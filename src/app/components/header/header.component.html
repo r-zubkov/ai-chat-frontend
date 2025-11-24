@@ -1,0 +1,37 @@
+<header class="header flex items-center gap-4 px-4">
+  <button
+    class="burger-btn"
+    aria-label="Меню"
+    [class.open]="appService.sidebarOpen()"
+    (click)="toggleMenu()">
+      <span></span>
+  </button>
+
+  <div class="header__info flex flex-row items-center gap-4">
+    <tui-icon icon="@tui.brain" [style.font-size.rem]="1.5" />
+
+    <h1 class="header__title">AI Chat</h1>
+  </div>
+
+  <div class="header__model-select">
+    <label tuiLabel>
+      <tui-textfield
+        tuiChevron
+        tuiTextfieldSize="s"
+        [tuiTextfieldCleaner]="false"
+      >
+        <input
+          placeholder="Model"
+          tuiSelect
+          [formControl]="modelControl"
+        />
+  
+        <tui-data-list-wrapper
+          *tuiTextfieldDropdown
+          new
+          [items]="chatService.models"
+        />
+      </tui-textfield>
+    </label>
+  </div>
+</header>

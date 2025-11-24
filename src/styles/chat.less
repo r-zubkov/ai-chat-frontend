@@ -1,0 +1,56 @@
+// message markdown-it & highlight.js styles 
+
+.chat-message {
+  h1, h2, h3, h4, strong {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  ol {
+    padding-left: var(--space-5);
+  }
+
+  ul {
+    padding-left: var(--space-7);
+  }
+
+  li > ul,
+  li > ol {
+    margin-top: var(--space-3);
+  }
+
+  li + li {
+    margin-top: var(--space-3);
+  }
+
+  p:first-child,
+  h1:first-child,
+  h2:first-child,
+  h3:first-child,
+  h4:first-child {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  p:not(:first-child),
+  h1:not(:first-child),
+  h2:not(:first-child),
+  h3:not(:first-child),
+  h4:not(:first-child) {
+    margin-top: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  pre code.hljs {
+    font-size: var(--text-sm);
+    white-space: break-spaces;
+    background: #0d11178c;
+    border-radius: var(--radius-md);
+  }
+
+  code:not(.hljs) {
+    color: #9cb6ff;
+    background: #4f59814f;
+    padding: 0px var(--space-1);
+    border-radius: var(--radius);
+  }
+}

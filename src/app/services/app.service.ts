@@ -1,0 +1,29 @@
+import { Injectable, signal } from '@angular/core';
+import { getCssValue } from '../helpers/get-css-value';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AppService {
+  readonly sidebarOpen = signal<boolean>(true);
+  readonly isMobile = signal<boolean>(false);
+
+  updateMobileState(width: number): void {
+    const mobileBP = parseFloat(getCssValue('--grid-lg'));
+    this.isMobile.set(width <= mobileBP);
+
+    this.isMobile() ?  this.closeSidebar() : this.openSidebar();
+  }
+
+  openSidebar(): void {
+    if (!this.sidebarOpen()) this.sidebarOpen.set(true);
+  }
+
+  closeSidebar(): void {
+    if (this.sidebarOpen()) this.sidebarOpen.set(false);
+  }
+
+  toggleSidebar(): void {
+    this.sidebarOpen.set(!this.sidebarOpen());
+  }
+}

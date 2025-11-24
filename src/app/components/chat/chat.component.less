@@ -1,0 +1,97 @@
+
+:host {
+  width: 100%;
+}
+
+// chat new
+.chat-new {
+  height: calc(100vh - var(--header-height));
+  height: calc(100dvh - var(--header-height));
+  width: calc(100% - var(--chat-messages-side-padding) * 2);
+  max-width: calc(var(--chat-max-width) + 2px);
+}
+
+// chat list
+.chat-list {
+  height: calc(100% - var(--chat-input-wrapper-height));
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+}
+
+.chat-messages {
+  width: calc(100% - var(--chat-messages-side-padding) * 2);
+  max-width: var(--chat-max-width);
+  gap: var(--chat-messages-gap);
+  padding-top: var(--chat-messages-gap);
+  padding-left: var(--chat-messages-side-padding);
+  padding-right: var(--chat-messages-side-padding);
+  padding-bottom: calc(var(--chat-messages-gap) * 2);
+}
+
+:host-context(.mobile) .chat-messages {
+  max-width: calc(100vw - var(--chat-messages-side-padding) * 2);
+}
+
+.chat-message {
+  min-width: 25%;
+  max-width: 100%;
+  overflow: auto;
+  align-self: flex-start;
+
+  &--user {
+    background: var(--color-bg-user-msg);
+    align-self: flex-end;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 var(--radius-xl);
+    padding: var(--chat-messages-inner-padding);
+  }
+}
+
+.thinking-loader {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: block;
+  margin: var(--space-2) 0 var(--space-2) 38px;
+  position: relative;
+  color: #FFF;
+  box-sizing: border-box;
+  animation: animloader 1.7s linear infinite;
+}
+
+@keyframes animloader {
+  0% {
+    box-shadow: 14px 0 0 -2px,  38px 0 0 -2px,  -14px 0 0 -2px,  -38px 0 0 -2px;
+  }
+  25% {
+    box-shadow: 14px 0 0 -2px,  38px 0 0 -2px,  -14px 0 0 -2px,  -38px 0 0 2px;
+  }
+  50% {
+    box-shadow: 14px 0 0 -2px,  38px 0 0 -2px,  -14px 0 0 2px,  -38px 0 0 -2px;
+  }
+  75% {
+    box-shadow: 14px 0 0 2px,  38px 0 0 -2px,  -14px 0 0 -2px,  -38px 0 0 -2px;
+  }
+  100% {
+    box-shadow: 14px 0 0 -2px,  38px 0 0 2px,  -14px 0 0 -2px,  -38px 0 0 -2px;
+  }
+}
+
+// input
+.chat-input-wrapper {
+  height: var(--chat-input-wrapper-height);
+  width: calc(100% - var(--chat-messages-side-padding) * 2);
+  max-width: calc(var(--chat-max-width) + 2px);
+  margin: auto;
+  position: relative;
+}
+
+:host-context(.mobile) .chat-input-wrapper {
+  max-width: calc(100vw - var(--chat-messages-side-padding) * 2);
+}
+
+.chat-input {
+  position: absolute;
+  width: 100%;
+  background: var(--color-bg);
+  bottom: calc(var(--chat-input-wrapper-padding) * 2);
+}

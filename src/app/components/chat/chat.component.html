@@ -1,0 +1,64 @@
+<!-- Новый чат -->
+@if (!hasMessages) {
+  <div class="chat-new flex flex-col justify-center m-auto text-center">
+    <div class="text-3xl mb-10">Новый чат</div>
+
+    <chat-input [thinking]="thinking()" (onSend)="sendMessage($event)"></chat-input>
+  </div>
+}
+
+@if (hasMessages) {
+  <!-- Активный чат -->
+  <div class="chat-list">
+    <tui-scrollbar>
+      <div class="flex flex-col items-center">
+        <div class="chat-messages flex flex-col flex-1 pt-6">
+          @for (msg of chatService.activeChat()?.messages; track msg.id) {
+            @if (msg.role !== ChatMessageRole.SYSTEM) {
+              <div
+                class="chat-message"
+                [attr.data-id]="msg.id"
+                [class.chat-message--user]="msg.role === ChatMessageRole.USER"
+                [class.chat-message--assistant]="msg.role === ChatMessageRole.ASSISTANT"
+              >
+                @if (msg.role !== ChatMessageRole.USER) {
+                  <div class="chat-message__header opacity-60 mb-3">
+                    AI • {{ getModelLabelByKey(msg.model) }}
+                  </div>
+                }
+
+                <div class="chat-message__content" [innerHTML]="msg.content | markdown"></div>
+              </div>
+            }
+          }
+
+          @if (chatService.activeChat()?.state === ChatState.ERROR) {
+            <div class="chat-error flex flex-col items-start">
+              <div class="mb-4">Произошла ошибка</div>
+              <button
+                size="s"
+                tuiButton
+                iconStart="@tui.rotate-ccw"
+                type="button"
+                (click)="retryLasRequest()"
+              >
+                Повторить запрос
+              </button>
+            </div>
+          }
+
+          @if (thinking()) {
+            <div class="chat-thinking">
+              <div class="thinking-loader"></div>
+            </div>
+          }
+        </div>
+      </div>
+    </tui-scrollbar>
+  </div>
+  <div class="chat-input-wrapper">
+    <div class="chat-input">
+      <chat-input [thinking]="thinking()" (onSend)="sendMessage($event)"></chat-input>
+    </div>
+  </div>
+}

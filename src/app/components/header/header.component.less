@@ -1,0 +1,80 @@
+@import "../../../styles/utils.less";
+
+.header {
+  height: var(--header-height);
+}
+
+.header__info {
+  @media (max-width: @grid-lg) {
+    display: none !important;
+  }
+}
+
+.header__title {
+  font-size: var(--text-xl);
+  line-height: var(--text-xl--line-height);
+  font-weight: var(--font-weight-semibold);
+}
+
+.header__model-select {
+  margin-left: auto;
+  min-width: 140px;
+}
+
+// burder btn
+.burger-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px; 
+  height: 32px;
+  padding: 0;
+  background: transparent; 
+  border: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+  transform: scale(0.75);
+
+  @media (min-width: @grid-lg) {
+    display: none;
+  }
+}
+
+.burger-btn span,
+.burger-btn span::before,
+.burger-btn span::after {
+  display: block;
+  width: 32px;
+  height: 3px;
+  background-color: #ffffff;
+  border-radius: 2px;
+  transition: all 0.2s ease-in-out;
+  position: absolute;
+}
+
+.burger-btn span {
+  background-color: #ffffff;
+}
+
+.burger-btn span::before {
+  content: "";
+  transform: translateY(-10px);
+}
+
+.burger-btn span::after {
+  content: "";
+  transform: translateY(10px);
+}
+
+.burger-btn.open span {
+  background-color: transparent; 
+}
+
+.burger-btn.open span::before {
+  transform: translateY(0) rotate(45deg);
+}
+
+.burger-btn.open span::after {
+  transform: translateY(0) rotate(-45deg);
+}

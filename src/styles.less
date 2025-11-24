@@ -1,0 +1,41 @@
+@import "highlight.js/styles/github-dark.css";
+
+@import "styles/variables.less";
+@import "styles/utils.less";
+
+@import "styles/chat.less";
+
+// variables
+:root {
+  --header-height: var(--space-16);
+  --sidebar-desktop-max-width: 280px;
+  --sidebar-mobile-max-width: 450px;
+  --chat-max-width: 768px;
+  --chat-input-height: 56px;
+  --chat-input-wrapper-padding: var(--space-4);
+  --chat-input-wrapper-height: calc(var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2);
+  --chat-input-height: 56px;
+  --chat-messages-gap: var(--space-6);
+  --chat-messages-side-padding: var(--space-4);
+  --chat-messages-inner-padding: var(--space-3);
+  --color-bg-user-msg: #1d2030;
+  --color-bg: #151823;
+  --color-bg-dark: #111319; 
+  --color-bg-darken: #10121a; 
+  --color-bg-blue: #3e4af3;
+}
+
+.mobile {
+  --header-height: var(--space-14);
+}
+
+// common
+html, body, tui-root {
+  height: 100%;
+  overflow: hidden;
+}
+
+.chat-container {
+  height: calc(100vh - var(--header-height) - 50px);
+  height: calc(100dvh - var(--header-height) - 50px);
+}

@@ -1,0 +1,41 @@
+<div class="sidebar-root flex flex-col">
+  <div class="sidebar-list sidebar-header">
+    <button type="button" class="sidebar-list__btn sidebar-action-btn sidebar-new-btn" (click)="createNewChat()">
+      <tui-icon icon="@tui.message-circle-plus" [style.font-size.rem]="1.25" />
+      <span>Новый чат</span>
+    </button>
+  </div>
+
+  <tui-scrollbar class="flex-1">
+    <div class="sidebar-list">
+      @for (chat of chatService.chats(); track chat.id) {
+        <button
+            type="button"
+            class="sidebar-chat sidebar-list__btn"
+            [class.sidebar-list__btn--active]="chat.id === this.chatService.activeChatId()"
+            (click)="openChat(chat.id)"
+          >
+            <div class="sidebar-chat__title">
+              {{ chat.title }}
+            </div>
+            <div class="sidebar-chat__model opacity-60">
+              {{ getLastMsgTime(chat.messages) }} • {{ getModelLabelByKey(chat.model) }}
+            </div>
+          </button>
+        }
+    </div>
+  </tui-scrollbar>
+
+  <div class="sidebar-list sidebar-footer">
+    @if(chatService.chats().length) {
+      <button
+        type="button"
+        class="sidebar-list__btn sidebar-action-btn"
+        (click)="openClearConfirmationModal()"
+      >
+        <tui-icon icon="@tui.brush-cleaning" [style.font-size.rem]="1.25" />
+        <span>Очистить историю</span>
+      </button>
+    }
+  </div>
+</div>

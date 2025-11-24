@@ -1,0 +1,26 @@
+<form (submit)="send()">
+  <tui-textfield [tuiTextfieldCleaner]='false' size="l">
+    <textarea
+      tuiTextarea 
+      placeholder="Спросите что-нибудь..."
+      [ngModel]="input()"
+      (ngModelChange)="input.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+      [max]="20"
+      [min]="1" 
+      (keydown)="onKeyDown($event)"
+    ></textarea> 
+    
+    <button
+      tuiButton
+      iconStart="@tui.arrow-up"
+      appearance="primary"
+      size='s'
+      type="submit"
+      class="ml-3"
+      [loading]="thinking"
+      [disabled]="thinking || !input().trim()"
+      (click)="send()"
+    ></button>
+  </tui-textfield>
+</form>
