@@ -3,9 +3,8 @@ import { Chat, ChatMessage } from '../models/chat.model';
 import { ModelType } from '../types/model-type';
 import { ChatMessageRole } from '../types/chat-message-role';
 import { StorageService } from './storage.service';
-import { ChatApiService } from './chat-api.service';
 import { ChatState } from '../types/chat-state';
-import { HttpErrorResponse } from '@angular/common/http';
+import { ChatSocketService } from './chat-socket.service';
 
 const MODEL_BASE_SYSTEM_PROMT = `
   Стиль:
@@ -45,9 +44,11 @@ export class ChatService {
   readonly activeChatId = signal<string | null>(null);
   readonly activeChat = computed(() => this.chats().find((c) => c.id === this.activeChatId()) || null);
 
+  private currentRequestId: string | null = null;
+
   constructor(
     private readonly storage: StorageService,
-    private readonly apiService: ChatApiService,
+    private readonly chatSocketService: ChatSocketService
   ) { }
 
   private applySystemPrompt(model: string, messages: ChatMessage[]): ChatMessage[] {
@@ -151,18 +152,15 @@ export class ChatService {
     text: string,
     onSend: (msg: ChatMessage) => void,
     onFinish: (msg: ChatMessage) => void,
-    onError: (err: HttpErrorResponse) => void
+    onError: (err: any) => void,
   ): void {
     const trimmed = text.trim();
     if (!trimmed || !this.currentModel()) return;
-    
-    // Получаем текущую модель
-    const currentModel = this.currentModel() as ModelType
 
-    // Берём активный чат или создаём новый
+    const currentModel = this.currentModel() as ModelType;
+
     const chat: Chat = this.activeChat() ?? this.createChat(trimmed);
 
-    // Создаём сообщение пользователя
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: ChatMessageRole.USER,
@@ -171,50 +169,74 @@ export class ChatService {
       timestamp: Date.now(),
     };
 
-    // Добавляем user + применяем системный промт для текущей модели
     const messagesWithUser = [...chat.messages, userMessage];
-    const messagesWithSystem = this.applySystemPrompt(this.currentModel(), messagesWithUser);
+    const messagesWithSystem = this.applySystemPrompt(
+      this.currentModel(),
+      messagesWithUser,
+    );
 
-    // Обновляем чат по отправке сообщения
-    const updatedChat: Chat = {
-      ...chat,
-      state: ChatState.THINKING,
-      messages: messagesWithSystem,
+    const assistantMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: ChatMessageRole.ASSISTANT,
+      model: currentModel,
+      content: '',
+      timestamp: Date.now(),
     };
 
-    this.updateChat(updatedChat)
+    const messagesWithAssistant = [...messagesWithSystem, assistantMessage];
 
-    // Запрос к API
-    this.apiService
-      .sendChatCompletion(currentModel, updatedChat.messages, false)
-      .subscribe({
-        next: (assistantText) => {
-          const assistantMessage: ChatMessage = {
-            id: crypto.randomUUID(),
-            role: ChatMessageRole.ASSISTANT,
-            model: currentModel,
-            content: assistantText,
-            timestamp: Date.now(),
-          };
+    let updatedChat: Chat = {
+      ...chat,
+      state: ChatState.THINKING,
+      messages: messagesWithAssistant,
+    };
 
-          this.updateChat({
-            ...updatedChat,
-            state: ChatState.IDLE,
-            messages: [...updatedChat.messages, assistantMessage],
-          });
+    this.updateChat(updatedChat);
+    onSend(userMessage);
 
-          onFinish(assistantMessage);
-        },
-        error: (err) => {
-            this.updateChat({
-            ...updatedChat,
-            state: ChatState.ERROR,
-          });
+    // --- Запускаем стрим по сокету ---
+    const { requestId, stream$ } = this.chatSocketService
+      .sendChatCompletion(currentModel, messagesWithSystem);
 
-          onError(err)
-        },
-      });
+    this.currentRequestId = requestId;
 
-      onSend(userMessage);
+    stream$.subscribe({
+      next: (delta: string) => {
+        assistantMessage.content += delta;
+
+        updatedChat = {
+          ...updatedChat,
+          messages: [
+            ...messagesWithSystem,
+            {
+              ...assistantMessage,
+              content: assistantMessage.content,
+            },
+          ],
+        };
+
+        this.updateChat(updatedChat);
+      },
+      error: (err: any) => {
+        this.currentRequestId = null;
+
+        this.updateChat({
+          ...updatedChat,
+          state: ChatState.ERROR,
+        });
+
+        onError(err);
+      },
+      complete: () => {
+        this.currentRequestId = null;
+
+        this.updateChat({
+          ...updatedChat,
+          state: ChatState.IDLE,
+        });
+
+        onFinish(assistantMessage);
+      },
+    });
   }
 }

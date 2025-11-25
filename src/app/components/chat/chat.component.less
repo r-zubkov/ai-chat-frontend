@@ -20,16 +20,13 @@
 
 .chat-messages {
   width: calc(100% - var(--chat-messages-side-padding) * 2);
-  max-width: var(--chat-max-width);
+  max-width: clamp(0px, calc(100vw - var(--chat-messages-side-padding) * 2), var(--chat-max-width));
+  min-width: 0;
   gap: var(--chat-messages-gap);
   padding-top: var(--chat-messages-gap);
   padding-left: var(--chat-messages-side-padding);
   padding-right: var(--chat-messages-side-padding);
   padding-bottom: calc(var(--chat-messages-gap) * 2);
-}
-
-:host-context(.mobile) .chat-messages {
-  max-width: calc(100vw - var(--chat-messages-side-padding) * 2);
 }
 
 .chat-message {
