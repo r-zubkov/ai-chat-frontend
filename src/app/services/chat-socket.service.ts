@@ -14,6 +14,7 @@ export class ChatSocketService {
   constructor() {
     this.socket = io(environment.apiUrl, {
       transports: ['websocket'],
+      path: '/api/socket.io',
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: Infinity,
