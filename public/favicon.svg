@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <defs>
     <clipPath id="apple-squircle">
-       <rect width="512" height="512" rx="115" ry="115" />
+      <rect width="512" height="512" rx="115" ry="115" />
     </clipPath>
   </defs>
 
   <rect width="512" height="512" fill="#10121a" clip-path="url(#apple-squircle)"/>
 
-  <g transform="translate(88, 88) scale(14)">
+  <g transform="translate(58, 58) scale(16.5)">
     <g stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
         <path d="M12 18V5"/>
         <path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4"/>
