@@ -5,6 +5,8 @@ import { ChatMessageRole } from '../types/chat-message-role';
 import { StorageService } from './storage.service';
 import { ChatState } from '../types/chat-state';
 import { ChatSocketService } from './chat-socket.service';
+import { debounceTime, Subject } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 const MODEL_BASE_SYSTEM_PROMT = `
   Стиль:
@@ -46,10 +48,23 @@ export class ChatService {
 
   private currentRequestId: string | null = null;
 
+  private readonly saveSubject = new Subject<Chat[]>();
+
   constructor(
     private readonly storage: StorageService,
     private readonly chatSocketService: ChatSocketService
-  ) { }
+  ) {
+    this.subscribeToSaveSubject()
+  }
+
+  private subscribeToSaveSubject(): void {
+    this.saveSubject
+      .pipe(
+        debounceTime(2000),
+        takeUntilDestroyed()
+      )
+      .subscribe((chats) => this.saveChats(chats));
+  }
 
   private applySystemPrompt(model: string, messages: ChatMessage[]): ChatMessage[] {
     const systemPrompt = this.modelSystemPrompts[model];
@@ -109,20 +124,21 @@ export class ChatService {
     };
   }
 
-  updateChat(chat: Chat) {
+  updateChat(chat: Chat): void {
     const chats = [...this.chats()];
     const index = chats.findIndex((c) => c.id === chat.id);
 
     if (index === -1) {
       chats.unshift(chat);
-    } else {
+    } else {  
       chats[index] = chat;
     }
 
     this.chats.set(chats);
     // set active chat id only from new chat state
     if (!this.activeChatId()) this.activeChatId.set(chat.id);
-    this.saveChats(chats);
+    // small debounce time
+    this.saveSubject.next(chats);
   }
 
   deleteChat(chatId: string): void {
