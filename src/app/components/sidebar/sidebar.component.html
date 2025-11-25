@@ -11,15 +11,20 @@
       @for (chat of chatService.chats(); track chat.id) {
         <button
             type="button"
-            class="sidebar-chat sidebar-list__btn"
+            class="sidebar-chat sidebar-list__btn flex"
             [class.sidebar-list__btn--active]="chat.id === this.chatService.activeChatId()"
             (click)="openChat(chat.id)"
           >
-            <div class="sidebar-chat__title">
-              {{ chat.title }}
-            </div>
-            <div class="sidebar-chat__model opacity-60">
-              {{ getLastMsgTime(chat.messages) }} • {{ getModelLabelByKey(chat.model) }}
+            @if(chat.state === ChatState.THINKING) {
+              <tui-loader [inheritColor]="true" class="mr-3" />
+            }
+            <div class="min-width-0">
+              <div class="sidebar-chat__title">
+                {{ chat.title }}
+              </div>
+              <div class="sidebar-chat__model opacity-60">
+                {{ getLastMsgTime(chat.messages) }} • {{ getModelLabelByKey(chat.model) }}
+              </div>
             </div>
           </button>
         }
