@@ -255,4 +255,10 @@ export class ChatService {
       },
     });
   }
+
+  stopCurrentRequest(): void {
+    if (this.currentRequestId) {
+      this.chatSocketService.abortRequest(this.currentRequestId);
+    }
+  }
 }

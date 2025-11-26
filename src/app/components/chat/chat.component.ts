@@ -61,7 +61,7 @@ export class ChatComponent implements AfterViewInit {
     return !!this.chatService.activeChat()?.messages?.length;
   }
 
-  sendMessage(text: string): void {
+  sendRequest(text: string): void {
     this.chatService.sendMessage(
       text,
       (msg) => {setTimeout(() => this.scrollToBottom('smooth'))},
@@ -70,12 +70,16 @@ export class ChatComponent implements AfterViewInit {
     )
   }
 
+  cancelRequest(): void {
+    this.chatService.stopCurrentRequest()
+  }
+
   retryLasRequest(): void {
     const lastUserMsg = this.chatService.activeChat()?.messages
     .filter(msg => msg.role === ChatMessageRole.USER)
     .at(-1);
 
-    if (lastUserMsg) this.sendMessage(lastUserMsg.content);
+    if (lastUserMsg) this.sendRequest(lastUserMsg.content);
   }
 
   getModelLabelByKey(key: ModelType): string {

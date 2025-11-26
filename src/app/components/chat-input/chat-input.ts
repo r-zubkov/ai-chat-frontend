@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TuiButton, TuiTextfield } from '@taiga-ui/core';
-import { TuiButtonLoading, TuiTextarea } from '@taiga-ui/kit';
+import { TuiTextarea } from '@taiga-ui/kit';
 
 @Component({
   selector: 'chat-input',
@@ -10,7 +10,6 @@ import { TuiButtonLoading, TuiTextarea } from '@taiga-ui/kit';
     TuiTextarea,
     TuiTextfield,
     TuiButton,
-    TuiButtonLoading
   ],
   templateUrl: './chat-input.html',
   styleUrl: './chat-input.less',
@@ -19,6 +18,7 @@ export class ChatInput {
   @Input() thinking!: boolean;
   
   @Output() onSend = new EventEmitter<string>();
+  @Output() onCancel = new EventEmitter<boolean>();
 
   protected input = signal<string>('');
 
@@ -30,6 +30,10 @@ export class ChatInput {
     this.onSend.emit(text)
 
     this.input.set('');
+  }
+
+  protected cancel(): void {
+    this.onCancel.emit(true)
   }
 
   protected onKeyDown(event: KeyboardEvent): void {

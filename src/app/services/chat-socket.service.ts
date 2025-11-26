@@ -6,12 +6,16 @@ import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ChatSocketService {
-  private socket: Socket;
+  private socket: Socket | null = null;
 
   // все активные запросы на клиенте: requestId -> observer
   private activeRequests = new Map<string, Observer<string>>();
 
   constructor() {
+    this.initSocket()
+  }
+
+  private initSocket(): void {
     this.socket = io(environment.apiUrl, {
       transports: ['websocket'],
       path: '/api/socket.io',
@@ -23,7 +27,7 @@ export class ChatSocketService {
     });
 
     this.socket.on('connect', () => {
-      console.log('[socket] connected', this.socket.id);
+      console.log('[socket] connected', this.socket?.id);
     });
 
     this.socket.on('reconnect', (attempt) => {
@@ -83,17 +87,17 @@ export class ChatSocketService {
       };
 
       const cleanup = () => {
-        this.socket.off('chat:chunk', onChunk);
-        this.socket.off('chat:done', onDone);
-        this.socket.off('chat:error', onError);
+        this.socket?.off('chat:chunk', onChunk);
+        this.socket?.off('chat:done', onDone);
+        this.socket?.off('chat:error', onError);
         this.activeRequests.delete(requestId);
       };
 
-      this.socket.on('chat:chunk', onChunk);
-      this.socket.on('chat:done', onDone);
-      this.socket.on('chat:error', onError);
+      this.socket?.on('chat:chunk', onChunk);
+      this.socket?.on('chat:done', onDone);
+      this.socket?.on('chat:error', onError);
 
-      this.socket.emit('chat:request', {
+      this.socket?.emit('chat:request', {
         requestId,
         model,
         messages,
@@ -103,7 +107,7 @@ export class ChatSocketService {
       return () => {
         cleanup();
         // чтобы не висел на сервере, шлём abort
-        this.socket.emit('chat:abort', { requestId });
+        this.socket?.emit('chat:abort', { requestId });
       };
     });
 
@@ -118,7 +122,7 @@ export class ChatSocketService {
     const observer = this.activeRequests.get(requestId);
     if (!observer) return;
 
-    this.socket.emit('chat:abort', { requestId });
+    this.socket?.emit('chat:abort', { requestId });
     this.activeRequests.delete(requestId);
     observer.complete();
   }
@@ -128,7 +132,7 @@ export class ChatSocketService {
    */
   abortAllRequests(): void {
     for (const [requestId, observer] of this.activeRequests.entries()) {
-      this.socket.emit('chat:abort', { requestId });
+      this.socket?.emit('chat:abort', { requestId });
       observer.complete();
     }
     this.activeRequests.clear();

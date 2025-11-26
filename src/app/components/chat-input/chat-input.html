@@ -11,16 +11,27 @@
       (keydown)="onKeyDown($event)"
     ></textarea> 
     
-    <button
-      tuiButton
-      iconStart="@tui.arrow-up"
-      appearance="primary"
-      size='s'
-      type="submit"
-      class="ml-3"
-      [loading]="thinking"
-      [disabled]="thinking || !input().trim()"
-      (click)="send()"
-    ></button>
+    @if (!thinking) {
+      <button
+        tuiButton
+        iconStart="@tui.arrow-up"
+        appearance="primary"
+        size='s'
+        type="submit"
+        class="ml-3"
+        [disabled]="!input().trim()"
+        (click)="send()"
+      ></button>
+    } @else {
+      <button
+        tuiButton
+        iconStart="@tui.circle-x"
+        appearance="primary"
+        size='s'
+        type="submit"
+        class="ml-3"
+        (click)="cancel()"
+      ></button>
+    }
   </tui-textfield>
 </form>

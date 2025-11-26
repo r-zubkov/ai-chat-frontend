@@ -3,7 +3,7 @@
   <div class="chat-new flex flex-col justify-center m-auto text-center">
     <div class="text-3xl mb-10">Новый чат</div>
 
-    <chat-input [thinking]="thinking()" (onSend)="sendMessage($event)"></chat-input>
+    <chat-input [thinking]="thinking()" (onSend)="sendRequest($event)"></chat-input>
   </div>
 }
 
@@ -62,7 +62,11 @@
   </div>
   <div class="chat-input-wrapper">
     <div class="chat-input">
-      <chat-input [thinking]="thinking()" (onSend)="sendMessage($event)"></chat-input>
+      <chat-input
+        [thinking]="thinking()"
+        (onSend)="sendRequest($event)"
+        (onCancel)="cancelRequest()"
+      ></chat-input>
     </div>
   </div>
 }
