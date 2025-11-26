@@ -9,8 +9,8 @@
   <tui-scrollbar class="flex-1">
     <div class="sidebar-list">
       @for (chat of chatService.chats(); track chat.id) {
-        <button
-            type="button"
+        <div
+            role="button"
             class="sidebar-chat sidebar-list__btn flex"
             [class.sidebar-list__btn--active]="chat.id === this.chatService.activeChatId()"
             (click)="openChat(chat.id)"
@@ -26,7 +26,7 @@
                 {{ getLastMsgTime(chat.messages) }} • {{ getModelLabelByKey(chat.model) }}
               </div>
             </div>
-          </button>
+          </div>
         }
     </div>
   </tui-scrollbar>
