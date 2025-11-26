@@ -36,6 +36,25 @@ export class SidebarComponent {
     if (this.appServbice.isMobile()) this.appServbice.sidebarOpen.set(false)
   }
 
+  deleteChat(event: MouseEvent, chatId: string): void {
+    event.stopPropagation();
+
+    const data: TuiConfirmData = {
+      content: 'Это действие нельзя будет отменить',
+      yes: 'Да',
+      no: 'Нет',
+    };
+
+    this.dialogService
+      .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Вы уверены?', data})
+      .subscribe((confirm) => {
+        if (confirm) {
+          this.chatService.deleteChat(chatId)
+          if (this.appServbice.isMobile()) this.appServbice.sidebarOpen.set(false)
+        }
+      });
+  }
+
   openClearConfirmationModal(): void {
     const data: TuiConfirmData = {
       content: 'Это действие нельзя будет отменить',

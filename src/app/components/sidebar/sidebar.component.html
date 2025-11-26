@@ -11,14 +11,15 @@
       @for (chat of chatService.chats(); track chat.id) {
         <div
             role="button"
-            class="sidebar-chat sidebar-list__btn flex"
+            class="sidebar-chat sidebar-list__btn flex gap-3"
             [class.sidebar-list__btn--active]="chat.id === this.chatService.activeChatId()"
             (click)="openChat(chat.id)"
           >
             @if(chat.state === ChatState.THINKING) {
-              <tui-loader [inheritColor]="true" class="mr-3" />
+              <tui-loader [inheritColor]="true" />
             }
-            <div class="min-width-0">
+
+            <div class="min-width-0 flex-1">
               <div class="sidebar-chat__title">
                 {{ chat.title }}
               </div>
@@ -26,6 +27,10 @@
                 {{ getLastMsgTime(chat.messages) }} • {{ getModelLabelByKey(chat.model) }}
               </div>
             </div>
+
+            <button class="sidebar-chat__action" type="button" (click)="deleteChat($event, chat.id)">
+              <tui-icon icon="@tui.trash-2" [style.font-size.rem]="1" />
+            </button>
           </div>
         }
     </div>

@@ -64,7 +64,25 @@
 
   &::first-letter {
     text-transform: uppercase;
+  }
 }
+
+.sidebar-chat__action {
+  display: none;
+  border: none;
+  background: transparent;
+  padding: 0px var(--space-1);
+  cursor: pointer;
+}
+
+.sidebar-chat:hover {
+  .sidebar-chat__action {
+    display: block;
+  }
+}
+
+:host-context(.mobile) .sidebar-chat .sidebar-chat__action {
+  display: block;
 }
 
 .sidebar-chat__model {

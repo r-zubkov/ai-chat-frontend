@@ -64,9 +64,15 @@ export class ChatComponent implements AfterViewInit {
   sendRequest(text: string): void {
     this.chatService.sendMessage(
       text,
-      (msg) => {setTimeout(() => this.scrollToBottom('smooth'))},
-      (msg) => {setTimeout(() => this.scrollToMessage(msg.id, 'smooth'))},
-      (err) => {console.error('Error sending message:', err)}
+      (msg) => {
+        setTimeout(() => this.scrollToBottom('smooth'))
+      },
+      (msg) => {
+        //setTimeout(() => this.scrollToMessage(msg.id, 'smooth'))
+      },
+      (err) => {
+        console.error('Error sending message:', err)
+      }
     )
   }
 
