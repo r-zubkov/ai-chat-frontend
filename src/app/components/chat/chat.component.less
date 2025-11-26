@@ -29,6 +29,10 @@
   padding-bottom: calc(var(--chat-messages-gap) * 2);
 }
 
+:host-context(.mobile) .chat-messages {
+  padding-bottom: var(--chat-messages-gap);
+}
+
 .chat-message {
   min-width: 25%;
   max-width: 100%;
