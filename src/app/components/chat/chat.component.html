@@ -27,7 +27,11 @@
                   </div>
                 }
 
-                <div class="chat-message__content" [innerHTML]="msg.content | markdown"></div>
+                @if (msg.role === ChatMessageRole.USER) {
+                  <div class="chat-message__content"> {{ msg.content }} </div>
+                } @else {
+                  <div class="chat-message__content" [innerHTML]="msg.content | markdown"></div>
+                }
               </div>
             }
           }
