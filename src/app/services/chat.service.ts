@@ -94,6 +94,10 @@ export class ChatService {
 
   loadChatsFromLocalStorage(): void {
     const loaded = this.storage.loadChats();
+    
+    // complete thinking state
+    loaded.forEach(chat => {if (chat.state === ChatState.THINKING) chat.state = ChatState.IDLE})
+
     this.chats.set(loaded);
   }
 
@@ -210,7 +214,7 @@ export class ChatService {
     this.updateChat(updatedChat);
     onSend(userMessage);
 
-    // --- Запускаем стрим по сокету ---
+    // Запускаем стрим по сокету
     const { requestId, stream$ } = this.chatSocketService
       .sendChatCompletion(currentModel, messagesWithSystem);
 
