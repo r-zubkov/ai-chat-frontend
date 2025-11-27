@@ -46,7 +46,7 @@ export class SidebarComponent {
     };
 
     this.dialogService
-      .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Вы уверены?', data})
+      .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Удалить чат?', data})
       .subscribe((confirm) => {
         if (confirm) {
           this.chatService.deleteChat(chatId)
@@ -63,7 +63,7 @@ export class SidebarComponent {
     };
 
     this.dialogService
-      .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Вы уверены?', data})
+      .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Очистить историю?', data})
       .subscribe((confirm) => {
         if (confirm) this.chatService.deleteAllChats()
       });
