@@ -43,8 +43,19 @@ export class ChatService {
   readonly currentModel = signal<string>(ModelType.GROK_4_FAST);
 
   readonly chats = signal<Chat[]>([]);
+
   readonly activeChatId = signal<string | null>(null);
-  readonly activeChat = computed(() => this.chats().find((c) => c.id === this.activeChatId()) || null);
+  
+  readonly activeChat = computed<Chat | null>(() => this.chats().find((chat) => chat.id === this.activeChatId()) || null);
+  readonly activeChatView = computed<Chat | null>(() => {
+    const chat = this.activeChat();
+    if (!chat) return null;
+
+    return {
+      ...chat,
+      messages: chat.messages.filter(msg => msg.role !== ChatMessageRole.SYSTEM),
+    };
+  });
 
   private currentRequestId: string | null = null;
 

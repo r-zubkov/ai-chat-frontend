@@ -13,33 +13,31 @@
     <tui-scrollbar>
       <div class="flex flex-col items-center">
         <div class="chat-messages flex flex-col flex-1 pt-6">
-          @for (msg of chatService.activeChat()?.messages; let last = $last; track msg.id) {
-            @if (msg.role !== ChatMessageRole.SYSTEM) {
-              <div
-                class="chat-message"
-                [attr.data-id]="msg.id"
-                [class.chat-message--user]="msg.role === ChatMessageRole.USER"
-                [class.chat-message--assistant]="msg.role === ChatMessageRole.ASSISTANT"
-              >
-                @if (msg.role !== ChatMessageRole.USER) {
-                  <div class="chat-message__header opacity-60 mb-3">
-                    AI • {{ getModelLabelByKey(msg.model) }}
-                  </div>
-                }
+          @for (msg of chatService.activeChatView()?.messages; let last = $last; track msg.id) {
+            <div
+              class="chat-message"
+              [attr.data-id]="msg.id"ы
+              [class.chat-message--user]="msg.role === ChatMessageRole.USER"
+              [class.chat-message--assistant]="msg.role === ChatMessageRole.ASSISTANT"
+            >
+              @if (msg.role !== ChatMessageRole.USER) {
+                <div class="chat-message__header opacity-60 mb-3">
+                  AI • {{ getModelLabelByKey(msg.model) }}
+                </div>
+              }
 
-                @if (msg.role === ChatMessageRole.USER) {
-                  <div class="chat-message__content"> {{ msg.content }} </div>
-                } @else {
-                  <div class="chat-message__content" [innerHTML]="msg.content | markdown"></div>
-                }
+              @if (msg.role === ChatMessageRole.USER) {
+                <div class="chat-message__content"> {{ msg.content }} </div>
+              } @else {
+                <div class="chat-message__content" [innerHTML]="msg.content | markdown"></div>
+              }
 
-                @if (last && thinking()) {
-                  <div class="chat-thinking mt-5">
-                    <div class="thinking-loader"></div>
-                  </div>
-                }
-              </div>
-            }
+              @if (last && thinking()) {
+                <div class="chat-thinking mt-5">
+                  <div class="thinking-loader"></div>
+                </div>
+              }
+            </div>
           }
 
           @if (chatService.activeChat()?.state === ChatState.ERROR) {
