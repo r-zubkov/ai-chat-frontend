@@ -23,6 +23,9 @@ export class MarkdownService {
         return `<pre><code class="hljs">${value}</code></pre>`;
       },
     });
+
+    this.md.renderer.rules['table_open'] = () => '<div class="table-wrapper"><table>';
+    this.md.renderer.rules['table_close'] = () => '</table></div>';
   }
 
   render(src: string): string {

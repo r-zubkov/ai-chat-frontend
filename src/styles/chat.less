@@ -48,6 +48,7 @@
   }
 
   code:not(.hljs) {
+    font-size: 0.875em;
     color: #9cb6ff;
     background: #4f59814f;
     padding: 0px var(--space-1);
@@ -56,5 +57,44 @@
 
   p, li {
     line-height: 1.6;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+    margin: var(--space-4) 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+    width: 100%;
+  }
+
+  th {
+    padding: var(--space-3) 14px;
+    font-weight: 600;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  td {
+    padding: var(--space-3) 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    vertical-align: top;
+  }
+
+  th:first-child,
+  td:first-child {
+    padding-left: var(--space-1);
+  }
+
+  th:last-child,
+  td:last-child {
+    padding-right: var(--space-1);
+  }
+
+  table code {
+    font-size: 0.875em;
   }
 }
