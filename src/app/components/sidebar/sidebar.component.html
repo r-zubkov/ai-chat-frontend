@@ -1,7 +1,7 @@
 <div class="sidebar-root flex flex-col">
   <div class="sidebar-list sidebar-header">
     <button type="button" class="sidebar-list__btn sidebar-action-btn sidebar-new-btn" (click)="createNewChat()">
-      <tui-icon icon="@tui.message-circle-plus" [style.font-size.rem]="1.25" />
+      <tui-icon icon="@tui.message-circle-plus" [style.font-size.rem]="1" />
       <span>Новый чат</span>
     </button>
   </div>
@@ -43,7 +43,7 @@
         class="sidebar-list__btn sidebar-action-btn"
         (click)="openClearConfirmationModal()"
       >
-        <tui-icon icon="@tui.brush-cleaning" [style.font-size.rem]="1.25" />
+        <tui-icon icon="@tui.brush-cleaning" [style.font-size.rem]="1" />
         <span>Очистить историю</span>
       </button>
     }

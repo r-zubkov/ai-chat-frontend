@@ -13,7 +13,7 @@
     <tui-scrollbar>
       <div class="flex flex-col items-center">
         <div class="chat-messages flex flex-col flex-1 pt-6">
-          @for (msg of chatService.activeChat()?.messages; track msg.id) {
+          @for (msg of chatService.activeChat()?.messages; let last = $last; track msg.id) {
             @if (msg.role !== ChatMessageRole.SYSTEM) {
               <div
                 class="chat-message"
@@ -32,6 +32,12 @@
                 } @else {
                   <div class="chat-message__content" [innerHTML]="msg.content | markdown"></div>
                 }
+
+                @if (last && thinking()) {
+                  <div class="chat-thinking mt-5">
+                    <div class="thinking-loader"></div>
+                  </div>
+                }
               </div>
             }
           }
@@ -48,12 +54,6 @@
               >
                 Повторить запрос
               </button>
-            </div>
-          }
-
-          @if (thinking()) {
-            <div class="chat-thinking">
-              <div class="thinking-loader"></div>
             </div>
           }
         </div>
