@@ -107,11 +107,22 @@ export class ChatService {
     this.storage.saveChats(chats);
   }
 
+  private sortChatsByLastUpdate(chats: Chat[]): Chat[] {
+    return chats.sort((a, b) => b.lastUpdate - a.lastUpdate);
+  }
+
   loadChatsFromLocalStorage(): void {
     const loaded = this.storage.loadChats();
     
     // complete thinking state
     loaded.forEach(chat => {if (chat.state === ChatState.THINKING) chat.state = ChatState.IDLE});
+
+    // TODO: remove fallback later
+    loaded.forEach(chat => {
+      if (!('lastUpdate' in chat)) {
+        (chat as any).lastUpdate = Date.now();
+      }
+    })
 
     this.chats.set(loaded);
   }
@@ -163,6 +174,7 @@ export class ChatService {
       title: name || generatedTitle,
       state: ChatState.IDLE,
       model: this.currentModel() as ModelType,
+      lastUpdate: Date.now(),
       messages: [],
     };
   }
@@ -171,11 +183,15 @@ export class ChatService {
     const chats = [...this.chats()];
     const index = chats.findIndex((c) => c.id === chat.id);
 
+    chat.lastUpdate = Date.now();
+
     if (index === -1) {
       chats.unshift(chat);
     } else {  
       chats[index] = chat;
     }
+
+    this.sortChatsByLastUpdate(chats)
 
     this.chats.set(chats);
     // set active chat id only from new chat state

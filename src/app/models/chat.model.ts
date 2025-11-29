@@ -15,5 +15,6 @@ export interface Chat {
   title: string;
   state: ChatState;
   model: ModelType;
+  lastUpdate: number;
   messages: ChatMessage[];
 }
