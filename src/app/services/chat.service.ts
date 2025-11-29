@@ -7,6 +7,7 @@ import { ChatState } from '../types/chat-state';
 import { ChatSocketService } from './chat-socket.service';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AppService } from './app.service';
 
 const MODEL_BASE_SYSTEM_PROMT = `
   Стиль:
@@ -40,7 +41,9 @@ export class ChatService {
     { id: ModelType.GEMINI_25_FLASH, label: ModelLabelMap[ModelType.GEMINI_25_FLASH] }
   ];
 
-  readonly currentModel = signal<string>(ModelType.GROK_4_FAST);
+  private globalCurrentModel = signal<ModelType>(ModelType.GROK_4_FAST);
+
+  readonly currentModel = signal<ModelType>(ModelType.GROK_4_FAST);
 
   readonly chats = signal<Chat[]>([]);
 
@@ -62,6 +65,7 @@ export class ChatService {
   private readonly saveSubject = new Subject<Chat[]>();
 
   constructor(
+    private readonly appServbice: AppService,
     private readonly storage: StorageService,
     private readonly chatSocketService: ChatSocketService
   ) {
@@ -107,22 +111,46 @@ export class ChatService {
     const loaded = this.storage.loadChats();
     
     // complete thinking state
-    loaded.forEach(chat => {if (chat.state === ChatState.THINKING) chat.state = ChatState.IDLE})
+    loaded.forEach(chat => {if (chat.state === ChatState.THINKING) chat.state = ChatState.IDLE});
 
     this.chats.set(loaded);
   }
 
   loadCurrentModelFromLocalStorage(): void {
     const loaded = this.storage.loadCurrentModal();
-    if (loaded) this.currentModel.set(loaded);
+
+    if (loaded) {
+      this.currentModel.set(loaded);
+      this.globalCurrentModel.set(loaded);
+    }
   }
 
   updateCurrentModel(model: ModelType): void {
-    this.currentModel.set(model)
-    this.storage.saveCurrentModel(model)
+    this.currentModel.set(model);
+
+    // for global use
+    if (!this.activeChatId()) {
+      this.globalCurrentModel.set(model);
+      this.storage.saveCurrentModel(this.globalCurrentModel());
+    }
   }
 
-  createChat(name: string | null = null): Chat {
+  navigateToChat(chatId: string | null): void {
+    this.activeChatId.set(chatId);
+    const activeChat = this.activeChat();
+
+    if (activeChat) {
+      this.updateCurrentModel(activeChat.model);
+    } else {
+      this.updateCurrentModel(this.globalCurrentModel());
+    }
+
+    if (this.appServbice.isMobile()) {
+      this.appServbice.sidebarOpen.set(false);
+    }
+  }
+
+  private createChat(name: string | null = null): Chat {
     const now = new Date();
     const pad = (n: number) => n.toString().padStart(2, '0');
 
@@ -177,6 +205,8 @@ export class ChatService {
   deleteAllChats(): void {
     this.chats.set([]);
     this.saveChats([]);
+
+    this.navigateToChat(null)
   }
 
   sendMessage(
