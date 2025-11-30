@@ -16,7 +16,7 @@
           @for (msg of chatService.activeChatView()?.messages; let last = $last; track msg.id) {
             <div
               class="chat-message"
-              [attr.data-id]="msg.id"ы
+              [attr.data-id]="msg.id"
               [class.chat-message--user]="msg.role === ChatMessageRole.USER"
               [class.chat-message--assistant]="msg.role === ChatMessageRole.ASSISTANT"
             >
