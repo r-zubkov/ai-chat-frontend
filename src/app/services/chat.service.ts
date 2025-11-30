@@ -107,10 +107,6 @@ export class ChatService {
     this.storage.saveChats(chats);
   }
 
-  private sortChatsByLastUpdate(chats: Chat[]): Chat[] {
-    return chats.sort((a, b) => b.lastUpdate - a.lastUpdate);
-  }
-
   loadChatsFromLocalStorage(): void {
     const loaded = this.storage.loadChats();
     
@@ -183,20 +179,31 @@ export class ChatService {
     const chats = [...this.chats()];
     const index = chats.findIndex((c) => c.id === chat.id);
 
-    chat.lastUpdate = Date.now();
+    const updatedChat: Chat = {
+      ...chat,
+      lastUpdate: Date.now(),
+    };
 
     if (index === -1) {
-      chats.unshift(chat);
-    } else {  
-      chats[index] = chat;
+      chats.unshift(updatedChat);
+    } else {
+      chats[index] = updatedChat;
+
+      // Если чет не сверху — переносим
+      if (index !== 0) {
+        chats.splice(index, 1); // удалить
+        chats.unshift(updatedChat); // перенести в начало
+      }
     }
 
-    this.sortChatsByLastUpdate(chats)
-
     this.chats.set(chats);
-    // set active chat id only from new chat state
-    if (!this.activeChatId()) this.activeChatId.set(chat.id);
-    // small debounce time
+
+    // Ставим активный чат если ещё не выбран
+    if (!this.activeChatId()) {
+      this.activeChatId.set(updatedChat.id);
+    }
+
+    // Небольшой дебаунс на сохранение
     this.saveSubject.next(chats);
   }
 
