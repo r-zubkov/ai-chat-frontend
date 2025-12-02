@@ -2,23 +2,43 @@
 
 .header {
   height: var(--header-height);
+
+  [tuiLink][tuiChevron]:after {
+    height: var(--space-5);
+  }
+}
+.header__model {
+  gap: 0.375rem;
 }
 
-.header__info {
-  @media (max-width: @grid-lg) {
-    display: none !important;
+.header__model-selection {
+  font-size: 1.125rem;
+  line-height: 1.5;
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-1) var(--space-2);
+  margin-left: calc(var(--space-2) * -1);
+  border-radius: var(--radius-lg);
+  color: #ffffff;
+  transition: background 0.3s ease-in-out,
+              box-shadow 0.3s ease-in-out;
+                     
+  &:hover {
+    color: #ffffff !important;
+    background: var(--color-bg-subtle);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  }
+
+  &:after {
+    height: var(--space-5);
   }
 }
 
-.header__title {
-  font-size: var(--text-xl);
-  line-height: var(--text-xl--line-height);
-  font-weight: var(--font-weight-semibold);
-}
-
-.header__model-select {
-  margin-left: auto;
-  min-width: 140px;
+.header__new-chat {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
 }
 
 // burder btn
@@ -34,11 +54,7 @@
   cursor: pointer;
   position: relative;
   z-index: 10;
-  transform: scale(0.75);
-
-  @media (min-width: @grid-lg) {
-    display: none;
-  }
+  transform: scale(0.65);
 }
 
 .burger-btn span,
