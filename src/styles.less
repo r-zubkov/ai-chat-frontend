@@ -18,11 +18,28 @@
   --chat-messages-gap: var(--space-6);
   --chat-messages-side-padding: var(--space-4);
   --chat-messages-inner-padding: var(--space-3);
-  --color-bg-user-msg: #1d2030;
   --color-bg: #151823;
-  --color-bg-dark: #111319; 
-  --color-bg-darken: #10121a; 
-  --color-bg-blue: #3e4af3;
+  --color-bg-semi-subtle: #21253b;
+  --color-bg-subtle: #262a40;
+  --color-bg-elevation: #2a2f45;
+  --color-bg-dark: #10121a; 
+  --color-bg-dark-subtle: #282a31; 
+  --color-bg-dark-elevation: #32333a; 
+  --color-bg-user-msg: #1d2030;
+}
+
+[tuiTheme=dark] {
+  --tui-background-elevation-3: var(--color-bg-subtle);
+}
+
+[tuiTheme=dark] {
+  [tuiAppearance][data-appearance=textfield] {
+    background: var(--color-bg-subtle);
+
+    &:is(a, button, select, textarea, input, label, .tui-interactive):not(:disabled):hover:not(:disabled):not([data-state]) {
+      background: var(--color-bg-elevation);
+    }
+  }
 }
 
 .mobile {
@@ -38,6 +55,6 @@ html, body, tui-root {
 }
 
 .chat-container {
-  height: calc(100vh - var(--header-height) - 50px);
-  height: calc(100dvh - var(--header-height) - 50px);
+  height: calc(100vh - var(--header-height));
+  height: calc(100dvh - var(--header-height));
 }

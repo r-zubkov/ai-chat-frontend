@@ -1,37 +1,59 @@
-<header class="header flex items-center gap-4 px-4">
-  <button
-    class="burger-btn"
-    aria-label="Меню"
-    [class.open]="appService.sidebarOpen()"
-    (click)="toggleMenu()">
+<header class="header flex items-center justify-between gap-4 px-4">
+  @if(appService.isMobile()) {
+    <button
+      class="burger-btn"
+      aria-label="Меню"
+      [class.open]="appService.sidebarOpen()"
+      (click)="toggleMenu()"
+    >
       <span></span>
-  </button>
+    </button>
+  }
 
-  <div class="header__info flex flex-row items-center gap-4">
-    <tui-icon icon="@tui.brain" [style.font-size.rem]="1.5" />
+  <div class="header__model flex flex-row items-center">
+    @if (chatService.activeChatId()) {
+      <tui-icon icon="@tui.message-circle-code" [style.font-size.rem]="1.125" />
+    } @else {
+      <tui-icon icon="@tui.brain" [style.font-size.rem]="1.125" />
+    }
 
-    <h1 class="header__title">AI Chat</h1>
+    <tui-icon icon="@tui.chevron-right" class="opacity-60" [style.font-size.rem]="1.125" />
+
+    <button
+      tuiChevron
+      tuiDropdownAlign="right"
+      tuiLink
+      type="button"
+      class="header__model-selection"
+      [class.open]="modelSelectionOpen"
+      [textContent]="selectedModel"
+      [tuiDropdown]="dropdown"
+      [(tuiDropdownOpen)]="modelSelectionOpen"
+    ></button>
   </div>
 
-  <div class="header__model-select">
-    <label tuiLabel>
-      <tui-textfield
-        tuiChevron
-        tuiTextfieldSize="s"
-        [tuiTextfieldCleaner]="false"
-      >
-        <input
-          placeholder="Model"
-          tuiSelect
-          [formControl]="modelControl"
-        />
-  
-        <tui-data-list-wrapper
-          *tuiTextfieldDropdown
-          new
-          [items]="chatService.models"
-        />
-      </tui-textfield>
-    </label>
-  </div>
+  @if(appService.isMobile()) {
+    <button
+      class="header__new-chat"
+      (click)="newChat()"
+    >
+      <tui-icon icon="@tui.message-circle-plus" [style.font-size.rem]="1.25" />
+    </button>
+  }
 </header>
+
+<ng-template #dropdown>
+  <tui-data-list>
+    <button
+      *ngFor="let model of chatService.models"
+      tuiOption
+      type="button"
+      class="item gap-2"
+      (click)="onClick(model.id)"
+    >
+      {{ model.label }}
+      <tui-icon *ngIf="itemIsActive(model.id)" icon="@tui.check" [style.font-size.rem]="1" />
+    </button>
+  </tui-data-list>
+</ng-template>
+
