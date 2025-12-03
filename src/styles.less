@@ -8,13 +8,17 @@
 // variables
 :root {
   --header-height: var(--space-16);
+  
   --sidebar-desktop-max-width: 280px;
   --sidebar-mobile-max-width: 450px;
+
   --chat-max-width: 768px;
+
   --chat-input-height: 56px;
   --chat-input-wrapper-padding: var(--space-4);
   --chat-input-wrapper-height: calc(var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2);
   --chat-input-height: 56px;
+
   --chat-messages-gap: var(--space-6);
   --chat-messages-side-padding: var(--space-4);
   --chat-messages-inner-padding: var(--space-3);
@@ -46,16 +50,6 @@
   --tui-border-normal: rgba(200, 220, 255, 0.14);
   --tui-border-hover: rgba(200, 220, 255, 0.6);
   --tui-border-focus: rgba(200, 220, 255, 0.64);
-}
-
-[tuiTheme=dark] {
-  [tuiAppearance][data-appearance=textfield] {
-    background: var(--color-bg-subtle);
-
-    &:is(a, button, select, textarea, input, label, .tui-interactive):not(:disabled):hover:not(:disabled):not([data-state]) {
-      background: var(--color-bg-elevation);
-    }
-  }
 }
 
 .mobile {
