@@ -2,12 +2,9 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TuiDialogService, TuiIcon, TuiLoader, TuiScrollbar } from '@taiga-ui/core';
 import { ChatService } from '../../services/chat.service';
-import { ModelType } from '../../types/model-type';
-import { getModelLabelByKey } from '../../helpers/get-model-label-by-key';
-import { formatTimestamp } from '../../helpers/format-timestamp';
-import { ChatMessage } from '../../models/chat.model';
 import { TUI_CONFIRM, TuiConfirmData } from '@taiga-ui/kit';
 import { ChatState } from '../../types/chat-state';
+import { ModelLabelPipe } from '../../pipes/model-label.pipe';
 
 const TuiConfirmText: TuiConfirmData = {
   content: 'Это действие нельзя будет отменить',
@@ -18,7 +15,13 @@ const TuiConfirmText: TuiConfirmData = {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, TuiScrollbar, TuiIcon, TuiLoader],
+  imports: [
+    CommonModule,
+    TuiScrollbar,
+    TuiIcon,
+    TuiLoader,
+    ModelLabelPipe
+  ],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.less'],
 })
@@ -54,13 +57,5 @@ export class SidebarComponent {
       .subscribe((confirm) => {
         if (confirm) this.chatService.deleteAllChats()
       });
-  }
-
-  getModelLabelByKey(key: ModelType): string {
-    return getModelLabelByKey(key)
-  }
-
-  getLastMsgTime(messages: ChatMessage[]): string {
-    return formatTimestamp((messages.at(-1))?.timestamp || 0)
   }
 }

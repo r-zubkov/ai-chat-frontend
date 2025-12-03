@@ -22,7 +22,7 @@
             >
               @if (msg.role !== ChatMessageRole.USER) {
                 <div class="chat-message__header opacity-60 mb-3">
-                  AI • {{ getModelLabelByKey(msg.model) }}
+                  AI • {{ msg.model | modelLabel }}
                 </div>
               }
 

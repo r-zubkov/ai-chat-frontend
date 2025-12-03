@@ -24,7 +24,7 @@
                 {{ chat.title }}
               </div>
               <div class="sidebar-chat__model opacity-60">
-                {{ getLastMsgTime(chat.messages) }} • {{ getModelLabelByKey(chat.model) }}
+                {{ chat.lastUpdate | date:'dd.MM.yy HH:mm' }} • {{ chat.model | modelLabel }}
               </div>
             </div>
 

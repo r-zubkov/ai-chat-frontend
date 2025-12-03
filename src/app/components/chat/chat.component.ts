@@ -10,8 +10,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { getCssValue } from '../../helpers/get-css-value';
 import { remToPx } from '../../helpers/rem-to-px';
 import { ChatState } from '../../types/chat-state';
-import { ModelType } from '../../types/model-type';
-import { getModelLabelByKey } from '../../helpers/get-model-label-by-key';
+import { ModelLabelPipe } from '../../pipes/model-label.pipe';
 
 @Component({
   selector: 'app-chat',
@@ -20,7 +19,8 @@ import { getModelLabelByKey } from '../../helpers/get-model-label-by-key';
     MarkdownPipe,
     TuiScrollbar,
     TuiButton,
-    ChatInput
+    ChatInput,
+    ModelLabelPipe
   ],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.less'],
@@ -86,10 +86,6 @@ export class ChatComponent implements AfterViewInit {
     .at(-1);
 
     if (lastUserMsg) this.sendRequest(lastUserMsg.content);
-  }
-
-  getModelLabelByKey(key: ModelType): string {
-    return getModelLabelByKey(key)
   }
 
   private scrollToMessage(messageId: string, behavior: ScrollBehavior = 'smooth'): void {
