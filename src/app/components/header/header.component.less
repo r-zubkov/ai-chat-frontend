@@ -22,11 +22,13 @@
   color: #ffffff;
   transition: background 0.3s ease-in-out,
               box-shadow 0.3s ease-in-out;
+
+  &:hover, &:active, &:focus {
+    color: #ffffff !important;
+  }
                      
   &:hover {
-    color: #ffffff !important;
-    background: var(--color-bg-subtle);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+    background: var(--color-bg-button-hover);
   }
 
   &:after {
