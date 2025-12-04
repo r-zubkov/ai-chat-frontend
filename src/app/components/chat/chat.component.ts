@@ -77,7 +77,7 @@ export class ChatComponent implements AfterViewInit {
   }
 
   cancelRequest(): void {
-    this.chatService.stopCurrentRequest()
+    this.chatService.stopRequest(this.chatService.activeChat()?.currentRequestId || '')
   }
 
   retryLasRequest(): void {

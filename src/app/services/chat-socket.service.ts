@@ -122,8 +122,7 @@ export class ChatSocketService {
   }
 
   /**
-   * Явная отмена одного запроса (по кнопке "Стоп").
-   * Это НЕ ошибка, поэтому observer.complete().
+   * Явная отмена одного запроса
    */
   abortRequest(requestId: string): void {
     const observer = this.activeRequests.get(requestId);
@@ -135,7 +134,7 @@ export class ChatSocketService {
   }
 
   /**
-   * Отменить все активные запросы (глобальная кнопка "Stop All").
+   * Отменить все активные запросы
    */
   abortAllRequests(): void {
     for (const requestId of Array.from(this.activeRequests.keys())) {
@@ -144,8 +143,7 @@ export class ChatSocketService {
   }
 
   /**
-   * Явное завершение жизни сервиса (например, если когда-то
-   * решишь использовать его не как root-сервис).
+   * Явное завершение жизни сервиса
    */
   destroy(): void {
     this.abortAllRequests();

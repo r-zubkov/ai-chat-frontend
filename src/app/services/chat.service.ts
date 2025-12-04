@@ -60,8 +60,6 @@ export class ChatService {
     };
   });
 
-  private currentRequestId: string | null = null;
-
   private readonly saveSubject = new Subject<Chat[]>();
 
   constructor(
@@ -109,16 +107,25 @@ export class ChatService {
 
   loadChatsFromLocalStorage(): void {
     const loaded = this.storage.loadChats();
-    
-    // complete thinking state
-    loaded.forEach(chat => {if (chat.state === ChatState.THINKING) chat.state = ChatState.IDLE});
 
     // TODO: remove fallback later
     loaded.forEach(chat => {
       if (!('lastUpdate' in chat)) {
         (chat as any).lastUpdate = Date.now();
       }
+
+      if (!('currentRequestId' in chat)) {
+        (chat as any).currentRequestId = null;
+      }
     })
+    
+    // complete thinking state
+    loaded.forEach(chat => {
+      if (chat.state === ChatState.THINKING) {
+        chat.state = ChatState.IDLE;
+        chat.currentRequestId = null;
+      }
+    });
 
     this.chats.set(loaded);
   }
@@ -171,6 +178,7 @@ export class ChatService {
       state: ChatState.IDLE,
       model: this.currentModel() as ModelType,
       lastUpdate: Date.now(),
+      currentRequestId: null,
       messages: [],
     };
   }
@@ -215,6 +223,9 @@ export class ChatService {
       return; // ничего удалять
     }
 
+    const currentRequestId = chats[index]?.currentRequestId
+    if (currentRequestId) this.stopRequest(currentRequestId)
+
     chats.splice(index, 1);
     this.chats.set(chats);
     this.saveChats(chats);
@@ -226,7 +237,9 @@ export class ChatService {
   }
 
   deleteAllChats(): void {
-    this.chats.set([]);
+    this.stopAllRequests()
+
+    this.chats.set([]); 
     this.saveChats([]);
 
     this.navigateToChat(null)
@@ -269,20 +282,18 @@ export class ChatService {
 
     const messagesWithAssistant = [...messagesWithSystem, assistantMessage];
 
+    // Запускаем стрим по сокету
+    const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(currentModel, messagesWithSystem);
+
     let updatedChat: Chat = {
       ...chat,
       state: ChatState.THINKING,
+      currentRequestId: requestId,
       messages: messagesWithAssistant,
     };
 
     this.updateChat(updatedChat);
     onSend(userMessage);
-
-    // Запускаем стрим по сокету
-    const { requestId, stream$ } = this.chatSocketService
-      .sendChatCompletion(currentModel, messagesWithSystem);
-
-    this.currentRequestId = requestId;
 
     stream$.subscribe({
       next: (delta: string) => {
@@ -302,21 +313,19 @@ export class ChatService {
         this.updateChat(updatedChat);
       },
       error: (err: any) => {
-        this.currentRequestId = null;
-
         this.updateChat({
           ...updatedChat,
           state: ChatState.ERROR,
+          currentRequestId: null
         });
 
         onError(err);
       },
       complete: () => {
-        this.currentRequestId = null;
-
         this.updateChat({
           ...updatedChat,
           state: ChatState.IDLE,
+          currentRequestId: null
         });
 
         onFinish(assistantMessage);
@@ -324,9 +333,16 @@ export class ChatService {
     });
   }
 
-  stopCurrentRequest(): void {
-    if (this.currentRequestId) {
-      this.chatSocketService.abortRequest(this.currentRequestId);
-    }
+  stopRequest(requestId: string): void {
+    this.chatSocketService.abortRequest(requestId);
+  }
+
+  stopAllRequests(): void {
+    this.chatSocketService.abortAllRequests();
+  }
+
+  destroy(): void {
+    this.stopAllRequests()
+    this.chatSocketService.destroy()
   }
 }
