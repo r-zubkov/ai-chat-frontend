@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable, Observer } from 'rxjs';
 import { ChatMessage } from '../models/chat.model';
@@ -9,10 +9,13 @@ export class ChatSocketService {
   private socket: Socket | null = null;
 
   // все активные запросы на клиенте: requestId -> observer
-  private activeRequests = new Map<string, Observer<string>>();
+  private readonly activeRequests = new Map<string, Observer<string>>();
+
+  // состояние подключения для UI
+  readonly connected = signal(false);
 
   constructor() {
-    this.initSocket()
+    this.initSocket();
   }
 
   private initSocket(): void {
@@ -28,36 +31,57 @@ export class ChatSocketService {
 
     this.socket.on('connect', () => {
       console.log('[socket] connected', this.socket?.id);
+      this.connected.set(true);
     });
 
     this.socket.on('reconnect', (attempt) => {
       console.log('[socket] reconnected, attempt', attempt);
+      this.connected.set(true);
     });
 
     this.socket.on('disconnect', (reason) => {
       console.warn('[socket] disconnected:', reason);
+      this.connected.set(false);
 
-      // Если во время дисконнекта были активные запросы —
-      // считаем, что они упали с ошибкой (для ChatState.ERROR)
-      if (this.activeRequests.size > 0) {
-        for (const observer of this.activeRequests.values()) {
-          observer.error(new Error('Socket disconnected'));
-        }
-        this.activeRequests.clear();
-      } else {
-        // Просто лог, если запросов не было
-        console.log('[socket] disconnected with no active requests');
+      // Все активные запросы считаем упавшими
+      for (const observer of this.activeRequests.values()) {
+        observer.error(new Error('Socket disconnected'));
       }
+      this.activeRequests.clear();
     });
 
     this.socket.on('connect_error', (err) => {
       console.error('[socket] connect_error', err);
+      this.connected.set(false);
+    });
+
+    // --- Централизованные обработчики чатов ---
+
+    this.socket.on('chat:chunk', (data: ChatChunkPayload) => {
+      const observer = this.activeRequests.get(data.requestId);
+      observer?.next(data.delta);
+    });
+
+    this.socket.on('chat:done', (data: ChatDonePayload) => {
+      const observer = this.activeRequests.get(data.requestId);
+      if (!observer) return;
+
+      this.activeRequests.delete(data.requestId);
+      observer.complete();
+    });
+
+    this.socket.on('chat:error', (data: ChatErrorPayload) => {
+      const observer = this.activeRequests.get(data.requestId);
+      if (!observer) return;
+
+      this.activeRequests.delete(data.requestId);
+      observer.error(new Error(data.error));
     });
   }
 
   /**
    * Стримит ответ от модели.
-   * Возвращаем и requestId, и Observable, чтобы можно было отменять по ID.
+   * Возвращаем requestId + Observable, чтобы можно было отменять по ID.
    */
   sendChatCompletion(
     model: string,
@@ -66,48 +90,31 @@ export class ChatSocketService {
     const requestId = crypto.randomUUID();
 
     const stream$ = new Observable<string>((observer) => {
-      // сохраняем observer, чтобы при disconnect/abort можно было его дёрнуть
+      // Если сокет не подключён — сразу фейлим observable
+      if (!this.socket || !this.socket.connected) {
+        observer.error(new Error('Socket is not connected'));
+        return;
+      }
+
+      // Регистрируем активный запрос
       this.activeRequests.set(requestId, observer);
 
-      const onChunk = (data: { requestId: string; delta: string }) => {
-        if (data.requestId !== requestId) return;
-        observer.next(data.delta);
-      };
-
-      const onDone = (data: { requestId: string; aborted?: boolean }) => {
-        if (data.requestId !== requestId) return;
-        cleanup();
-        observer.complete();
-      };
-
-      const onError = (data: { requestId: string; error: string }) => {
-        if (data.requestId !== requestId) return;
-        cleanup();
-        observer.error(new Error(data.error));
-      };
-
-      const cleanup = () => {
-        this.socket?.off('chat:chunk', onChunk);
-        this.socket?.off('chat:done', onDone);
-        this.socket?.off('chat:error', onError);
-        this.activeRequests.delete(requestId);
-      };
-
-      this.socket?.on('chat:chunk', onChunk);
-      this.socket?.on('chat:done', onDone);
-      this.socket?.on('chat:error', onError);
-
-      this.socket?.emit('chat:request', {
+      // Отправляем запрос на сервер
+      this.socket.emit('chat:request', {
         requestId,
         model,
         messages,
       });
 
-      // teardown — если отписались вручную от Observable
+      // teardown — если отписались вручную
       return () => {
-        cleanup();
-        // чтобы не висел на сервере, шлём abort
-        this.socket?.emit('chat:abort', { requestId });
+        const current = this.activeRequests.get(requestId);
+
+        // Отменяем только если этот observer ещё актуален
+        if (current === observer) {
+          this.activeRequests.delete(requestId);
+          this.socket?.emit('chat:abort', { requestId });
+        }
       };
     });
 
@@ -115,7 +122,7 @@ export class ChatSocketService {
   }
 
   /**
-   * Явная отмена одного запроса (по кнопке "Стоп", например).
+   * Явная отмена одного запроса (по кнопке "Стоп").
    * Это НЕ ошибка, поэтому observer.complete().
    */
   abortRequest(requestId: string): void {
@@ -128,13 +135,22 @@ export class ChatSocketService {
   }
 
   /**
-   * Отменить все активные запросы (если хочешь "global stop").
+   * Отменить все активные запросы (глобальная кнопка "Stop All").
    */
   abortAllRequests(): void {
-    for (const [requestId, observer] of this.activeRequests.entries()) {
-      this.socket?.emit('chat:abort', { requestId });
-      observer.complete();
+    for (const requestId of Array.from(this.activeRequests.keys())) {
+      this.abortRequest(requestId);
     }
-    this.activeRequests.clear();
+  }
+
+  /**
+   * Явное завершение жизни сервиса (например, если когда-то
+   * решишь использовать его не как root-сервис).
+   */
+  destroy(): void {
+    this.abortAllRequests();
+    this.socket?.disconnect();
+    this.socket = null;
+    this.connected.set(false);
   }
 }
