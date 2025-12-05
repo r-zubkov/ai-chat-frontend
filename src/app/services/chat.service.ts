@@ -9,6 +9,8 @@ import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
 
+const API_HISTORY_LIMIT = 6;
+
 const MODEL_BASE_SYSTEM_PROMT = `
   Стиль:
   - Короткие абзацы, буллет-пойнты.
@@ -79,26 +81,34 @@ export class ChatService {
       .subscribe((chats) => this.saveChats(chats));
   }
 
-  private applySystemPrompt(model: string, messages: ChatMessage[]): ChatMessage[] {
+  private applySystemPrompt(model: ModelType, messages: ChatMessage[]): ChatMessage[] {
     const systemPrompt = this.modelSystemPrompts[model];
-    if (!systemPrompt) {
-      return messages;
-    }
-
-    const [first, ...rest] = messages;
-    if (first?.role === 'system') {
-      return messages; // Если уже есть системное сообщение
-    }
+    if (!systemPrompt) return messages;
 
     const systemMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: ChatMessageRole.SYSTEM,
       content: systemPrompt,
-      model: this.currentModel() as ModelType,
+      model: model,
       timestamp: Date.now(),
     };
 
     return [systemMessage, ...messages];
+  }
+
+  private buildApiMessages(
+    chat: Chat,
+    userMessage: ChatMessage,
+    model: ModelType,
+  ): ChatMessage[] {
+    // Берём хвост N сообщений (хронологический порядок сохраняется)
+    const historyTail = chat.messages.slice(-API_HISTORY_LIMIT);
+
+    // Добавляем текущий userMessage в конец
+    const historyWithLastUserMsg = [...historyTail, userMessage];
+
+    // добавить SYSTEM в начало, не мутируя исходный массив
+    return this.applySystemPrompt(model, historyWithLastUserMsg);
   }
 
   private saveChats(chats: Chat[]): void {
@@ -266,11 +276,8 @@ export class ChatService {
       timestamp: Date.now(),
     };
 
-    const messagesWithUser = [...chat.messages, userMessage];
-    const messagesWithSystem = this.applySystemPrompt(
-      this.currentModel(),
-      messagesWithUser,
-    );
+    // База для UI-истории (БЕЗ system)
+    const baseMessages = [...chat.messages, userMessage];
 
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -280,16 +287,19 @@ export class ChatService {
       timestamp: Date.now(),
     };
 
-    const messagesWithAssistant = [...messagesWithSystem, assistantMessage];
+    const messagesWithAssistant = [...baseMessages, assistantMessage];
+
+    // --- ТОЛЬКО для API: system + хвост истории + текущий userMessage
+    const apiMessages = this.buildApiMessages(chat, userMessage, currentModel);
 
     // Запускаем стрим по сокету
-    const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(currentModel, messagesWithSystem);
+    const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(currentModel, apiMessages);
 
     let updatedChat: Chat = {
       ...chat,
       state: ChatState.THINKING,
       currentRequestId: requestId,
-      messages: messagesWithAssistant,
+      messages: messagesWithAssistant, // без SYSTEM
     };
 
     this.updateChat(updatedChat);
@@ -302,7 +312,7 @@ export class ChatService {
         updatedChat = {
           ...updatedChat,
           messages: [
-            ...messagesWithSystem,
+            ...baseMessages,
             {
               ...assistantMessage,
               content: assistantMessage.content,
@@ -316,7 +326,7 @@ export class ChatService {
         this.updateChat({
           ...updatedChat,
           state: ChatState.ERROR,
-          currentRequestId: null
+          currentRequestId: null,
         });
 
         onError(err);
@@ -325,7 +335,7 @@ export class ChatService {
         this.updateChat({
           ...updatedChat,
           state: ChatState.IDLE,
-          currentRequestId: null
+          currentRequestId: null,
         });
 
         onFinish(assistantMessage);
