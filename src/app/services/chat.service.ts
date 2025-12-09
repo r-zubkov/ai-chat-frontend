@@ -174,17 +174,10 @@ export class ChatService {
     }
   }
 
-  private createChat(name: string | null = null): Chat {
-    const now = new Date();
-    const pad = (n: number) => n.toString().padStart(2, '0');
-
-    const generatedTitle = `${pad(now.getDate())}-${pad(
-      now.getMonth() + 1,
-    )}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-
+  private createChat(name: string): Chat {
     return {
       id: crypto.randomUUID(),
-      title: name || generatedTitle,
+      title: name,
       state: ChatState.IDLE,
       model: this.currentModel() as ModelType,
       lastUpdate: Date.now(),
