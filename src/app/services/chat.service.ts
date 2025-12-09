@@ -21,7 +21,7 @@ const MODEL_BASE_SYSTEM_PROMT = `
   - Если задачу можно сделать по шагам — пронумеруй шаги.
 `;
 
-export const ModelLabelMap = {
+export const ModelLabelMap: Record<ModelType, string> = {
   [ModelType.GPT5]: 'GPT 5',
   [ModelType.GPT5_MINI]: 'GPT 5 mini',
   [ModelType.GROK_4_FAST]: 'Grok 4 Fast',
@@ -30,13 +30,13 @@ export const ModelLabelMap = {
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
-  readonly modelSystemPrompts: Record<string, string> = {
+  readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
     [ModelType.GPT5]: MODEL_BASE_SYSTEM_PROMT,
     [ModelType.GPT5_MINI]: MODEL_BASE_SYSTEM_PROMT,
     [ModelType.GEMINI_25_FLASH]: MODEL_BASE_SYSTEM_PROMT,
   };
 
-  readonly models = [
+  readonly models: Array<{ id: ModelType; label: string }> = [
     { id: ModelType.GPT5, label: ModelLabelMap[ModelType.GPT5] },
     { id: ModelType.GPT5_MINI, label: ModelLabelMap[ModelType.GPT5_MINI] },
     { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST] },
