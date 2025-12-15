@@ -8,6 +8,7 @@ import { ChatSocketService } from './chat-socket.service';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
+import { truncateAtWord } from '../helpers/text-utils';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -177,7 +178,7 @@ export class ChatService {
   private createChat(name: string): Chat {
     return {
       id: crypto.randomUUID(),
-      title: name,
+      title: truncateAtWord(name, 100, null),
       state: ChatState.IDLE,
       model: this.currentModel() as ModelType,
       lastUpdate: Date.now(),

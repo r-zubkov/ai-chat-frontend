@@ -57,11 +57,11 @@ export class ChatComponent implements AfterViewInit {
       .subscribe();
   }
 
-  get hasMessages(): boolean {
+  protected get hasMessages(): boolean {
     return !!this.chatService.activeChat()?.messages?.length;
   }
 
-  sendRequest(text: string): void {
+  protected sendRequest(text: string): void {
     this.chatService.sendMessage(
       text,
       (msg) => {
@@ -76,11 +76,11 @@ export class ChatComponent implements AfterViewInit {
     )
   }
 
-  cancelRequest(): void {
+  protected cancelRequest(): void {
     this.chatService.stopRequest(this.chatService.activeChat()?.currentRequestId || '')
   }
 
-  retryLasRequest(): void {
+  protected retryLasRequest(): void {
     const lastUserMsg = this.chatService.activeChat()?.messages
     .filter(msg => msg.role === ChatMessageRole.USER)
     .at(-1);

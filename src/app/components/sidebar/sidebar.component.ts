@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TuiDialogService, TuiIcon, TuiLoader, TuiScrollbar } from '@taiga-ui/core';
 import { ChatService } from '../../services/chat.service';
 import { TUI_CONFIRM, TuiConfirmData } from '@taiga-ui/kit';
 import { ChatState } from '../../types/chat-state';
 import { ModelLabelPipe } from '../../pipes/model-label.pipe';
+import { Chat } from '../../models/chat.model';
 
 const TuiConfirmText: TuiConfirmData = {
   content: 'Это действие нельзя будет отменить',
@@ -27,21 +28,24 @@ const TuiConfirmText: TuiConfirmData = {
 })
 export class SidebarComponent {
   protected readonly ChatState = ChatState;
+
+  private readonly selectedChatId = signal<string | null>(null);
+  private readonly selectedChat = computed<Chat | null>(() => this.chatService.chats().find((chat) => chat.id === this.selectedChatId()) || null);
   
   constructor(
     public readonly chatService: ChatService,
     private readonly dialogService: TuiDialogService
   ) {}
 
-  createNewChat(): void  {
+  protected createNewChat(): void  {
     this.chatService.navigateToChat(null)
   }
 
-  openChat(chatId: string): void {
+  protected openChat(chatId: string): void {
     this.chatService.navigateToChat(chatId)
   }
 
-  deleteChat(event: MouseEvent, chatId: string): void {
+  protected deleteChat(event: MouseEvent, chatId: string): void {
     event.stopPropagation();
 
     this.dialogService
@@ -51,7 +55,7 @@ export class SidebarComponent {
       });
   }
 
-  openClearConfirmationModal(): void {
+  protected openClearConfirmationModal(): void {
     this.dialogService
       .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Очистить историю?', data: TuiConfirmText})
       .subscribe((confirm) => {
