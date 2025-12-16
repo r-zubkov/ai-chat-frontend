@@ -85,6 +85,9 @@
     display: block;
   }
 }
+.sidebar-chat__action.dropdown-open {
+  display: block;
+}
 
 :host-context(.mobile) .sidebar-chat .sidebar-chat__action {
   display: block;
@@ -92,4 +95,8 @@
 
 .sidebar-chat__model {
   font-size: var(--text-xs);
+}
+
+tui-data-list button {
+  justify-content: flex-start;
 }

@@ -28,8 +28,43 @@
               </div>
             </div>
 
-            <button class="sidebar-chat__action" type="button" (click)="deleteChat($event, chat.id)">
-              <tui-icon icon="@tui.trash-2" [style.font-size.rem]="1" />
+            <button
+              class="sidebar-chat__action"
+              type="button"
+              [class.dropdown-open]="isItemOptionsDropdownOpen(chat.id)"
+              tuiActiveZone
+              tuiDropdownAlign="right"
+              [tuiDropdownSided]="true"
+              [tuiDropdown]="dropdownItemOptionsContent"
+              [tuiDropdownManual]="isItemOptionsDropdownOpen(chat.id)"
+              [tuiObscuredEnabled]="isItemOptionsDropdownOpen(chat.id)"
+              (click)="handleOpenItemOptionsDropdown($event, chat.id)"
+              (tuiActiveZoneChange)="onActiveZone($event)"
+              (tuiObscured)="onObscured($event)"
+            >
+              <tui-icon icon="@tui.ellipsis-vertical" [style.font-size.rem]="1" />
+
+              <ng-template #dropdownItemOptionsContent>
+                <tui-data-list>
+                  <!-- <button
+                    tuiOption
+                    type="button"
+                    (click)="handleRenameChat(chat.id)"
+                  >
+                    <tui-icon icon="@tui.pencil" [style.font-size.rem]="1" />
+                    <span class="ml-2">Переименовать</span>
+                  </button> -->
+                  <button
+                    class="tui-text-danger"
+                    tuiOption
+                    type="button"
+                    (click)="handleDeleteChat(chat.id)"
+                  >
+                    <tui-icon icon="@tui.trash-2" [style.font-size.rem]="1" />
+                    <span class="ml-2">Удалить</span>
+                  </button>
+                </tui-data-list>
+              </ng-template>
             </button>
           </div>
         }
@@ -41,7 +76,7 @@
       <button
         type="button"
         class="sidebar-list__btn sidebar-action-btn"
-        (click)="openClearConfirmationModal()"
+        (click)="handleOpenClearConfirmationModal()"
       >
         <tui-icon icon="@tui.brush-cleaning" [style.font-size.rem]="1" />
         <span>Очистить историю</span>
