@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {TuiAutoFocus} from '@taiga-ui/cdk';
 import { TuiButton, TuiDialogContext, TuiTextfield } from '@taiga-ui/core';
