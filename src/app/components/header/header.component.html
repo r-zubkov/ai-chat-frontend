@@ -5,7 +5,7 @@
       aria-label="Меню"
       [class.open]="appService.sidebarOpen()"
       (click)="toggleMenu()"
-    >
+      >
       <span></span>
     </button>
   }
@@ -36,7 +36,7 @@
     <button
       class="header__new-chat"
       (click)="newChat()"
-    >
+      >
       <tui-icon icon="@tui.message-circle-plus" [style.font-size.rem]="1.25" />
     </button>
   }
@@ -44,16 +44,19 @@
 
 <ng-template #dropdown>
   <tui-data-list>
-    <button
-      *ngFor="let model of chatService.models"
-      tuiOption
-      type="button"
-      class="item gap-2"
-      (click)="onClick(model.id)"
-    >
-      {{ model.label }}
-      <tui-icon *ngIf="itemIsActive(model.id)" icon="@tui.check" [style.font-size.rem]="1" />
-    </button>
+    @for (model of chatService.models; track model) {
+      <button
+        tuiOption
+        type="button"
+        class="item gap-2"
+        (click)="onClick(model.id)"
+        >
+        {{ model.label }}
+        @if (itemIsActive(model.id)) {
+          <tui-icon icon="@tui.check" [style.font-size.rem]="1" />
+        }
+      </button>
+    }
   </tui-data-list>
 </ng-template>
 

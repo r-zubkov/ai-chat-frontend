@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
@@ -15,13 +14,12 @@ import { ModelLabelPipe } from '../../pipes/model-label.pipe';
 @Component({
   selector: 'app-chat',
   imports: [
-    CommonModule,
     MarkdownPipe,
     TuiScrollbar,
     TuiButton,
     ChatInput,
     ModelLabelPipe
-  ],
+],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.less'],
 })

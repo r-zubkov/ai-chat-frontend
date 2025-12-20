@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl, FormsModule } from '@angular/forms';
 import { TuiSelect, TuiDataListWrapper, TuiChevron } from '@taiga-ui/kit';
 import { TuiTextfield, TuiIcon, TuiDropdown, TuiDataList, TuiLink } from '@taiga-ui/core';
@@ -12,7 +11,6 @@ import { AppService } from '../../services/app.service';
 @Component({
   selector: 'app-header',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     FormsModule,
     TuiChevron,
@@ -22,8 +20,8 @@ import { AppService } from '../../services/app.service';
     TuiSelect,
     TuiTextfield,
     TuiDropdown,
-    TuiDataList,
-  ],
+    TuiDataList
+],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.less'],
 })
