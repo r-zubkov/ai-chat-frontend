@@ -1,0 +1,27 @@
+<form tuiForm>
+  <tui-textfield>
+    <label tuiLabel>Your name</label>
+    <input
+      name="name"
+      tuiAutoFocus
+      tuiTextfield
+      [(ngModel)]="value"
+    />
+  </tui-textfield>
+  <footer>
+    <button
+      appearance="secondary"
+      tuiButton
+      type="button"
+      (click)="context.$implicit.complete()"
+    >
+      Cancel
+    </button>
+    <button
+      tuiButton
+      type="submit"
+    >
+      Submit
+    </button>
+  </footer>
+</form>

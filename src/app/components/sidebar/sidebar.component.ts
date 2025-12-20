@@ -1,18 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TuiDataList, TuiDialogService, TuiDropdown, TuiIcon, TuiLoader, TuiScrollbar } from '@taiga-ui/core';
 import { ChatService } from '../../services/chat.service';
 import { TUI_CONFIRM, TuiConfirmData } from '@taiga-ui/kit';
+import {PolymorpheusComponent} from '@taiga-ui/polymorpheus';
 import { ChatState } from '../../types/chat-state';
 import { ModelLabelPipe } from '../../pipes/model-label.pipe';
 import { TuiObscured } from '@taiga-ui/cdk/directives/obscured';
 import { TuiActiveZone } from '@taiga-ui/cdk/directives/active-zone';
+import { ChangeChatNameModal } from '../change-chat-name-modal/change-chat-name-modal';
 
 const TuiConfirmText: TuiConfirmData = {
   content: 'Это действие нельзя будет отменить',
   yes: 'Да',
   no: 'Нет',
 };
+
 
 @Component({
   selector: 'app-sidebar',
@@ -33,6 +36,8 @@ const TuiConfirmText: TuiConfirmData = {
 })
 export class SidebarComponent {
   private readonly openItems = new Set<string | number>();
+
+  private readonly dialogs = inject(TuiDialogService);
 
   protected readonly ChatState = ChatState;
 
@@ -67,9 +72,20 @@ export class SidebarComponent {
 
   protected handleRenameChat(chatId: string): void {
     this.hideItemOptionsDropdown()
+
+    this.dialogs
+        .open<string>(new PolymorpheusComponent(ChangeChatNameModal), {
+            label: 'Переимновать чат',
+            size: 's',
+            data: 'Alex Inkin',
+        })
+        .pipe()
+        .subscribe((next: any) => {
+          console.log(next)
+        });
   }
 
-  protected  handleOpenClearConfirmationModal(): void {
+  protected handleOpenClearConfirmationModal(): void {
     this.dialogService
       .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Очистить историю?', data: TuiConfirmText})
       .subscribe((confirm) => {
