@@ -219,6 +219,30 @@ export class ChatService {
     this.saveSubject.next(chats);
   }
 
+  updateChatTitle(chatId: string, title: string): void {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+
+    const chats = this.chats();
+    const index = chats.findIndex(c => c.id === chatId);
+    if (index === -1) return;
+
+    const chat = chats[index];
+    if (chat.title === trimmed) return; // ничего не менялось
+
+    const updatedChat: Chat = {
+      ...chat,
+      title: trimmed,
+    };
+
+    const nextChats = [...chats];
+    nextChats[index] = updatedChat;
+
+    this.chats.set(nextChats);
+    
+    this.saveSubject.next(nextChats);
+  }
+
   deleteChat(chatId: string): void {
     const chats = [...this.chats()];
     const index = chats.findIndex(c => c.id === chatId);

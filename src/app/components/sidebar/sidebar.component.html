@@ -49,7 +49,7 @@
                   <button
                     tuiOption
                     type="button"
-                    (click)="handleRenameChat(chat.id)"
+                    (click)="handleRenameChat(chat)"
                   >
                     <tui-icon icon="@tui.pencil" [style.font-size.rem]="1" />
                     <span class="ml-2">Переименовать</span>
@@ -58,7 +58,7 @@
                     class="tui-text-danger"
                     tuiOption
                     type="button"
-                    (click)="handleDeleteChat(chat.id)"
+                    (click)="handleDeleteChat(chat)"
                   >
                     <tui-icon icon="@tui.trash-2" [style.font-size.rem]="1" />
                     <span class="ml-2">Удалить</span>
