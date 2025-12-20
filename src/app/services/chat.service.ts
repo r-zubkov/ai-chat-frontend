@@ -201,7 +201,7 @@ export class ChatService {
     } else {
       chats[index] = updatedChat;
 
-      // Если чет не сверху — переносим
+      // Если чат не сверху — переносим
       if (index !== 0) {
         chats.splice(index, 1); // удалить
         chats.unshift(updatedChat); // перенести в начало
@@ -239,8 +239,65 @@ export class ChatService {
     nextChats[index] = updatedChat;
 
     this.chats.set(nextChats);
-    
     this.saveSubject.next(nextChats);
+  }
+
+  updateMessageContent(
+    chatId: string,
+    messageId: string,
+    content: string,
+  ): void {
+    const chats = this.chats();
+    const chatIndex = chats.findIndex(c => c.id === chatId);
+    if (chatIndex === -1) return;
+
+    const chat = chats[chatIndex];
+    const messageIndex = chat.messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) return;
+
+    const message = chat.messages[messageIndex];
+    if (message.content === content) return; // ничего не изменилось
+
+    const updatedMessage = {
+      ...message,
+      content,
+    };
+
+    const updatedMessages = [...chat.messages];
+    updatedMessages[messageIndex] = updatedMessage;
+
+    const updatedChat = {
+      ...chat,
+      lastUpdate: Date.now(),
+      messages: updatedMessages,
+    };
+
+    const nextChats = [...chats];
+    nextChats[chatIndex] = updatedChat;
+
+    this.chats.set(nextChats);
+    this.saveSubject.next(nextChats);
+  }
+
+  private updateChatRequestState(
+    chatId: string,
+    state: ChatState,
+    requestId: string | null
+  ): void {
+    const chats = [...this.chats()];
+    const idx = chats.findIndex(c => c.id === chatId);
+    if (idx === -1) return;
+
+    const chat = chats[idx];
+    chats[idx] = {
+      ...chat,
+      lastUpdate: Date.now(),
+      state,
+      currentRequestId: requestId,
+    };
+
+    this.chats.set(chats);
+    this.saveSubject.next(chats);
   }
 
   deleteChat(chatId: string): void {
@@ -280,11 +337,12 @@ export class ChatService {
     onError: (err: any) => void,
   ): void {
     const trimmed = text.trim();
-    if (!trimmed || !this.currentModel()) return;
+    const model = this.currentModel();
+    if (!trimmed || !model) return;
 
-    const currentModel = this.currentModel() as ModelType;
+    const currentModel = model as ModelType;
 
-    const chat: Chat = this.activeChat() ?? this.createChat(trimmed);
+    const chat = this.activeChat() ?? this.createChat(trimmed);
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -294,9 +352,6 @@ export class ChatService {
       timestamp: Date.now(),
     };
 
-    // База для UI-истории (БЕЗ system)
-    const baseMessages = [...chat.messages, userMessage];
-
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: ChatMessageRole.ASSISTANT,
@@ -305,58 +360,44 @@ export class ChatService {
       timestamp: Date.now(),
     };
 
-    const messagesWithAssistant = [...baseMessages, assistantMessage];
-
-    // --- ТОЛЬКО для API: system + хвост истории + текущий userMessage
-    const apiMessages = this.buildApiMessages(chat, userMessage, currentModel);
-
-    // Запускаем стрим по сокету
-    const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(currentModel, apiMessages);
-
-    let updatedChat: Chat = {
+    // кладём user + assistant (пустой) и ставим THINKING
+    this.updateChat({
       ...chat,
       state: ChatState.THINKING,
-      currentRequestId: requestId,
-      messages: messagesWithAssistant, // без SYSTEM
-    };
+      currentRequestId: null, // пока не знаем requestId
+      messages: [...chat.messages, userMessage, assistantMessage],
+    });
 
-    this.updateChat(updatedChat);
     onSend(userMessage);
+
+    // system + хвост истории + текущий userMessage
+    const apiMessages = this.buildApiMessages(chat, userMessage, currentModel);
+
+    const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(currentModel, apiMessages);
+
+    // ставим requestId
+    this.updateChatRequestState(chat.id, ChatState.THINKING, requestId);
+
+    let content = '';
 
     stream$.subscribe({
       next: (delta: string) => {
-        assistantMessage.content += delta;
-
-        updatedChat = {
-          ...updatedChat,
-          messages: [
-            ...baseMessages,
-            {
-              ...assistantMessage,
-              content: assistantMessage.content,
-            },
-          ],
-        };
-
-        this.updateChat(updatedChat);
+        content += delta;
+        this.updateMessageContent(chat.id, assistantMessage.id, content)
       },
       error: (err: any) => {
-        this.updateChat({
-          ...updatedChat,
-          state: ChatState.ERROR,
-          currentRequestId: null,
-        });
+        // финальный флеш, чтобы не потерять хвост
+        this.updateMessageContent(chat.id, assistantMessage.id, content);
+        this.updateChatRequestState(chat.id, ChatState.ERROR, null);
 
         onError(err);
       },
       complete: () => {
-        this.updateChat({
-          ...updatedChat,
-          state: ChatState.IDLE,
-          currentRequestId: null,
-        });
+        // финальный флеш
+        this.updateMessageContent(chat.id, assistantMessage.id, content);
+        this.updateChatRequestState(chat.id, ChatState.IDLE, null);
 
-        onFinish(assistantMessage);
+        onFinish({ ...assistantMessage, content });
       },
     });
   }
