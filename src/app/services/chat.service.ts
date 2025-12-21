@@ -1,5 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { Chat, ChatMessage } from '../models/chat.model';
+import { Chat, ChatMessage, ChatMessageMeta } from '../models/chat.model';
 import { ModelType } from '../types/model-type';
 import { ChatMessageRole } from '../types/chat-message-role';
 import { StorageService } from './storage.service';
@@ -9,6 +9,7 @@ import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
+import { buildTextHash } from '../helpers/hash';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -300,6 +301,52 @@ export class ChatService {
     this.saveSubject.next(chats);
   }
 
+  private buildMessageMeta(content: string, role: ChatMessageRole, model: ModelType): ChatMessageMeta {
+    const length = content.length;
+    const hash = buildTextHash(`${role}|${model}|${content}`);
+
+    return { length, hash }
+  }
+
+  private buildMessageMetaFromMessage(message: ChatMessage): ChatMessageMeta {
+    return this.buildMessageMeta(message.content ?? '', message.role, message.model)
+  }
+
+  private addMessageMeta(chatId: string, messageId: string): void {
+    const chats = this.chats();
+    const chatIndex = chats.findIndex(c => c.id === chatId);
+    if (chatIndex === -1) return;
+
+    const chat = chats[chatIndex];
+    const messageIndex = chat.messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) return;
+
+    const message = chat.messages[messageIndex];
+
+    if (message.meta) return;
+
+    const { length, hash } = this.buildMessageMetaFromMessage(message)
+
+    const updatedMessage: ChatMessage = {
+      ...message,
+      meta: { length, hash },
+    };
+
+    const updatedMessages = [...chat.messages];
+    updatedMessages[messageIndex] = updatedMessage;
+
+    const updatedChat: Chat = {
+      ...chat,
+      messages: updatedMessages,
+    };
+
+    const nextChats = [...chats];
+    nextChats[chatIndex] = updatedChat;
+
+    this.chats.set(nextChats);
+    this.saveSubject.next(nextChats);
+  }
+
   deleteChat(chatId: string): void {
     const chats = [...this.chats()];
     const index = chats.findIndex(c => c.id === chatId);
@@ -349,6 +396,7 @@ export class ChatService {
       role: ChatMessageRole.USER,
       model: currentModel,
       content: trimmed,
+      meta: this.buildMessageMeta(trimmed, ChatMessageRole.USER, currentModel),
       timestamp: Date.now(),
     };
 
@@ -388,6 +436,7 @@ export class ChatService {
       error: (err: any) => {
         // финальный флеш, чтобы не потерять хвост
         this.updateMessageContent(chat.id, assistantMessage.id, content);
+        this.addMessageMeta(chat.id, assistantMessage.id);
         this.updateChatRequestState(chat.id, ChatState.ERROR, null);
 
         onError(err);
@@ -395,6 +444,7 @@ export class ChatService {
       complete: () => {
         // финальный флеш
         this.updateMessageContent(chat.id, assistantMessage.id, content);
+        this.addMessageMeta(chat.id, assistantMessage.id);
         this.updateChatRequestState(chat.id, ChatState.IDLE, null);
 
         onFinish({ ...assistantMessage, content });

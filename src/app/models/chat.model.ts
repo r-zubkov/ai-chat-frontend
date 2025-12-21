@@ -8,6 +8,12 @@ export interface ChatMessage {
   model: ModelType;
   content: string;
   timestamp: number;
+  meta?: ChatMessageMeta
+}
+
+export interface ChatMessageMeta {
+  length: number;
+  hash: string
 }
 
 export interface Chat {
