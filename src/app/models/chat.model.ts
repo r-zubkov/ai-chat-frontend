@@ -13,7 +13,6 @@ export interface ChatMessage {
 
 export interface ChatMessageMeta {
   length: number;
-  hash: string
 }
 
 export interface Chat {

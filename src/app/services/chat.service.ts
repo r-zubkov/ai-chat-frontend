@@ -9,7 +9,6 @@ import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
-import { buildTextHash } from '../helpers/hash';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -301,15 +300,14 @@ export class ChatService {
     this.saveSubject.next(chats);
   }
 
-  private buildMessageMeta(content: string, role: ChatMessageRole, model: ModelType): ChatMessageMeta {
+  private buildMessageMeta(content: string): ChatMessageMeta {
     const length = content.length;
-    const hash = buildTextHash(`${role}|${model}|${content}`);
 
-    return { length, hash }
+    return { length }
   }
 
   private buildMessageMetaFromMessage(message: ChatMessage): ChatMessageMeta {
-    return this.buildMessageMeta(message.content ?? '', message.role, message.model)
+    return this.buildMessageMeta(message.content ?? '')
   }
 
   private addMessageMeta(chatId: string, messageId: string): void {
@@ -325,11 +323,11 @@ export class ChatService {
 
     if (message.meta) return;
 
-    const { length, hash } = this.buildMessageMetaFromMessage(message)
+    const { length } = this.buildMessageMetaFromMessage(message)
 
     const updatedMessage: ChatMessage = {
       ...message,
-      meta: { length, hash },
+      meta: { length },
     };
 
     const updatedMessages = [...chat.messages];
@@ -396,7 +394,7 @@ export class ChatService {
       role: ChatMessageRole.USER,
       model: currentModel,
       content: trimmed,
-      meta: this.buildMessageMeta(trimmed, ChatMessageRole.USER, currentModel),
+      meta: this.buildMessageMeta(trimmed),
       timestamp: Date.now(),
     };
 
