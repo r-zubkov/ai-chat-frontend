@@ -26,16 +26,16 @@ const MODEL_BASE_SYSTEM_PROMT = `
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
-    [ModelType.GPT_5]: MODEL_BASE_SYSTEM_PROMT,
+    [ModelType.GPT_51]: MODEL_BASE_SYSTEM_PROMT,
     [ModelType.GPT_5_MINI]: MODEL_BASE_SYSTEM_PROMT,
-    [ModelType.GEMINI_25_FLASH]: MODEL_BASE_SYSTEM_PROMT,
+    [ModelType.GEMINI_3_FLASH_PREVIEW]: MODEL_BASE_SYSTEM_PROMT,
   };
 
   readonly models: Array<{ id: ModelType; label: string }> = [
-    { id: ModelType.GPT_5, label: ModelLabelMap[ModelType.GPT_5]! },
+    { id: ModelType.GPT_51, label: ModelLabelMap[ModelType.GPT_51]! },
     { id: ModelType.GPT_5_MINI, label: ModelLabelMap[ModelType.GPT_5_MINI]! },
     { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
-    { id: ModelType.GEMINI_25_FLASH, label: ModelLabelMap[ModelType.GEMINI_25_FLASH]! }
+    { id: ModelType.GEMINI_3_FLASH_PREVIEW, label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]! }
   ];
 
   private globalCurrentModel = signal<ModelType>(ModelType.GROK_4_FAST);
