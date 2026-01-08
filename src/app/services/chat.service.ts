@@ -9,6 +9,7 @@ import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
+import { ModelLabelMap } from '../maps/model-label.map';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -22,26 +23,19 @@ const MODEL_BASE_SYSTEM_PROMT = `
   - Если задачу можно сделать по шагам — пронумеруй шаги.
 `;
 
-export const ModelLabelMap: Record<ModelType, string> = {
-  [ModelType.GPT5]: 'GPT 5',
-  [ModelType.GPT5_MINI]: 'GPT 5 mini',
-  [ModelType.GROK_4_FAST]: 'Grok 4 Fast',
-  [ModelType.GEMINI_25_FLASH]: 'Gemini 2.5 Flash',
-} 
-
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
-    [ModelType.GPT5]: MODEL_BASE_SYSTEM_PROMT,
-    [ModelType.GPT5_MINI]: MODEL_BASE_SYSTEM_PROMT,
+    [ModelType.GPT_5]: MODEL_BASE_SYSTEM_PROMT,
+    [ModelType.GPT_5_MINI]: MODEL_BASE_SYSTEM_PROMT,
     [ModelType.GEMINI_25_FLASH]: MODEL_BASE_SYSTEM_PROMT,
   };
 
   readonly models: Array<{ id: ModelType; label: string }> = [
-    { id: ModelType.GPT5, label: ModelLabelMap[ModelType.GPT5] },
-    { id: ModelType.GPT5_MINI, label: ModelLabelMap[ModelType.GPT5_MINI] },
-    { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST] },
-    { id: ModelType.GEMINI_25_FLASH, label: ModelLabelMap[ModelType.GEMINI_25_FLASH] }
+    { id: ModelType.GPT_5, label: ModelLabelMap[ModelType.GPT_5]! },
+    { id: ModelType.GPT_5_MINI, label: ModelLabelMap[ModelType.GPT_5_MINI]! },
+    { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
+    { id: ModelType.GEMINI_25_FLASH, label: ModelLabelMap[ModelType.GEMINI_25_FLASH]! }
   ];
 
   private globalCurrentModel = signal<ModelType>(ModelType.GROK_4_FAST);
