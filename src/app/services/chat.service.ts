@@ -427,6 +427,7 @@ export class ChatService {
       ...chat,
       state: ChatState.THINKING,
       currentRequestId: null, // пока не знаем requestId
+      model: currentModel,
       messages: [...chat.messages, userMessage, assistantMessage],
     });
 
