@@ -136,12 +136,26 @@ export class ChatService {
   }
 
   loadCurrentModelFromLocalStorage(): void {
-    const loaded = this.storage.loadCurrentModal();
+    const loaded = this.storage.loadCurrentModal() as ModelType | null;
 
-    if (loaded) {
-      this.currentModel.set(loaded);
-      this.globalCurrentModel.set(loaded);
+    let modelToSet: ModelType;
+
+    if (loaded && this.isModelAvailable(loaded)) {
+      modelToSet = loaded;
+    } else {
+      modelToSet = this.getDefaultModel();
     }
+
+    this.currentModel.set(modelToSet);
+    this.globalCurrentModel.set(modelToSet);
+  }
+
+  private isModelAvailable(modelId: ModelType): boolean {
+    return this.models.some(model => model.id === modelId);
+  }
+
+  private getDefaultModel(): ModelType {
+    return this.models[0].id;
   }
 
   updateCurrentModel(model: ModelType): void {
