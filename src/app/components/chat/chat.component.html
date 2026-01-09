@@ -13,7 +13,7 @@
     <tui-scrollbar>
       <div class="flex flex-col items-center">
         <div class="chat-messages flex flex-col flex-1 pt-6">
-          @for (msg of chatService.activeChatView()?.messages; let last = $last; track msg.id) {
+          @for (msg of chatService.activeChat()?.messages; let last = $last; track msg.id) {
             <div
               class="chat-message"
               [attr.data-id]="msg.id"

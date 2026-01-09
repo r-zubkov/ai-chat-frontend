@@ -44,17 +44,7 @@ export class ChatService {
   readonly chats = signal<Chat[]>([]);
 
   readonly activeChatId = signal<string | null>(null);
-  
   readonly activeChat = computed<Chat | null>(() => this.chats().find((chat) => chat.id === this.activeChatId()) || null);
-  readonly activeChatView = computed<Chat | null>(() => {
-    const chat = this.activeChat();
-    if (!chat) return null;
-
-    return {
-      ...chat,
-      messages: chat.messages.filter(msg => msg.role !== ChatMessageRole.SYSTEM),
-    };
-  });
 
   private readonly saveSubject = new Subject<Chat[]>();
 
