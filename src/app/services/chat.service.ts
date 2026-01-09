@@ -32,9 +32,9 @@ export class ChatService {
   };
 
   readonly models: Array<{ id: ModelType; label: string }> = [
+    { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
     { id: ModelType.GPT_51, label: ModelLabelMap[ModelType.GPT_51]! },
     { id: ModelType.GPT_5_MINI, label: ModelLabelMap[ModelType.GPT_5_MINI]! },
-    { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
     { id: ModelType.GEMINI_3_FLASH_PREVIEW, label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]! }
   ];
 
