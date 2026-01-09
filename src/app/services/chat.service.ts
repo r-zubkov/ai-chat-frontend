@@ -1,15 +1,14 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { Chat, ChatMessage, ChatMessageMeta } from '../models/chat.model';
+import { Chat, ChatState } from '../types/chat';
 import { ModelType } from '../types/model-type';
-import { ChatMessageRole } from '../types/chat-message-role';
 import { StorageService } from './storage.service';
-import { ChatState } from '../types/chat-state';
 import { ChatSocketService } from './chat-socket.service';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
 import { ModelLabelMap } from '../maps/model-label.map';
+import { ChatMessage, ChatMessageMeta, ChatMessageRole } from '../types/chat-message';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -115,12 +114,8 @@ export class ChatService {
 
     // TODO: remove fallback later
     loaded.forEach(chat => {
-      if (!('lastUpdate' in chat)) {
-        (chat as any).lastUpdate = Date.now();
-      }
-
-      if (!('currentRequestId' in chat)) {
-        (chat as any).currentRequestId = null;
+      if (!('projectId' in chat)) {
+        (chat as any).projectId = null;
       }
     })
     
@@ -197,8 +192,9 @@ export class ChatService {
       title: truncateAtWord(name, 100, null),
       state: ChatState.IDLE,
       model: this.currentModel() as ModelType,
-      lastUpdate: Date.now(),
+      projectId: null,
       currentRequestId: null,
+      lastUpdate: Date.now(),
       messages: [],
     };
   }

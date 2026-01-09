@@ -3,13 +3,13 @@ import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
 import { ChatInput } from '../chat-input/chat-input';
 import { distinctUntilChanged, tap } from 'rxjs';
-import { ChatMessageRole } from '../../types/chat-message-role';
 import { ChatService } from '../../services/chat.service';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { getCssValue } from '../../helpers/get-css-value';
 import { remToPx } from '../../helpers/rem-to-px';
-import { ChatState } from '../../types/chat-state';
 import { ModelLabelPipe } from '../../pipes/model-label.pipe';
+import { ChatState } from '../../types/chat';
+import { ChatMessageRole } from '../../types/chat-message';
 
 @Component({
   selector: 'app-chat',

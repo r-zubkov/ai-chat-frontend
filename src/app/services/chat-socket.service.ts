@@ -1,8 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable, Observer } from 'rxjs';
-import { ChatMessage } from '../models/chat.model';
 import { environment } from '../../environments/environment';
+import { ChatMessage } from '../types/chat-message';
 
 @Injectable({ providedIn: 'root' })
 export class ChatSocketService {

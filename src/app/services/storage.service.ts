@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Chat } from '../models/chat.model';
+import { Chat } from '../types/chat';
 import { ModelType } from '../types/model-type';
 
 const CHATS_STORAGE_KEY = 'ai-chat-chats';

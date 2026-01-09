@@ -3,13 +3,12 @@ import { CommonModule } from '@angular/common';
 import { TuiAlertService, TuiDataList, TuiDialogService, TuiDropdown, TuiIcon, TuiLoader, TuiScrollbar } from '@taiga-ui/core';
 import { ChatService } from '../../services/chat.service';
 import { TUI_CONFIRM, TuiConfirmData } from '@taiga-ui/kit';
-import {PolymorpheusComponent} from '@taiga-ui/polymorpheus';
-import { ChatState } from '../../types/chat-state';
+import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import { ModelLabelPipe } from '../../pipes/model-label.pipe';
 import { TuiObscured } from '@taiga-ui/cdk/directives/obscured';
 import { TuiActiveZone } from '@taiga-ui/cdk/directives/active-zone';
 import { ChangeChatNameModal } from '../change-chat-name-modal/change-chat-name-modal';
-import { Chat } from '../../models/chat.model';
+import { Chat, ChatState } from '../../types/chat';
 import { take } from 'rxjs';
 
 const TuiConfirmText: TuiConfirmData = {
@@ -66,7 +65,7 @@ export class SidebarComponent {
   protected handleDeleteChat(chat: Chat): void {
     this.hideItemOptionsDropdown()
 
-    this.dialogService
+    this.dialogService  
       .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Удалить чат?', data: TuiConfirmText})
       .subscribe((confirm) => {
         if (confirm) this.chatService.deleteChat(chat.id)
