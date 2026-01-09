@@ -159,11 +159,19 @@ export class ChatService {
   }
 
   updateCurrentModel(model: ModelType): void {
-    this.currentModel.set(model);
+    let modelToSet: ModelType;
+
+    if (this.isModelAvailable(model)) {
+      modelToSet = model;
+    } else {
+      modelToSet = this.getDefaultModel();
+    }
+
+    this.currentModel.set(modelToSet);
 
     // for global use
     if (!this.activeChatId()) {
-      this.globalCurrentModel.set(model);
+      this.globalCurrentModel.set(modelToSet);
       this.storage.saveCurrentModel(this.globalCurrentModel());
     }
   }
