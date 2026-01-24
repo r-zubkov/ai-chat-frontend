@@ -8,6 +8,7 @@ export enum ChatMessageRole {
 
 export interface ChatMessage {
   id: string;
+  chatId: string;
   role: ChatMessageRole;
   model: ModelType;
   content: string;

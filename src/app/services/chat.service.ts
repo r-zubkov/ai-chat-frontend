@@ -65,7 +65,7 @@ export class ChatService {
       .subscribe((chats) => this.saveChats(chats));
   }
 
-  private applySystemPrompt(model: ModelType, messages: ChatMessage[]): ChatMessage[] {
+  private applySystemPrompt(chatId: string, model: ModelType, messages: ChatMessage[]): ChatMessage[] {
     const systemPrompt = this.modelSystemPrompts[model];
     if (!systemPrompt) return messages;
 
@@ -73,7 +73,8 @@ export class ChatService {
       id: crypto.randomUUID(),
       role: ChatMessageRole.SYSTEM,
       content: systemPrompt,
-      model: model,
+      model,
+      chatId,
       timestamp: Date.now(),
     };
 
@@ -92,11 +93,16 @@ export class ChatService {
     const historyWithLastUserMsg = [...historyTail, userMessage];
 
     // добавить SYSTEM в начало, не мутируя исходный массив
-    return this.applySystemPrompt(model, historyWithLastUserMsg);
+    return this.applySystemPrompt(chat.id, model, historyWithLastUserMsg);
   }
 
   private saveChats(chats: Chat[]): void {
     this.storage.saveChats(chats);
+  }
+
+  async loadChats(limit = 50) {
+    const chats = await this.storage.getChats(limit);
+    this.chats.set(chats);
   }
 
   loadChatsFromLocalStorage(): void {
@@ -395,6 +401,7 @@ export class ChatService {
       id: crypto.randomUUID(),
       role: ChatMessageRole.USER,
       model: currentModel,
+      chatId: chat.id,
       content: trimmed,
       meta: this.buildMessageMeta(trimmed),
       timestamp: Date.now(),
@@ -404,6 +411,7 @@ export class ChatService {
       id: crypto.randomUUID(),
       role: ChatMessageRole.ASSISTANT,
       model: currentModel,
+      chatId: chat.id,
       content: '',
       timestamp: Date.now(),
     };
