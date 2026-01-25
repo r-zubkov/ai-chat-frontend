@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
 import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageMeta, ChatMessageRole } from '../types/chat-message';
+import { DexieEventType } from '../common/chat.db';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -37,14 +38,18 @@ export class ChatService {
     { id: ModelType.GEMINI_3_FLASH_PREVIEW, label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]! }
   ];
 
-  private globalCurrentModel = signal<ModelType>(ModelType.GROK_4_FAST);
+  private readonly globalCurrentModel = signal<ModelType>(ModelType.GROK_4_FAST);
 
   readonly currentModel = signal<ModelType>(ModelType.GROK_4_FAST);
 
   readonly chats = signal<Chat[]>([]);
+  readonly chatsCount = signal<number>(0);
 
   readonly activeChatId = signal<string | null>(null);
   readonly activeChat = computed<Chat | null>(() => this.chats().find((chat) => chat.id === this.activeChatId()) || null);
+
+  private readonly chatsLimitStep: number = 50;
+  private chatsLimit: number = this.chatsLimitStep;
 
   private readonly saveSubject = new Subject<Chat[]>();
 
@@ -53,6 +58,7 @@ export class ChatService {
     private readonly chatRepositoryService: ChatRepositoryService,
     private readonly chatSocketService: ChatSocketService
   ) {
+    this.watchChatsUpdate()
     this.subscribeToSaveSubject()
   }
 
@@ -100,9 +106,23 @@ export class ChatService {
     this.chatRepositoryService.saveChats(chats);
   }
 
-  async loadChats(limit = 50) {
-    const chats = await this.chatRepositoryService.getChats(limit);
+  async loadChats(): Promise<void> {
+    const chats = await this.chatRepositoryService.getChats(this.chatsLimit);
     this.chats.set(chats);
+  }
+
+  async loadChatsCount(): Promise<void> {
+    const count = await this.chatRepositoryService.getChatsCount();
+    this.chatsCount.set(count);
+  }
+
+  watchChatsUpdate(): void {
+    this.chatRepositoryService.chatsUpdated$.pipe(takeUntilDestroyed()).subscribe(event => {
+      if (event === DexieEventType.CREATING || event === DexieEventType.DELETING) {
+        this.loadChatsCount()
+      }
+      this.loadChats()
+    })
   }
 
   loadChatsFromLocalStorage(): void {

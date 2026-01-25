@@ -1,21 +1,25 @@
 import { Injectable } from '@angular/core';
 import { Chat } from '../types/chat';
 import { ModelType } from '../types/model-type';
-import { chatDB } from '../common/chat.db';
+import { chatDB, DexieEventType } from '../common/chat.db';
 import { ChatMessage } from '../types/chat-message';
+import { Observable, Subscription } from 'rxjs';
 
 const CHATS_STORAGE_KEY = 'ai-chat-chats';
 const CURRENT_MODEL_STORAGE_KEY = 'ai-chat-current-model';
 
 @Injectable({ providedIn: 'root' })
 export class ChatRepositoryService {
-
   async getChats(limit = 50): Promise<Chat[]> {
     return chatDB.chats
       .orderBy('lastUpdate')
       .reverse()
       .limit(limit)
       .toArray();
+  }
+
+  async getChatsCount(): Promise<number> {
+    return chatDB.chats.count()
   }
 
   async createChat(chat: Chat): Promise<void> {
@@ -42,6 +46,10 @@ export class ChatRepositoryService {
       .where('chatId')
       .equals(chatId)
       .sortBy('timestamp');
+  }
+  
+  async getMessagesCount(): Promise<number> {
+    return chatDB.messages.count()
   }
 
   async createMessage(message: ChatMessage): Promise<void> {
@@ -75,6 +83,22 @@ export class ChatRepositoryService {
   async setSetting(key: string, value: any): Promise<void> {
     await chatDB.settings.put({ key, value });
   }
+
+  get projectsUpdated$(): Observable<DexieEventType> {
+    return chatDB.projectsUpdated$.asObservable()
+  }
+
+  get chatsUpdated$(): Observable<DexieEventType> {
+    return chatDB.chatsUpdated$.asObservable()
+  }
+
+  get messagesUpdated$(): Observable<DexieEventType> {
+    return chatDB.messagesUpdated$.asObservable()
+  } 
+
+  get settingsUpdated$(): Observable<DexieEventType> {
+    return chatDB.settingsUpdated$.asObservable()
+  } 
 
   loadChats(): Chat[] {
     try {
