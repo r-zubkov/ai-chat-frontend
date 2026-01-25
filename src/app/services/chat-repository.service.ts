@@ -10,17 +10,20 @@ const CURRENT_MODEL_STORAGE_KEY = 'ai-chat-current-model';
 @Injectable({ providedIn: 'root' })
 export class ChatRepositoryService {
 
-  async getChats(limit = 50, offset = 0): Promise<Chat[]> {
+  async getChats(limit = 50): Promise<Chat[]> {
     return chatDB.chats
       .orderBy('lastUpdate')
       .reverse()
-      .offset(offset)
       .limit(limit)
       .toArray();
   }
 
   async createChat(chat: Chat): Promise<void> {
     await chatDB.chats.put(chat);
+  }
+
+  async createChats(chats: Chat[]): Promise<void> {
+    await chatDB.chats.bulkPut(chats);
   }
 
   async updateChat(id: string, data: Partial<Chat>): Promise<void> {
@@ -41,8 +44,12 @@ export class ChatRepositoryService {
       .sortBy('timestamp');
   }
 
-  async crateMessage(message: ChatMessage): Promise<void> {
+  async createMessage(message: ChatMessage): Promise<void> {
     await chatDB.messages.put(message);
+  }
+
+  async createMessages(messages: ChatMessage[]): Promise<void> {
+    await chatDB.messages.bulkPut(messages);
   }
 
   async updateMessage(id: string, data: Partial<ChatMessage>): Promise<void> {
