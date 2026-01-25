@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Chat } from '../types/chat';
 import { ModelType } from '../types/model-type';
-import { chatDB } from './chat.db';
+import { chatDB } from '../common/chat.db';
 import { ChatMessage } from '../types/chat-message';
 
 const CHATS_STORAGE_KEY = 'ai-chat-chats';
 const CURRENT_MODEL_STORAGE_KEY = 'ai-chat-current-model';
 
 @Injectable({ providedIn: 'root' })
-export class StorageService {
+export class ChatRepositoryService {
 
   async getChats(limit = 50, offset = 0): Promise<Chat[]> {
     return chatDB.chats
@@ -53,11 +53,20 @@ export class StorageService {
       await chatDB.messages.where('id').equals(id).delete();
   }
 
-  async deleteAll(): Promise<void> {
+  async deleteAllChats(): Promise<void> {
     await chatDB.transaction('rw', chatDB.chats, chatDB.messages, async () => {
       await chatDB.chats.clear();
       await chatDB.messages.clear();
     });
+  }
+
+  async getSetting<T>(key: string): Promise<T | null> {
+    const row = await chatDB.settings.get(key);
+    return (row?.value as unknown as T) ?? null;
+  }
+
+  async setSetting(key: string, value: any): Promise<void> {
+    await chatDB.settings.put({ key, value });
   }
 
   loadChats(): Chat[] {
@@ -75,7 +84,7 @@ export class StorageService {
   }
 
   loadCurrentModal(): ModelType | null {
-    try {
+    try { 
       const raw = localStorage.getItem(CURRENT_MODEL_STORAGE_KEY);
       if (!raw) return null;
       return JSON.parse(raw) as ModelType;

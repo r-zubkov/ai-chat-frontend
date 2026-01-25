@@ -1,7 +1,7 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { Chat, ChatState } from '../types/chat';
 import { ModelType } from '../types/model-type';
-import { StorageService } from './storage.service';
+import { ChatRepositoryService } from './chat-repository.service';
 import { ChatSocketService } from './chat-socket.service';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -50,7 +50,7 @@ export class ChatService {
 
   constructor(
     private readonly appServbice: AppService,
-    private readonly storage: StorageService,
+    private readonly chatRepositoryService: ChatRepositoryService,
     private readonly chatSocketService: ChatSocketService
   ) {
     this.subscribeToSaveSubject()
@@ -97,16 +97,16 @@ export class ChatService {
   }
 
   private saveChats(chats: Chat[]): void {
-    this.storage.saveChats(chats);
+    this.chatRepositoryService.saveChats(chats);
   }
 
   async loadChats(limit = 50) {
-    const chats = await this.storage.getChats(limit);
+    const chats = await this.chatRepositoryService.getChats(limit);
     this.chats.set(chats);
   }
 
   loadChatsFromLocalStorage(): void {
-    const loaded = this.storage.loadChats();
+    const loaded = this.chatRepositoryService.loadChats();
 
     // TODO: remove fallback later
     loaded.forEach(chat => {
@@ -127,7 +127,7 @@ export class ChatService {
   }
 
   loadCurrentModelFromLocalStorage(): void {
-    const loaded = this.storage.loadCurrentModal() as ModelType | null;
+    const loaded = this.chatRepositoryService.loadCurrentModal() as ModelType | null;
 
     let modelToSet: ModelType;
 
@@ -163,7 +163,7 @@ export class ChatService {
     // for global use
     if (!this.activeChatId()) {
       this.globalCurrentModel.set(modelToSet);
-      this.storage.saveCurrentModel(this.globalCurrentModel());
+      this.chatRepositoryService.saveCurrentModel(this.globalCurrentModel());
     }
   }
 
