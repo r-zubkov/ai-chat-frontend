@@ -63,6 +63,7 @@ export class ChatComponent implements AfterViewInit {
     this.chatService.sendMessage(
       text,
       (msg) => {
+        this.chatService.navigateToChat(msg.chatId)
         setTimeout(() => this.scrollToBottom('smooth'))
       },
       (msg) => {

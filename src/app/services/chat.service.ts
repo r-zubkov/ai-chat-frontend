@@ -1,7 +1,7 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { Chat, ChatState } from '../types/chat';
 import { ModelType } from '../types/model-type';
-import { ChatRepositoryService } from './chat-repository.service';
+import { ChatRepositoryService, RepositoryEventType } from './chat-repository.service';
 import { ChatSocketService } from './chat-socket.service';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -9,7 +9,6 @@ import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
 import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageMeta, ChatMessageRole } from '../types/chat-message';
-import { DexieEventType } from '../common/chat.db';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -59,7 +58,6 @@ export class ChatService {
     private readonly chatSocketService: ChatSocketService
   ) {
     this.watchChatsUpdate()
-    this.subscribeToSaveSubject()
   }
 
   private subscribeToSaveSubject(): void {
@@ -87,19 +85,12 @@ export class ChatService {
     return [systemMessage, ...messages];
   }
 
-  private buildApiMessages(
-    chat: Chat,
-    userMessage: ChatMessage,
-    model: ModelType,
-  ): ChatMessage[] {
-    // Берём хвост N сообщений (хронологический порядок сохраняется)
-    const historyTail = chat.messages.slice(-API_HISTORY_LIMIT);
+  private buildApiMessages(chat: Chat, userMessage: ChatMessage, model: ModelType): ChatMessage[] {
+    const historyTail = chat.messages.slice(-API_HISTORY_LIMIT); // Берём хвост из N сообщений
+    const historyWithLastUserMsg = [...historyTail, userMessage]; // Добавляем userMessage в конец
 
-    // Добавляем текущий userMessage в конец
-    const historyWithLastUserMsg = [...historyTail, userMessage];
-
-    // добавить SYSTEM в начало, не мутируя исходный массив
-    return this.applySystemPrompt(chat.id, model, historyWithLastUserMsg);
+    // Добавляем SYSTEM в начало, не мутируя исходный массив
+    return this.applySystemPrompt(chat.id, model, historyWithLastUserMsg); 
   }
 
   private saveChats(chats: Chat[]): void {
@@ -118,7 +109,7 @@ export class ChatService {
 
   watchChatsUpdate(): void {
     this.chatRepositoryService.chatsUpdated$.pipe(takeUntilDestroyed()).subscribe(event => {
-      if (event === DexieEventType.CREATING || event === DexieEventType.DELETING) {
+      if (event === RepositoryEventType.CREATING || event === RepositoryEventType.DELETING) {
         this.loadChatsCount()
       }
       this.loadChats()
@@ -202,7 +193,7 @@ export class ChatService {
     }
   }
 
-  private createChat(name: string): Chat {
+  private createChatEntity(name: string): Chat {
     return {
       id: crypto.randomUUID(),
       title: truncateAtWord(name, 100, null),
@@ -215,59 +206,18 @@ export class ChatService {
     };
   }
 
-  updateChat(chat: Chat): void {
-    const chats = [...this.chats()];
-    const index = chats.findIndex((c) => c.id === chat.id);
-
-    const updatedChat: Chat = {
-      ...chat,
-      lastUpdate: Date.now(),
-    };
-
-    if (index === -1) {
-      chats.unshift(updatedChat);
-    } else {
-      chats[index] = updatedChat;
-
-      // Если чат не сверху — переносим
-      if (index !== 0) {
-        chats.splice(index, 1); // удалить
-        chats.unshift(updatedChat); // перенести в начало
-      }
-    }
-
-    this.chats.set(chats);
-
-    // Ставим активный чат если ещё не выбран
-    if (!this.activeChatId()) {
-      this.activeChatId.set(updatedChat.id);
-    }
-
-    // Небольшой дебаунс на сохранение
-    this.saveSubject.next(chats);
+  async updateChat(chatId: string, chatUpdateData: Partial<Omit<Chat, 'id'>>): Promise<void> {
+    await this.chatRepositoryService.updateChat(chatId, {...chatUpdateData})
   }
 
-  updateChatTitle(chatId: string, title: string): void {
-    const trimmed = title.trim();
-    if (!trimmed) return;
+  async deleteChat(chatId: string): Promise<void> {
+    await this.chatRepositoryService.deleteChat(chatId)
+  }
 
-    const chats = this.chats();
-    const index = chats.findIndex(c => c.id === chatId);
-    if (index === -1) return;
+  async deleteAllChats(): Promise<void> {
+    this.stopAllRequests()
 
-    const chat = chats[index];
-    if (chat.title === trimmed) return; // ничего не менялось
-
-    const updatedChat: Chat = {
-      ...chat,
-      title: trimmed,
-    };
-
-    const nextChats = [...chats];
-    nextChats[index] = updatedChat;
-
-    this.chats.set(nextChats);
-    this.saveSubject.next(nextChats);
+    await this.chatRepositoryService.deleteAllChats()
   }
 
   updateMessageContent(
@@ -305,27 +255,6 @@ export class ChatService {
 
     this.chats.set(nextChats);
     this.saveSubject.next(nextChats);
-  }
-
-  private updateChatRequestState(
-    chatId: string,
-    state: ChatState,
-    requestId: string | null
-  ): void {
-    const chats = [...this.chats()];
-    const idx = chats.findIndex(c => c.id === chatId);
-    if (idx === -1) return;
-
-    const chat = chats[idx];
-    chats[idx] = {
-      ...chat,
-      lastUpdate: Date.now(),
-      state,
-      currentRequestId: requestId,
-    };
-
-    this.chats.set(chats);
-    this.saveSubject.next(chats);
   }
 
   private buildMessageMeta(content: string): ChatMessageMeta {
@@ -373,54 +302,28 @@ export class ChatService {
     this.saveSubject.next(nextChats);
   }
 
-  deleteChat(chatId: string): void {
-    const chats = [...this.chats()];
-    const index = chats.findIndex(c => c.id === chatId);
-
-    if (index === -1) {
-      return; // ничего удалять
-    }
-
-    const currentRequestId = chats[index]?.currentRequestId
-    if (currentRequestId) this.stopRequest(currentRequestId)
-
-    chats.splice(index, 1);
-    this.chats.set(chats);
-    this.saveChats(chats);
-
-    // если удаляли активный чат — сбрасываем activeChatId
-    if (this.activeChatId() === chatId) {
-      this.activeChatId.set(null);
-    }
-  }
-
-  deleteAllChats(): void {
-    this.stopAllRequests()
-
-    this.chats.set([]); 
-    this.saveChats([]);
-
-    this.navigateToChat(null)
-  }
-
-  sendMessage(
+  async sendMessage(
     text: string,
     onSend: (msg: ChatMessage) => void,
     onFinish: (msg: ChatMessage) => void,
     onError: (err: any) => void,
-  ): void {
+  ): Promise<void> {
     const trimmed = text.trim();
     const model = this.currentModel();
     if (!trimmed || !model) return;
 
-    const currentModel = model as ModelType;
+    let chat = this.activeChat();
+    if (!chat) {
+      const entity = this.createChatEntity(trimmed);
+      await this.chatRepositoryService.createChat(entity);
 
-    const chat = this.activeChat() ?? this.createChat(trimmed);
+      chat = entity;
+    }
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: ChatMessageRole.USER,
-      model: currentModel,
+      model,
       chatId: chat.id,
       content: trimmed,
       meta: this.buildMessageMeta(trimmed),
@@ -430,51 +333,45 @@ export class ChatService {
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: ChatMessageRole.ASSISTANT,
-      model: currentModel,
+      model,
       chatId: chat.id,
       content: '',
       timestamp: Date.now(),
     };
 
-    // кладём user + assistant (пустой) и ставим THINKING
-    this.updateChat({
-      ...chat,
-      state: ChatState.THINKING,
-      currentRequestId: null, // пока не знаем requestId
-      model: currentModel,
-      messages: [...chat.messages, userMessage, assistantMessage],
-    });
+    await this.chatRepositoryService.createMessages([userMessage, assistantMessage]);
 
     onSend(userMessage);
 
     // system + хвост истории + текущий userMessage
-    const apiMessages = this.buildApiMessages(chat, userMessage, currentModel);
+    const apiMessages = this.buildApiMessages(chat, userMessage, model);
 
-    const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(currentModel, apiMessages);
+    // отправка запроса к модели
+    const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(model, apiMessages);
 
-    // ставим requestId
-    this.updateChatRequestState(chat.id, ChatState.THINKING, requestId);
+    // обновляем состояние чата
+    this.updateChat(chat.id, { model, state: ChatState.THINKING, currentRequestId: requestId })
 
     let content = '';
 
     stream$.subscribe({
       next: (delta: string) => {
         content += delta;
-        this.updateMessageContent(chat.id, assistantMessage.id, content)
+        // this.updateMessageContent(chat.id, assistantMessage.id, content)
       },
       error: (err: any) => {
         // финальный флеш, чтобы не потерять хвост
-        this.updateMessageContent(chat.id, assistantMessage.id, content);
-        this.addMessageMeta(chat.id, assistantMessage.id);
-        this.updateChatRequestState(chat.id, ChatState.ERROR, null);
+        //this.updateMessageContent(chat.id, assistantMessage.id, content);
+        //this.addMessageMeta(chat.id, assistantMessage.id);
+        this.updateChat(chat.id, { model, state: ChatState.ERROR, currentRequestId: null })
 
         onError(err);
       },
       complete: () => {
         // финальный флеш
-        this.updateMessageContent(chat.id, assistantMessage.id, content);
-        this.addMessageMeta(chat.id, assistantMessage.id);
-        this.updateChatRequestState(chat.id, ChatState.IDLE, null);
+        //this.updateMessageContent(chat.id, assistantMessage.id, content);
+        //this.addMessageMeta(chat.id, assistantMessage.id);
+        this.updateChat(chat.id, { model, state: ChatState.IDLE, currentRequestId: null })
 
         onFinish({ ...assistantMessage, content });
       },

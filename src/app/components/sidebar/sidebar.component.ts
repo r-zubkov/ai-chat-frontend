@@ -62,16 +62,6 @@ export class SidebarComponent {
     this.openItemOptionsDropdown(chatId)
   }
 
-  protected handleDeleteChat(chat: Chat): void {
-    this.hideItemOptionsDropdown()
-
-    this.dialogService  
-      .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Удалить чат?', data: TuiConfirmText})
-      .subscribe((confirm) => {
-        if (confirm) this.chatService.deleteChat(chat.id)
-      });
-  }
-
   protected handleRenameChat(chat: Chat): void {
     this.hideItemOptionsDropdown()
 
@@ -87,7 +77,20 @@ export class SidebarComponent {
           this.alerts.open('Название не может быть короче 1 символа', {appearance: 'negative'}).pipe(take(1)).subscribe()
           return
         }
-        this.chatService.updateChatTitle(chat.id, title)
+        this.chatService.updateChat(chat.id, { title })
+      });
+  }
+
+  protected handleDeleteChat(chat: Chat): void {
+    this.hideItemOptionsDropdown()
+
+    this.dialogService  
+      .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Удалить чат?', data: TuiConfirmText})
+      .subscribe((confirm) => {
+        if (confirm) {
+          this.chatService.deleteChat(chat.id);
+          this.chatService.navigateToChat(null)
+        }
       });
   }
 
@@ -95,7 +98,10 @@ export class SidebarComponent {
     this.dialogService
       .open<boolean>(TUI_CONFIRM, {size: 's', label: 'Очистить историю?', data: TuiConfirmText})
       .subscribe((confirm) => {
-        if (confirm) this.chatService.deleteAllChats()
+        if (confirm) {
+          this.chatService.deleteAllChats()
+          this.chatService.navigateToChat(null)
+        }
       });
   }
 
