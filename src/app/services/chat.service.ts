@@ -3,12 +3,12 @@ import { Chat, ChatState } from '../types/chat';
 import { ModelType } from '../types/model-type';
 import { ChatRepositoryService, RepositoryEventType } from './chat-repository.service';
 import { ChatSocketService } from './chat-socket.service';
-import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
 import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
+import { StreamingStore } from './streaming.store';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -50,23 +50,13 @@ export class ChatService {
   private readonly chatsLimitStep: number = 50;
   private chatsLimit: number = this.chatsLimitStep;
 
-  private readonly saveSubject = new Subject<Chat[]>();
-
   constructor(
     private readonly appServbice: AppService,
     private readonly chatRepositoryService: ChatRepositoryService,
-    private readonly chatSocketService: ChatSocketService
+    private readonly chatSocketService: ChatSocketService,
+    private readonly streamingStore: StreamingStore
   ) {
     this.watchChatsUpdate()
-  }
-
-  private subscribeToSaveSubject(): void {
-    this.saveSubject
-      .pipe(
-        debounceTime(2000),
-        takeUntilDestroyed()
-      )
-      .subscribe((chats) => this.saveChats(chats));
   }
 
   private applySystemPrompt(chatId: string, model: ModelType, messages: ChatMessage[]): ChatMessage[] {
@@ -277,12 +267,15 @@ export class ChatService {
     stream$.subscribe({
       next: (delta: string) => {
         content += delta;
-        // this.updateMessageContent(chat.id, assistantMessage.id, content)
+        // сохраняем локально для отрисовки
+        this.streamingStore.set(assistantMessage.id, content)
       },
       error: (err: any) => {
         // сохраняем в бд
         this.updateChat(chat.id, { model, state: ChatState.ERROR, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })
+
+        this.streamingStore.remove(assistantMessage.id)
 
         onError(err);
       },
@@ -290,6 +283,8 @@ export class ChatService {
         // сохраняем в бд
         this.updateChat(chat.id, { model, state: ChatState.IDLE, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.COMPLETED })
+
+        this.streamingStore.remove(assistantMessage.id)
 
         onFinish({ ...assistantMessage, content });
       },
