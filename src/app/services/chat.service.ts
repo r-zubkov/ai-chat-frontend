@@ -80,6 +80,7 @@ export class ChatService {
       model,
       state: ChatMessageState.COMPLETED,
       chatId,
+      meta: {},
       timestamp: Date.now(),
     };
 
@@ -339,6 +340,7 @@ export class ChatService {
       state: ChatMessageState.STREAMING,
       chatId: chat.id,
       content: '',
+      meta: {},
       timestamp: Date.now(),
     };
 
