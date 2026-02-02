@@ -8,7 +8,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
 import { ModelLabelMap } from '../maps/model-label.map';
-import { ChatMessage, ChatMessageMeta, ChatMessageRole } from '../types/chat-message';
+import { ChatMessage, ChatMessageMeta, ChatMessageRole, ChatMessageState } from '../types/chat-message';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -78,6 +78,7 @@ export class ChatService {
       role: ChatMessageRole.SYSTEM,
       content: systemPrompt,
       model,
+      state: ChatMessageState.COMPLETED,
       chatId,
       timestamp: Date.now(),
     };
@@ -324,6 +325,7 @@ export class ChatService {
       id: crypto.randomUUID(),
       role: ChatMessageRole.USER,
       model,
+      state: ChatMessageState.COMPLETED,
       chatId: chat.id,
       content: trimmed,
       meta: this.buildMessageMeta(trimmed),
@@ -334,6 +336,7 @@ export class ChatService {
       id: crypto.randomUUID(),
       role: ChatMessageRole.ASSISTANT,
       model,
+      state: ChatMessageState.STREAMING,
       chatId: chat.id,
       content: '',
       timestamp: Date.now(),
