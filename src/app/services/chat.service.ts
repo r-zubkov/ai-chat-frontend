@@ -8,7 +8,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
 import { ModelLabelMap } from '../maps/model-label.map';
-import { ChatMessage, ChatMessageMeta, ChatMessageRole, ChatMessageState } from '../types/chat-message';
+import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -80,7 +80,6 @@ export class ChatService {
       model,
       state: ChatMessageState.COMPLETED,
       chatId,
-      meta: {},
       timestamp: Date.now(),
     };
 
@@ -222,88 +221,6 @@ export class ChatService {
     await this.chatRepositoryService.deleteAllChats()
   }
 
-  updateMessageContent(
-    chatId: string,
-    messageId: string,
-    content: string,
-  ): void {
-    const chats = this.chats();
-    const chatIndex = chats.findIndex(c => c.id === chatId);
-    if (chatIndex === -1) return;
-
-    const chat = chats[chatIndex];
-    const messageIndex = chat.messages.findIndex(m => m.id === messageId);
-    if (messageIndex === -1) return;
-
-    const message = chat.messages[messageIndex];
-    if (message.content === content) return; // ничего не изменилось
-
-    const updatedMessage = {
-      ...message,
-      content,
-    };
-
-    const updatedMessages = [...chat.messages];
-    updatedMessages[messageIndex] = updatedMessage;
-
-    const updatedChat = {
-      ...chat,
-      lastUpdate: Date.now(),
-      messages: updatedMessages,
-    };
-
-    const nextChats = [...chats];
-    nextChats[chatIndex] = updatedChat;
-
-    this.chats.set(nextChats);
-    this.saveSubject.next(nextChats);
-  }
-
-  private buildMessageMeta(content: string): ChatMessageMeta {
-    const length = content.length;
-
-    return { length }
-  }
-
-  private buildMessageMetaFromMessage(message: ChatMessage): ChatMessageMeta {
-    return this.buildMessageMeta(message.content ?? '')
-  }
-
-  private addMessageMeta(chatId: string, messageId: string): void {
-    const chats = this.chats();
-    const chatIndex = chats.findIndex(c => c.id === chatId);
-    if (chatIndex === -1) return;
-
-    const chat = chats[chatIndex];
-    const messageIndex = chat.messages.findIndex(m => m.id === messageId);
-    if (messageIndex === -1) return;
-
-    const message = chat.messages[messageIndex];
-
-    if (message.meta) return;
-
-    const { length } = this.buildMessageMetaFromMessage(message)
-
-    const updatedMessage: ChatMessage = {
-      ...message,
-      meta: { length },
-    };
-
-    const updatedMessages = [...chat.messages];
-    updatedMessages[messageIndex] = updatedMessage;
-
-    const updatedChat: Chat = {
-      ...chat,
-      messages: updatedMessages,
-    };
-
-    const nextChats = [...chats];
-    nextChats[chatIndex] = updatedChat;
-
-    this.chats.set(nextChats);
-    this.saveSubject.next(nextChats);
-  }
-
   async sendMessage(
     text: string,
     onSend: (msg: ChatMessage) => void,
@@ -329,7 +246,6 @@ export class ChatService {
       state: ChatMessageState.COMPLETED,
       chatId: chat.id,
       content: trimmed,
-      meta: this.buildMessageMeta(trimmed),
       timestamp: Date.now(),
     };
 
@@ -340,7 +256,6 @@ export class ChatService {
       state: ChatMessageState.STREAMING,
       chatId: chat.id,
       content: '',
-      meta: {},
       timestamp: Date.now(),
     };
 
@@ -365,18 +280,16 @@ export class ChatService {
         // this.updateMessageContent(chat.id, assistantMessage.id, content)
       },
       error: (err: any) => {
-        // финальный флеш, чтобы не потерять хвост
-        //this.updateMessageContent(chat.id, assistantMessage.id, content);
-        //this.addMessageMeta(chat.id, assistantMessage.id);
+        // сохраняем в бд
         this.updateChat(chat.id, { model, state: ChatState.ERROR, currentRequestId: null })
+        this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })
 
         onError(err);
       },
       complete: () => {
-        // финальный флеш
-        //this.updateMessageContent(chat.id, assistantMessage.id, content);
-        //this.addMessageMeta(chat.id, assistantMessage.id);
+        // сохраняем в бд
         this.updateChat(chat.id, { model, state: ChatState.IDLE, currentRequestId: null })
+        this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.COMPLETED })
 
         onFinish({ ...assistantMessage, content });
       },

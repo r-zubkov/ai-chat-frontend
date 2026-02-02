@@ -20,10 +20,4 @@ export interface ChatMessage {
   state: ChatMessageState;
   content: string;
   timestamp: number;
-  meta: ChatMessageMeta
 }
-
-export interface ChatMessageMeta {
-  length?: number;
-}
-
