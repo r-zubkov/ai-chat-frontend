@@ -1,6 +1,5 @@
-import { computed, Injectable, signal } from "@angular/core";
+import { computed, signal } from "@angular/core";
 
-@Injectable({ providedIn: 'root' })
 export class StreamingStore {
   private _content = signal<Map<string, string>>(new Map());
 

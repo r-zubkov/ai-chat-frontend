@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, signal, ViewChild } from '@angular/core';
 import { ChatService } from '../../services/chat.service';
-import { ChatMessage, ChatMessageRole } from '../../types/chat-message';
+import { ChatMessage, ChatMessageRole, ChatMessageState } from '../../types/chat-message';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
 import { ChatState } from '../../types/chat';
@@ -33,9 +33,12 @@ export class UserChatPage {
   private readonly scrollBar?: ElementRef<HTMLElement>;
 
   protected readonly ChatState = ChatState;
+  protected readonly ChatMessageState = ChatMessageState;
   protected readonly ChatMessageRole = ChatMessageRole;
 
   protected readonly messages = signal<ChatMessage[]>([]);
+
+  streamingMessageId: string = '';
 
   constructor(readonly chatService: ChatService) {
     this.watchMessagesUpdate()
@@ -64,10 +67,13 @@ export class UserChatPage {
 
   protected sendRequest(text: string): void {
     this.chatService.sendMessage(
-      text, [], {
-        onSend: (msg) => {},
-        onFinish: (msg) => {},
-        onError: (err) => console.error('Error sending message:', err)
+      text, this.messages(), {
+        onSend: (msg) => {this.streamingMessageId = msg.id},
+        onFinish: (msg) => {this.streamingMessageId = ''},
+        onError: (err) => {
+          this.streamingMessageId = ''
+          console.error('Error sending message:', err)
+        }
       }
     )
   }

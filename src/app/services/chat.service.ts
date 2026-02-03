@@ -8,7 +8,6 @@ import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
 import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
-import { StreamingStore } from './streaming.store';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 
@@ -65,7 +64,6 @@ export class ChatService {
     private readonly appServbice: AppService,
     private readonly chatRepositoryService: ChatRepositoryService,
     private readonly chatSocketService: ChatSocketService,
-    private readonly streamingStore: StreamingStore
   ) {
     this.watchChatsUpdate()
   }
@@ -290,24 +288,17 @@ export class ChatService {
     stream$.subscribe({
       next: (delta: string) => {
         content += delta;
-        // сохраняем локально для отрисовки
-        this.streamingStore.set(assistantMessage.id, content)
+        this.chatRepositoryService.updateMessage(assistantMessage.id, { content })
       },
       error: (err: any) => {
-        // сохраняем в бд
         this.updateChat(chat.id, { model, state: ChatState.ERROR, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })
-
-        this.streamingStore.remove(assistantMessage.id)
 
         options.onError(err);
       },
       complete: () => {
-        // сохраняем в бд
         this.updateChat(chat.id, { model, state: ChatState.IDLE, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.COMPLETED })
-
-        this.streamingStore.remove(assistantMessage.id)
 
         options.onFinish({ ...assistantMessage, content });
       },

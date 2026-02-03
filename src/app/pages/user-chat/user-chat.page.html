@@ -9,7 +9,7 @@
             [class.chat-message--user]="msg.role === ChatMessageRole.USER"
             [class.chat-message--assistant]="msg.role === ChatMessageRole.ASSISTANT"
           >
-            @if (msg.role !== ChatMessageRole.USER) {
+            @if (msg.role === ChatMessageRole.ASSISTANT) {
               <div class="chat-message__header opacity-60 mb-3">
                 AI • {{ msg.model | modelLabel }}
               </div>
@@ -17,7 +17,7 @@
 
             @if (msg.role === ChatMessageRole.USER) {
               <div class="chat-message__content">{{ msg.content }}</div>
-            } @else {
+            } @else if (msg.role === ChatMessageRole.ASSISTANT) {
               <div class="chat-message__content" [innerHTML]="msg.content | markdown"></div>
             }
 
@@ -25,7 +25,7 @@
               <div class="chat-thinking mt-5">
                 <div class="thinking-loader"></div>
               </div>
-            }
+            } 
           </div>
         }
 
