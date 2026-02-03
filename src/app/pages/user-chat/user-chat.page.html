@@ -21,7 +21,7 @@
               <div class="chat-message__content" [innerHTML]="msg.content | markdown"></div>
             }
 
-            @if (last && thinking()) {
+            @if (last && chatService.activeChat()?.state === ChatState.THINKING) {
               <div class="chat-thinking mt-5">
                 <div class="thinking-loader"></div>
               </div>
@@ -50,7 +50,7 @@
 <div class="chat-input-wrapper">
   <div class="chat-input">
     <chat-input
-      [thinking]="thinking()"
+      [thinking]="chatService.activeChat()?.state === ChatState.THINKING"
       (onSend)="sendRequest($event)"
       (onCancel)="cancelRequest()"
     ></chat-input>

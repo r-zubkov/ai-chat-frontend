@@ -9,6 +9,7 @@ import { ChatInput } from '../../components/chat-input/chat-input';
 import { ModelLabelPipe } from '../../pipes/model-label.pipe';
 import { remToPx } from '../../helpers/rem-to-px';
 import { getCssValue } from '../../helpers/get-css-value';
+import { RepositoryEventType } from '../../services/chat-repository.service';
 
 @Component({
   selector: 'app-user-chat.page',
@@ -25,8 +26,7 @@ import { getCssValue } from '../../helpers/get-css-value';
 export class UserChatPage {
   @Input() set id(chatId: string) {
     this.chatService.initializeChat(chatId)
-    this.loadMessages()
-    setTimeout(() => this.scrollToBottom('instant')) 
+    this.loadMessages('instant')
   }
 
   @ViewChild(TuiScrollbar, {read: ElementRef})
@@ -37,27 +37,27 @@ export class UserChatPage {
 
   protected readonly messages = signal<ChatMessage[]>([]);
 
-  protected readonly thinking = signal<boolean>(false);
-
   constructor(readonly chatService: ChatService) {
     this.watchMessagesUpdate()
   }
   
-  private async loadMessages(): Promise<void> {
+  private async loadMessages(scrollEffect: 'instant' | 'smooth' | null = null): Promise<void> {
    const messages = await this.chatService.getMessages()
    this.messages.set(messages)
+   if (scrollEffect) setTimeout(() => this.scrollToBottom(scrollEffect), 50)
   }
 
   private watchMessagesUpdate(): void {
     this.chatService.messagesUpdated$.pipe(takeUntilDestroyed()).subscribe(event => {
-      this.loadMessages()
+      const scrollEffect = event === RepositoryEventType.UPDATING ? null : 'smooth'
+      this.loadMessages(scrollEffect)
     })
   }
 
   protected sendRequest(text: string): void {
     this.chatService.sendMessage(
       text, [], {
-        onSend: (msg) => setTimeout(() => this.scrollToBottom('smooth')),
+        onSend: (msg) => {},
         onFinish: (msg) => {},
         onError: (err) => console.error('Error sending message:', err)
       }

@@ -276,8 +276,6 @@ export class ChatService {
     // сохранение сообщений в бд
     await this.chatRepositoryService.createMessages([userMessage, assistantMessage]);
 
-    options.onSend(userMessage);
-
     // system + хвост истории + текущий userMessage
     const apiMessages = this.buildApiMessages(messageHistory, userMessage, model);
 
@@ -314,6 +312,8 @@ export class ChatService {
         options.onFinish({ ...assistantMessage, content });
       },
     });
+
+    options.onSend(userMessage);
   }
 
   stopRequest(requestId: string): void {
