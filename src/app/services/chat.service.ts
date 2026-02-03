@@ -10,7 +10,7 @@ import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
 import { StreamingStore } from './streaming.store';
 import { Router } from '@angular/router';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 
 const API_HISTORY_LIMIT = 6;
 
