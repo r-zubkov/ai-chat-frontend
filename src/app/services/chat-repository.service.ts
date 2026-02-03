@@ -4,6 +4,7 @@ import { ModelType } from '../types/model-type';
 import { chatDB } from '../common/chat.db';
 import { ChatMessage } from '../types/chat-message';
 import { Observable, Subject } from 'rxjs';
+import Dexie from 'dexie';
 
 const CHATS_STORAGE_KEY = 'ai-chat-chats';
 const CURRENT_MODEL_STORAGE_KEY = 'ai-chat-current-model';
@@ -61,9 +62,9 @@ export class ChatRepositoryService {
 
   async getMessages(chatId: string): Promise<ChatMessage[]> {
     return chatDB.messages
-      .where('chatId')
-      .equals(chatId)
-      .sortBy('timestamp');
+      .where('[chatId+sequelId]')
+      .between([chatId, Dexie.minKey], [chatId, Dexie.maxKey])
+      .toArray();
   }
   
   async getMessagesCount(): Promise<number> {

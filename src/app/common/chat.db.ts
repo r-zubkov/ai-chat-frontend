@@ -16,7 +16,7 @@ export class ChatDB extends Dexie {
     this.version(1).stores({
       projects: 'id, lastUpdate',
       chats: 'id, projectId, lastUpdate',
-      messages: 'id, chatId, timestamp',
+      messages: 'id, sequelId, chatId, timestamp, [chatId+sequelId]',
       settings: 'key',
     });
   }

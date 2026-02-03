@@ -2,9 +2,9 @@ import { Component, HostListener, OnDestroy, OnInit, signal } from '@angular/cor
 import { tuiItemsHandlersProvider, TuiRoot } from '@taiga-ui/core';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { HeaderComponent } from './components/header/header.component';
-import { ChatComponent } from './components/chat/chat.component';
 import { ChatService } from './services/chat.service';
 import { AppService } from './services/app.service';
+import { RouterOutlet } from '@angular/router';
 
 interface ISelectItem {
   readonly id: string | number;
@@ -13,13 +13,12 @@ interface ISelectItem {
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [
+    RouterOutlet,
     TuiRoot,
     SidebarComponent,
     HeaderComponent,
-    ChatComponent
-  ],
+],
   providers: [
     tuiItemsHandlersProvider({
       stringify: signal((x: ISelectItem) => x.label),

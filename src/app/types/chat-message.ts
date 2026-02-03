@@ -13,8 +13,9 @@ export enum ChatMessageState {
 }
 
 export interface ChatMessage {
-  id: string;
+  readonly id: string;
   chatId: string;
+  sequelId: number;
   role: ChatMessageRole;
   model: ModelType;
   state: ChatMessageState;

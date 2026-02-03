@@ -9,6 +9,8 @@ import { truncateAtWord } from '../helpers/text-utils';
 import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
 import { StreamingStore } from './streaming.store';
+import { Router } from '@angular/router';
+import { Observable, Subscription } from 'rxjs';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -21,6 +23,12 @@ const MODEL_BASE_SYSTEM_PROMT = `
   - Если есть код — отдельный блок с короткими комментариями.
   - Если задачу можно сделать по шагам — пронумеруй шаги.
 `;
+
+interface SendMessageOptions {
+  onSend: (msg: ChatMessage) => void;
+  onFinish: (msg: ChatMessage) => void;
+  onError: (err: any) => void;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
@@ -50,7 +58,10 @@ export class ChatService {
   private readonly chatsLimitStep: number = 50;
   private chatsLimit: number = this.chatsLimitStep;
 
+  private sequelCounter = 0;
+
   constructor(
+    private readonly router: Router,
     private readonly appServbice: AppService,
     private readonly chatRepositoryService: ChatRepositoryService,
     private readonly chatSocketService: ChatSocketService,
@@ -59,29 +70,34 @@ export class ChatService {
     this.watchChatsUpdate()
   }
 
-  private applySystemPrompt(chatId: string, model: ModelType, messages: ChatMessage[]): ChatMessage[] {
+  private generateSequelId(): number {
+    return Date.now() * 1000 + this.sequelCounter++
+  }
+
+  private applySystemPrompt(model: ModelType, messages: ChatMessage[]): ChatMessage[] {
     const systemPrompt = this.modelSystemPrompts[model];
     if (!systemPrompt) return messages;
 
     const systemMessage: ChatMessage = {
       id: crypto.randomUUID(),
+      sequelId: this.generateSequelId(),
+      chatId: '',
       role: ChatMessageRole.SYSTEM,
       content: systemPrompt,
       model,
       state: ChatMessageState.COMPLETED,
-      chatId,
       timestamp: Date.now(),
     };
 
     return [systemMessage, ...messages];
   }
 
-  private buildApiMessages(chat: Chat, userMessage: ChatMessage, model: ModelType): ChatMessage[] {
-    const historyTail = chat.messages.slice(-API_HISTORY_LIMIT); // Берём хвост из N сообщений
+  private buildApiMessages(messageHistory: ChatMessage[], userMessage: ChatMessage, model: ModelType): ChatMessage[] {
+    const historyTail = messageHistory.slice(-API_HISTORY_LIMIT); // Берём хвост из N сообщений
     const historyWithLastUserMsg = [...historyTail, userMessage]; // Добавляем userMessage в конец
 
     // Добавляем SYSTEM в начало, не мутируя исходный массив
-    return this.applySystemPrompt(chat.id, model, historyWithLastUserMsg); 
+    return this.applySystemPrompt(model, historyWithLastUserMsg); 
   }
 
   private saveChats(chats: Chat[]): void {
@@ -98,13 +114,17 @@ export class ChatService {
     this.chatsCount.set(count);
   }
 
-  watchChatsUpdate(): void {
-    this.chatRepositoryService.chatsUpdated$.pipe(takeUntilDestroyed()).subscribe(event => {
+  private watchChatsUpdate(): void {
+    this.chatsUpdated$.pipe(takeUntilDestroyed()).subscribe(event => {
       if (event === RepositoryEventType.CREATING || event === RepositoryEventType.DELETING) {
         this.loadChatsCount()
       }
       this.loadChats()
     })
+  }
+
+  async getMessages(): Promise<ChatMessage[]> {
+    return this.chatRepositoryService.getMessages(this.activeChatId() || '');
   }
 
   loadChatsFromLocalStorage(): void {
@@ -169,7 +189,7 @@ export class ChatService {
     }
   }
 
-  navigateToChat(chatId: string | null): void {
+  initializeChat(chatId: string | null): void {
     this.activeChatId.set(chatId);
     const activeChat = this.activeChat();
 
@@ -184,6 +204,10 @@ export class ChatService {
     }
   }
 
+  navigateToChat(chatId: string | null): void {
+    this.router.navigate(['/chat', chatId || 'new'])
+  }
+
   private createChatEntity(name: string): Chat {
     return {
       id: crypto.randomUUID(),
@@ -193,7 +217,6 @@ export class ChatService {
       projectId: null,
       currentRequestId: null,
       lastUpdate: Date.now(),
-      messages: [],
     };
   }
 
@@ -213,9 +236,8 @@ export class ChatService {
 
   async sendMessage(
     text: string,
-    onSend: (msg: ChatMessage) => void,
-    onFinish: (msg: ChatMessage) => void,
-    onError: (err: any) => void,
+    messageHistory: ChatMessage[],
+    options: SendMessageOptions
   ): Promise<void> {
     const trimmed = text.trim();
     const model = this.currentModel();
@@ -231,6 +253,7 @@ export class ChatService {
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
+      sequelId: this.generateSequelId(),
       role: ChatMessageRole.USER,
       model,
       state: ChatMessageState.COMPLETED,
@@ -241,6 +264,7 @@ export class ChatService {
 
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
+      sequelId: this.generateSequelId(),
       role: ChatMessageRole.ASSISTANT,
       model,
       state: ChatMessageState.STREAMING,
@@ -249,12 +273,13 @@ export class ChatService {
       timestamp: Date.now(),
     };
 
+    // сохранение сообщений в бд
     await this.chatRepositoryService.createMessages([userMessage, assistantMessage]);
 
-    onSend(userMessage);
+    options.onSend(userMessage);
 
     // system + хвост истории + текущий userMessage
-    const apiMessages = this.buildApiMessages(chat, userMessage, model);
+    const apiMessages = this.buildApiMessages(messageHistory, userMessage, model);
 
     // отправка запроса к модели
     const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(model, apiMessages);
@@ -277,7 +302,7 @@ export class ChatService {
 
         this.streamingStore.remove(assistantMessage.id)
 
-        onError(err);
+        options.onError(err);
       },
       complete: () => {
         // сохраняем в бд
@@ -286,7 +311,7 @@ export class ChatService {
 
         this.streamingStore.remove(assistantMessage.id)
 
-        onFinish({ ...assistantMessage, content });
+        options.onFinish({ ...assistantMessage, content });
       },
     });
   }
@@ -302,5 +327,21 @@ export class ChatService {
   destroy(): void {
     this.stopAllRequests()
     this.chatSocketService.destroy()
+  }
+
+  get projectsUpdated$(): Observable<RepositoryEventType> {
+    return this.chatRepositoryService.projectsUpdated$
+  }
+
+  get chatsUpdated$(): Observable<RepositoryEventType> {
+    return this.chatRepositoryService.chatsUpdated$
+  }
+
+  get messagesUpdated$(): Observable<RepositoryEventType> {
+    return this.chatRepositoryService.messagesUpdated$
+  }
+
+  get settingsUpdated$(): Observable<RepositoryEventType> {
+    return this.chatRepositoryService.settingsUpdated$
   }
 }

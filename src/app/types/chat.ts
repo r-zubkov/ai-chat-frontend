@@ -1,4 +1,3 @@
-import { ChatMessage } from "./chat-message";
 import { ModelType } from "./model-type";
 
 export enum ChatState {
@@ -15,5 +14,4 @@ export interface Chat {
   projectId: string | null;
   currentRequestId: string | null;
   lastUpdate: number;
-  messages: ChatMessage[];
 }
