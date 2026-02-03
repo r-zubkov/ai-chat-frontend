@@ -26,6 +26,12 @@ import { RepositoryEventType } from '../../services/chat-repository.service';
 export class UserChatPage {
   @Input() set id(chatId: string) {
     this.chatService.initializeChat(chatId)
+
+    if (!this.chatService.activeChat()) {
+      this.chatService.navigateToChat(null)
+      return
+    } 
+
     this.loadMessages('instant')
   }
 
@@ -44,6 +50,7 @@ export class UserChatPage {
   private async loadMessages(scrollEffect: 'instant' | 'smooth' | null = null): Promise<void> {
    const messages = await this.chatService.getMessages()
    this.messages.set(messages)
+
    if (scrollEffect) setTimeout(() => this.scrollToBottom(scrollEffect), 50)
   }
 
