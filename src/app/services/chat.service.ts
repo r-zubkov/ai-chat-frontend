@@ -57,8 +57,6 @@ export class ChatService {
   private readonly chatsLimitStep: number = 50;
   private chatsLimit: number = this.chatsLimitStep;
 
-  private sequelCounter = 0;
-
   constructor(
     private readonly router: Router,
     private readonly appServbice: AppService,
@@ -68,8 +66,8 @@ export class ChatService {
     this.watchChatsUpdate()
   }
 
-  private generateSequelId(): number {
-    return Date.now() * 1000 + this.sequelCounter++
+  private generateSequelId(localCounter: number): number {
+    return Date.now() * 1000 + localCounter
   }
 
   private applySystemPrompt(model: ModelType, messages: ChatMessage[]): ChatMessage[] {
@@ -77,14 +75,14 @@ export class ChatService {
     if (!systemPrompt) return messages;
 
     const systemMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      sequelId: this.generateSequelId(),
+      id: '',
+      sequelId: 0,
       chatId: '',
       role: ChatMessageRole.SYSTEM,
       content: systemPrompt,
       model,
       state: ChatMessageState.COMPLETED,
-      timestamp: Date.now(),
+      timestamp: 0,
     };
 
     return [systemMessage, ...messages];
@@ -249,9 +247,11 @@ export class ChatService {
       chat = entity;
     }
 
+    let sequelCounter = 0;
+
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
-      sequelId: this.generateSequelId(),
+      sequelId: this.generateSequelId(sequelCounter++),
       role: ChatMessageRole.USER,
       model,
       state: ChatMessageState.COMPLETED,
@@ -262,7 +262,7 @@ export class ChatService {
 
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
-      sequelId: this.generateSequelId(),
+      sequelId: this.generateSequelId(sequelCounter++),
       role: ChatMessageRole.ASSISTANT,
       model,
       state: ChatMessageState.STREAMING,
