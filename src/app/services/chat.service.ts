@@ -203,7 +203,7 @@ export class ChatService {
   }
 
   navigateToChat(chatId: string | null): void {
-    this.router.navigate(['/chat', chatId || 'new'])
+    this.router.navigate(['/chats', chatId || 'new'])
   }
 
   private createChatEntity(name: string): Chat {

@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'chat', pathMatch: 'full' },
+  { path: '', redirectTo: 'chats', pathMatch: 'full' },
 
   {
-    path: 'chat',
+    path: 'chats',
     children: [
       { path: '', redirectTo: 'new', pathMatch: 'full' },
       { 
@@ -18,5 +18,5 @@ export const routes: Routes = [
     ]
   },
 
-  { path: '**', redirectTo: 'chat' } 
+  { path: '**', redirectTo: 'chats' } 
 ];
