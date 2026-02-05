@@ -96,10 +96,6 @@ export class ChatService {
     return this.applySystemPrompt(model, historyWithLastUserMsg); 
   }
 
-  private saveChats(chats: Chat[]): void {
-    this.chatRepositoryService.saveChats(chats);
-  }
-
   async loadChats(): Promise<void> {
     const chats = await this.chatRepositoryService.getChats(this.chatsLimit);
     this.chats.set(chats);
@@ -123,29 +119,16 @@ export class ChatService {
     return this.chatRepositoryService.getMessages(this.activeChatId() || '');
   }
 
-  loadChatsFromLocalStorage(): void {
-    const loaded = this.chatRepositoryService.loadChats();
-
-    // TODO: remove fallback later
-    loaded.forEach(chat => {
-      if (!('projectId' in chat)) {
-        (chat as any).projectId = null;
-      }
-    })
-    
-    // complete thinking state
-    loaded.forEach(chat => {
-      if (chat.state === ChatState.THINKING) {
-        chat.state = ChatState.IDLE;
-        chat.currentRequestId = null;
-      }
-    });
-
-    this.chats.set(loaded);
+  private isModelAvailable(modelId: ModelType): boolean {
+    return this.models.some(model => model.id === modelId);
   }
 
-  loadCurrentModelFromLocalStorage(): void {
-    const loaded = this.chatRepositoryService.loadCurrentModal() as ModelType | null;
+  private getDefaultModel(): ModelType {
+    return this.models[0].id;
+  }
+
+  async loadCurrentModel(): Promise<void> {
+    const loaded = await this.chatRepositoryService.loadCurrentModel();
 
     let modelToSet: ModelType;
 
@@ -159,15 +142,7 @@ export class ChatService {
     this.globalCurrentModel.set(modelToSet);
   }
 
-  private isModelAvailable(modelId: ModelType): boolean {
-    return this.models.some(model => model.id === modelId);
-  }
-
-  private getDefaultModel(): ModelType {
-    return this.models[0].id;
-  }
-
-  updateCurrentModel(model: ModelType): void {
+  async updateCurrentModel(model: ModelType): Promise<void> {
     let modelToSet: ModelType;
 
     if (this.isModelAvailable(model)) {
@@ -178,10 +153,9 @@ export class ChatService {
 
     this.currentModel.set(modelToSet);
 
-    // for global use
     if (!this.activeChatId()) {
       this.globalCurrentModel.set(modelToSet);
-      this.chatRepositoryService.saveCurrentModel(this.globalCurrentModel());
+      await this.chatRepositoryService.saveCurrentModel(modelToSet);
     }
   }
 

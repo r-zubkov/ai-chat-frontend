@@ -6,8 +6,7 @@ import { ChatMessage } from '../types/chat-message';
 import { Observable, Subject } from 'rxjs';
 import Dexie from 'dexie';
 
-const CHATS_STORAGE_KEY = 'ai-chat-chats';
-const CURRENT_MODEL_STORAGE_KEY = 'ai-chat-current-model';
+const CURRENT_MODEL_SETTINGS_KEY = 'current-model';
 
 export enum RepositoryEventType {
   READING = 'reading',
@@ -110,6 +109,14 @@ export class ChatRepositoryService {
     await chatDB.settings.put({ key, value });
   }
 
+  async loadCurrentModel(): Promise<ModelType | null> {
+    return await this.getSetting<ModelType>(CURRENT_MODEL_SETTINGS_KEY);
+  }
+
+  async saveCurrentModel(model: ModelType): Promise<void> {
+    await this.setSetting(CURRENT_MODEL_SETTINGS_KEY, model);
+  }
+
   async clearAllData(): Promise<void> {
     await chatDB.transaction('rw', chatDB.chats, chatDB.messages, async () => {
       await chatDB.projects.clear();
@@ -139,32 +146,4 @@ export class ChatRepositoryService {
   get settingsUpdated$(): Observable<RepositoryEventType> {
     return this._settingsUpdated$.asObservable()
   } 
-
-  loadChats(): Chat[] {
-    try {
-      const raw = localStorage.getItem(CHATS_STORAGE_KEY);
-      if (!raw) return [];
-      return JSON.parse(raw) as Chat[];
-    } catch {
-      return [];
-    }
-  }
-
-  saveChats(chats: Chat[]): void {
-    localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(chats));
-  }
-
-  loadCurrentModal(): ModelType | null {
-    try { 
-      const raw = localStorage.getItem(CURRENT_MODEL_STORAGE_KEY);
-      if (!raw) return null;
-      return JSON.parse(raw) as ModelType;
-    } catch {
-      return null;
-    }
-  }
-
-  saveCurrentModel(model: ModelType): void {
-    localStorage.setItem(CURRENT_MODEL_STORAGE_KEY, JSON.stringify(model));
-  }
 }
