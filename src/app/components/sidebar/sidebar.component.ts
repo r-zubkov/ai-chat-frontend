@@ -77,7 +77,7 @@ export class SidebarComponent {
           this.alerts.open('Название не может быть короче 1 символа', {appearance: 'negative'}).pipe(take(1)).subscribe()
           return
         }
-        this.chatService.updateChat(chat.id, { title })
+        this.chatService.updateChat(chat.id, { title }, false)
       });
   }
 

@@ -35,9 +35,9 @@ export class AppComponent implements OnInit, OnDestroy {
     public readonly appSerivce: AppService,
     private readonly chatService: ChatService
   ) {
-    this.chatService.loadCurrentModel()
-    this.chatService.loadChats()
-    this.chatService.loadChatsCount()
+    this.chatService.loadCurrentModelFromDB()
+    this.chatService.loadChatsFromDB()
+    this.chatService.loadChatsCountFromDB()
   }
 
   ngOnInit(): void {

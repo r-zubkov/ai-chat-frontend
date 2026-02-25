@@ -70,6 +70,8 @@ export class ChatService {
     return Date.now() * 1000 + localCounter
   }
 
+  /* Сборка истории сообщений для чата */
+
   private applySystemPrompt(model: ModelType, messages: ChatMessage[]): ChatMessage[] {
     const systemPrompt = this.modelSystemPrompts[model];
     if (!systemPrompt) return messages;
@@ -96,38 +98,85 @@ export class ChatService {
     return this.applySystemPrompt(model, historyWithLastUserMsg); 
   }
 
-  async loadChats(): Promise<void> {
-    const chats = await this.chatRepositoryService.getChats(this.chatsLimit);
+  /* Чаты */
+
+  getChats(limit: number): Promise<Chat[]> {
+    return this.chatRepositoryService.getChats(limit);
+  }
+
+  getChatsCount(): Promise<number> {
+    return this.chatRepositoryService.getChatsCount();
+  }
+
+  async updateChat(
+    chatId: string,
+    chatUpdateData: Partial<Omit<Chat, 'id'>>,
+    triggerLastUpdate: boolean = true
+  ): Promise<void> {
+    const dataToUpdate: Partial<Omit<Chat, 'id'>> = {...chatUpdateData}
+    if (triggerLastUpdate) dataToUpdate.lastUpdate = Date.now()
+
+    await this.chatRepositoryService.updateChat(chatId, {...chatUpdateData})
+  }
+
+  async deleteChat(chatId: string): Promise<void> {
+    await this.chatRepositoryService.deleteChat(chatId)
+  }
+
+  async deleteAllChats(): Promise<void> {
+    this.stopAllRequests()
+
+    await this.chatRepositoryService.deleteAllChats()
+  }
+
+  async loadChatsFromDB(): Promise<void> {
+    const chats = await this.getChats(this.chatsLimit);
     this.chatStore.setChats(chats);
   }
 
-  async loadChatsCount(): Promise<void> {
-    const count = await this.chatRepositoryService.getChatsCount();
+  async loadChatsCountFromDB(): Promise<void> {
+    const count = await this.getChatsCount();
     this.chatStore.setChatsCount(count);
+  }
+
+  private createChatEntity(name: string): Chat {
+    return {
+      id: crypto.randomUUID(),
+      title: truncateAtWord(name, 100, null),
+      state: ChatState.IDLE,
+      model: this.currentModel() as ModelType,
+      projectId: null,
+      currentRequestId: null,
+      lastUpdate: Date.now(),
+    };
   }
 
   private watchChatsUpdate(): void {
     this.chatsUpdated$.pipe(takeUntilDestroyed()).subscribe(event => {
       if (event === RepositoryEventType.CREATING || event === RepositoryEventType.DELETING) {
-        this.loadChatsCount()
+        this.loadChatsCountFromDB()
       }
-      this.loadChats()
+      this.loadChatsFromDB()
     })
   }
 
-  async getMessages(): Promise<ChatMessage[]> {
+  /* Сообщения */
+
+  async getActiveChatMessages(): Promise<ChatMessage[]> {
     return this.chatRepositoryService.getMessages(this.activeChatId() || '');
   }
 
-  private isModelAvailable(modelId: ModelType): boolean {
-    return this.models.some(model => model.id === modelId);
+  private createMessageEntity(msg: Omit<ChatMessage, 'id' | 'timestamp'>): ChatMessage {
+    return {
+      ...msg,
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+    };
   }
 
-  private getDefaultModel(): ModelType {
-    return this.models[0].id;
-  }
+  /* Взаимодействие с моделями чатов */
 
-  async loadCurrentModel(): Promise<void> {
+  async loadCurrentModelFromDB(): Promise<void> {
     const loaded = await this.chatRepositoryService.loadCurrentModel();
 
     let modelToSet: ModelType;
@@ -159,6 +208,16 @@ export class ChatService {
     }
   }
 
+  private isModelAvailable(modelId: ModelType): boolean {
+    return this.models.some(model => model.id === modelId);
+  }
+
+  private getDefaultModel(): ModelType {
+    return this.models[0].id;
+  }
+
+  /* Навигация по чатам */
+
   initializeChat(chatId: string | null): void {
     this.chatStore.setActiveChatId(chatId);
     const activeChat = this.activeChat();
@@ -178,31 +237,7 @@ export class ChatService {
     this.router.navigate(['/chats', chatId || 'new'])
   }
 
-  private createChatEntity(name: string): Chat {
-    return {
-      id: crypto.randomUUID(),
-      title: truncateAtWord(name, 100, null),
-      state: ChatState.IDLE,
-      model: this.currentModel() as ModelType,
-      projectId: null,
-      currentRequestId: null,
-      lastUpdate: Date.now(),
-    };
-  }
-
-  async updateChat(chatId: string, chatUpdateData: Partial<Omit<Chat, 'id'>>): Promise<void> {
-    await this.chatRepositoryService.updateChat(chatId, {...chatUpdateData})
-  }
-
-  async deleteChat(chatId: string): Promise<void> {
-    await this.chatRepositoryService.deleteChat(chatId)
-  }
-
-  async deleteAllChats(): Promise<void> {
-    this.stopAllRequests()
-
-    await this.chatRepositoryService.deleteAllChats()
-  }
+  /* Отправка сообщений / работа с сокетами */
 
   async sendMessage(
     text: string,
@@ -223,27 +258,23 @@ export class ChatService {
 
     let sequelCounter = 0;
 
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
+    const userMessage: ChatMessage = this.createMessageEntity({
       sequelId: this.generateSequelId(sequelCounter++),
       role: ChatMessageRole.USER,
       model,
       state: ChatMessageState.COMPLETED,
       chatId: chat.id,
       content: trimmed,
-      timestamp: Date.now(),
-    };
+    });
 
-    const assistantMessage: ChatMessage = {
-      id: crypto.randomUUID(),
+    const assistantMessage: ChatMessage = this.createMessageEntity({
       sequelId: this.generateSequelId(sequelCounter++),
       role: ChatMessageRole.ASSISTANT,
       model,
       state: ChatMessageState.STREAMING,
       chatId: chat.id,
       content: '',
-      timestamp: Date.now(),
-    };
+    });
 
     // сохранение сообщений в бд
     await this.chatRepositoryService.createMessages([userMessage, assistantMessage]);
@@ -289,10 +320,7 @@ export class ChatService {
     this.chatSocketService.abortAllRequests();
   }
 
-  destroy(): void {
-    this.stopAllRequests()
-    this.chatSocketService.destroy()
-  }
+  /* Обновление данных из indexed db */
 
   get projectsUpdated$(): Observable<RepositoryEventType> {
     return this.chatRepositoryService.projectsUpdated$
@@ -308,5 +336,10 @@ export class ChatService {
 
   get settingsUpdated$(): Observable<RepositoryEventType> {
     return this.chatRepositoryService.settingsUpdated$
+  }
+
+  destroy(): void {
+    this.stopAllRequests()
+    this.chatSocketService.destroy()
   }
 }

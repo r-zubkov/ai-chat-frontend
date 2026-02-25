@@ -45,7 +45,7 @@ export class UserChatPage {
   }
   
   private async loadMessages(scrollEffect: 'instant' | 'smooth' | null = null): Promise<void> {
-    const messages = await this.chatService.getMessages()
+    const messages = await this.chatService.getActiveChatMessages()
 
     // редирект на новый чат если нет сообщений
     if (!messages.length) {
