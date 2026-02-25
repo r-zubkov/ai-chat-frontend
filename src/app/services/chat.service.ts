@@ -36,15 +36,14 @@ export class ChatService {
 
   readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
     [ModelType.GPT_51]: MODEL_BASE_SYSTEM_PROMT,
-    [ModelType.GPT_5_MINI]: MODEL_BASE_SYSTEM_PROMT,
     [ModelType.GEMINI_3_FLASH_PREVIEW]: MODEL_BASE_SYSTEM_PROMT,
   };
 
   readonly models: Array<{ id: ModelType; label: string }> = [
     { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
+    { id: ModelType.DEEPSEEK_32, label: ModelLabelMap[ModelType.DEEPSEEK_32]! },
+    { id: ModelType.GEMINI_3_FLASH_PREVIEW, label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]! },
     { id: ModelType.GPT_51, label: ModelLabelMap[ModelType.GPT_51]! },
-    { id: ModelType.GPT_5_MINI, label: ModelLabelMap[ModelType.GPT_5_MINI]! },
-    { id: ModelType.GEMINI_3_FLASH_PREVIEW, label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]! }
   ];
 
   readonly chats = this.chatStore.chats;
