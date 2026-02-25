@@ -1,4 +1,4 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Chat, ChatState } from '../types/chat';
 import { ModelType } from '../types/model-type';
 import { ChatRepositoryService, RepositoryEventType } from './chat-repository.service';
@@ -10,6 +10,7 @@ import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { ChatStore } from './chat.store';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -31,6 +32,8 @@ interface SendMessageOptions {
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
+  private readonly chatStore = inject(ChatStore);
+
   readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
     [ModelType.GPT_51]: MODEL_BASE_SYSTEM_PROMT,
     [ModelType.GPT_5_MINI]: MODEL_BASE_SYSTEM_PROMT,
@@ -44,15 +47,13 @@ export class ChatService {
     { id: ModelType.GEMINI_3_FLASH_PREVIEW, label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]! }
   ];
 
-  private readonly globalCurrentModel = signal<ModelType>(ModelType.GROK_4_FAST);
+  readonly chats = this.chatStore.chats;
+  readonly chatsCount = this.chatStore.chatsCount;
+  readonly activeChatId = this.chatStore.activeChatId;
+  readonly activeChat = this.chatStore.activeChat;
+  readonly currentModel = this.chatStore.currentModel;
 
-  readonly currentModel = signal<ModelType>(ModelType.GROK_4_FAST);
-
-  readonly chats = signal<Chat[]>([]);
-  readonly chatsCount = signal<number>(0);
-
-  readonly activeChatId = signal<string | null>(null);
-  readonly activeChat = computed<Chat | null>(() => this.chats().find((chat) => chat.id === this.activeChatId()) || null);
+  private readonly globalCurrentModel = this.chatStore.globalCurrentModel;
 
   private readonly chatsLimitStep: number = 50;
   private chatsLimit: number = this.chatsLimitStep;
@@ -98,12 +99,12 @@ export class ChatService {
 
   async loadChats(): Promise<void> {
     const chats = await this.chatRepositoryService.getChats(this.chatsLimit);
-    this.chats.set(chats);
+    this.chatStore.setChats(chats);
   }
 
   async loadChatsCount(): Promise<void> {
     const count = await this.chatRepositoryService.getChatsCount();
-    this.chatsCount.set(count);
+    this.chatStore.setChatsCount(count);
   }
 
   private watchChatsUpdate(): void {
@@ -138,8 +139,8 @@ export class ChatService {
       modelToSet = this.getDefaultModel();
     }
 
-    this.currentModel.set(modelToSet);
-    this.globalCurrentModel.set(modelToSet);
+    this.chatStore.setCurrentModel(modelToSet);
+    this.chatStore.setGlobalCurrentModel(modelToSet);
   }
 
   async updateCurrentModel(model: ModelType): Promise<void> {
@@ -151,16 +152,16 @@ export class ChatService {
       modelToSet = this.getDefaultModel();
     }
 
-    this.currentModel.set(modelToSet);
+    this.chatStore.setCurrentModel(modelToSet);
 
     if (!this.activeChatId()) {
-      this.globalCurrentModel.set(modelToSet);
+      this.chatStore.setGlobalCurrentModel(modelToSet);
       await this.chatRepositoryService.saveCurrentModel(modelToSet);
     }
   }
 
   initializeChat(chatId: string | null): void {
-    this.activeChatId.set(chatId);
+    this.chatStore.setActiveChatId(chatId);
     const activeChat = this.activeChat();
 
     if (activeChat) {
