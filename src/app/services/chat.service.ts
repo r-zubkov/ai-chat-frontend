@@ -11,8 +11,10 @@ import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-me
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ChatStore } from './chat.store';
+import { StreamingStore } from './streaming.store';
 
 const API_HISTORY_LIMIT = 6;
+const PERSIST_INTERVAL_MS = 5000;
 
 const MODEL_BASE_SYSTEM_PROMT = `
   Стиль:
@@ -33,6 +35,7 @@ interface SendMessageOptions {
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private readonly chatStore = inject(ChatStore);
+  private readonly streamingStore = inject(StreamingStore);
 
   readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
     [ModelType.GPT_51]: MODEL_BASE_SYSTEM_PROMT,
@@ -289,19 +292,31 @@ export class ChatService {
     this.updateChat(chat.id, { model, state: ChatState.THINKING, currentRequestId: requestId })
 
     let content = '';
+    let lastPersistedContent = '';
+
+    const persistStreamingContent = (): void => {
+      if (content === lastPersistedContent) return;
+
+      lastPersistedContent = content;
+      this.chatRepositoryService.updateMessage(assistantMessage.id, { content })
+    };
+
+    const persistInterval = setInterval(persistStreamingContent, PERSIST_INTERVAL_MS);
 
     stream$.subscribe({
       next: (delta: string) => {
         content += delta;
-        this.chatRepositoryService.updateMessage(assistantMessage.id, { content })
+        this.streamingStore.set(assistantMessage.id, content);
       },
       error: (err: any) => {
+        clearInterval(persistInterval);
         this.updateChat(chat.id, { model, state: ChatState.ERROR, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })
 
         options.onError(err);
       },
       complete: () => {
+        clearInterval(persistInterval);
         this.updateChat(chat.id, { model, state: ChatState.IDLE, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.COMPLETED })
 

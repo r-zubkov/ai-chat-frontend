@@ -10,6 +10,7 @@ import { ModelLabelPipe } from '../../pipes/model-label.pipe';
 import { remToPx } from '../../helpers/rem-to-px';
 import { getCssValue } from '../../helpers/get-css-value';
 import { RepositoryEventType } from '../../services/chat-repository.service';
+import { StreamingStore } from '../../services/streaming.store';
 
 @Component({
   selector: 'app-user-chat.page',
@@ -40,7 +41,7 @@ export class UserChatPage {
 
   streamingMessageId: string = '';
 
-  constructor(readonly chatService: ChatService) {
+  constructor(readonly chatService: ChatService, readonly streamingStore: StreamingStore) {
     this.watchMessagesUpdate()
   }
   
@@ -54,6 +55,18 @@ export class UserChatPage {
     } 
 
     this.messages.set(messages)
+
+    // Удаляем временный стрим только после загрузки сообщений из БД,
+    // чтобы не было пустого кадра и дергания скролла.
+    for (const msg of messages) {
+      if (
+        msg.role === ChatMessageRole.ASSISTANT &&
+        msg.state !== ChatMessageState.STREAMING &&
+        this.streamingStore.get(msg.id)
+      ) {
+        this.streamingStore.remove(msg.id)
+      }
+    }
 
     if (scrollEffect) setTimeout(() => this.scrollToBottom(scrollEffect), 50)
   }
