@@ -10,6 +10,7 @@ import { ModelLabelPipe } from '../../pipes/model-label.pipe';
 import { remToPx } from '../../helpers/rem-to-px';
 import { getCssValue } from '../../helpers/get-css-value';
 import { RepositoryEventType } from '../../services/chat-repository.service';
+import { StreamingStore } from '../../services/streaming.store';
 
 @Component({
   selector: 'app-user-chat.page',
@@ -40,7 +41,7 @@ export class UserChatPage {
 
   streamingMessageId: string = '';
 
-  constructor(readonly chatService: ChatService) {
+  constructor(readonly chatService: ChatService, readonly streamingStore: StreamingStore) {
     this.watchMessagesUpdate()
   }
   

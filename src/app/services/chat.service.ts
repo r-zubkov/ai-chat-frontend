@@ -11,6 +11,7 @@ import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-me
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ChatStore } from './chat.store';
+import { StreamingStore } from './streaming.store';
 
 const API_HISTORY_LIMIT = 6;
 
@@ -33,6 +34,7 @@ interface SendMessageOptions {
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private readonly chatStore = inject(ChatStore);
+  private readonly streamingStore = inject(StreamingStore);
 
   readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
     [ModelType.GPT_51]: MODEL_BASE_SYSTEM_PROMT,
@@ -293,17 +295,19 @@ export class ChatService {
     stream$.subscribe({
       next: (delta: string) => {
         content += delta;
-        this.chatRepositoryService.updateMessage(assistantMessage.id, { content })
+        this.streamingStore.set(assistantMessage.id, content);
       },
       error: (err: any) => {
         this.updateChat(chat.id, { model, state: ChatState.ERROR, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })
+        this.streamingStore.remove(assistantMessage.id);
 
         options.onError(err);
       },
       complete: () => {
         this.updateChat(chat.id, { model, state: ChatState.IDLE, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.COMPLETED })
+        this.streamingStore.remove(assistantMessage.id);
 
         options.onFinish({ ...assistantMessage, content });
       },
