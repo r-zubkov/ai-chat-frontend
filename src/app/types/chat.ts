@@ -7,7 +7,7 @@ export enum ChatState {
 }
 
 export interface Chat {
-  id: string;
+  readonly id: string;
   title: string;
   state: ChatState;
   model: ModelType;
