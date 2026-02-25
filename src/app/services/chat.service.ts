@@ -300,14 +300,12 @@ export class ChatService {
       error: (err: any) => {
         this.updateChat(chat.id, { model, state: ChatState.ERROR, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })
-        this.streamingStore.remove(assistantMessage.id);
 
         options.onError(err);
       },
       complete: () => {
         this.updateChat(chat.id, { model, state: ChatState.IDLE, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.COMPLETED })
-        this.streamingStore.remove(assistantMessage.id);
 
         options.onFinish({ ...assistantMessage, content });
       },

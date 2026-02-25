@@ -56,6 +56,18 @@ export class UserChatPage {
 
     this.messages.set(messages)
 
+    // Удаляем временный стрим только после загрузки сообщений из БД,
+    // чтобы не было пустого кадра и дергания скролла.
+    for (const msg of messages) {
+      if (
+        msg.role === ChatMessageRole.ASSISTANT &&
+        msg.state !== ChatMessageState.STREAMING &&
+        this.streamingStore.get(msg.id)
+      ) {
+        this.streamingStore.remove(msg.id)
+      }
+    }
+
     if (scrollEffect) setTimeout(() => this.scrollToBottom(scrollEffect), 50)
   }
 
