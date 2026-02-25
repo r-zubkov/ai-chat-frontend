@@ -14,6 +14,7 @@ import { ChatStore } from './chat.store';
 import { StreamingStore } from './streaming.store';
 
 const API_HISTORY_LIMIT = 6;
+const PERSIST_INTERVAL_MS = 5000;
 
 const MODEL_BASE_SYSTEM_PROMT = `
   Стиль:
@@ -291,6 +292,16 @@ export class ChatService {
     this.updateChat(chat.id, { model, state: ChatState.THINKING, currentRequestId: requestId })
 
     let content = '';
+    let lastPersistedContent = '';
+
+    const persistStreamingContent = (): void => {
+      if (content === lastPersistedContent) return;
+
+      lastPersistedContent = content;
+      this.chatRepositoryService.updateMessage(assistantMessage.id, { content })
+    };
+
+    const persistInterval = setInterval(persistStreamingContent, PERSIST_INTERVAL_MS);
 
     stream$.subscribe({
       next: (delta: string) => {
@@ -298,12 +309,14 @@ export class ChatService {
         this.streamingStore.set(assistantMessage.id, content);
       },
       error: (err: any) => {
+        clearInterval(persistInterval);
         this.updateChat(chat.id, { model, state: ChatState.ERROR, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })
 
         options.onError(err);
       },
       complete: () => {
+        clearInterval(persistInterval);
         this.updateChat(chat.id, { model, state: ChatState.IDLE, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.COMPLETED })
 
