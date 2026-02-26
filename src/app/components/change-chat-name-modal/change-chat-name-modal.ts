@@ -1,18 +1,44 @@
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import {TuiAutoFocus} from '@taiga-ui/cdk';
-import { TuiButton, TuiDialogContext, TuiTextfield } from '@taiga-ui/core';
-import {injectContext} from '@taiga-ui/polymorpheus';
+import {
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  type ValidationErrors,
+  type ValidatorFn,
+} from '@angular/forms';
+import { TuiAutoFocus } from '@taiga-ui/cdk';
+import { TuiButton, TuiDialogContext, TuiError, TuiTextfield } from '@taiga-ui/core';
+import { injectContext } from '@taiga-ui/polymorpheus';
+
+const trimRequiredValidator: ValidatorFn = (control): ValidationErrors | null =>
+  String(control.value ?? '').trim().length > 0 ? null : { trimRequired: true };
 
 @Component({
   selector: 'app-change-chat-name-modal',
-  imports: [FormsModule, TuiAutoFocus, TuiButton, TuiTextfield],
+  imports: [ReactiveFormsModule, TuiAutoFocus, TuiButton, TuiError, TuiTextfield],
   templateUrl: './change-chat-name-modal.html',
   styleUrl: './change-chat-name-modal.less',
-  host: {'(submit.prevent)': 'context.completeWith(value)'},
 })
 export class ChangeChatNameModal {
   protected readonly context = injectContext<TuiDialogContext<string, string>>();
- 
-  protected value = this.context.data;
+
+  protected readonly form = new FormGroup({
+    name: new FormControl(this.context.data, {
+      nonNullable: true,
+      validators: [trimRequiredValidator],
+    }),
+  });
+
+  protected get nameControl(): FormControl<string> {
+    return this.form.controls.name;
+  }
+
+  protected submit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.context.completeWith(this.nameControl.value);
+  }
 }

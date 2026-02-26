@@ -1,12 +1,17 @@
- <form>
-  <tui-textfield>
-    <input
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div>
+    <tui-textfield>
+      <input
         name="name"
         tuiAutoFocus
         tuiTextfield
-        [(ngModel)]="value"
-    />
-  </tui-textfield>
+        formControlName="name"
+      />
+    </tui-textfield>
+    @if(nameControl.invalid && nameControl.touched) {
+      <tui-error [error]="'Название не может быть короче 1 символа'"/>
+    }
+  </div>
   <footer>
     <button
       appearance="secondary"
@@ -19,6 +24,7 @@
     <button
       tuiButton
       type="submit"
+      [disabled]="form.invalid"
     >
       Сохранить
     </button>
