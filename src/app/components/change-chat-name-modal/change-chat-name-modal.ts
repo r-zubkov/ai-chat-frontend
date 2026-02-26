@@ -3,15 +3,11 @@ import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
-  type ValidationErrors,
-  type ValidatorFn,
 } from '@angular/forms';
 import { TuiAutoFocus } from '@taiga-ui/cdk';
 import { TuiButton, TuiDialogContext, TuiError, TuiTextfield } from '@taiga-ui/core';
 import { injectContext } from '@taiga-ui/polymorpheus';
-
-const trimRequiredValidator: ValidatorFn = (control): ValidationErrors | null =>
-  String(control.value ?? '').trim().length > 0 ? null : { trimRequired: true };
+import { trimRequiredValidator } from '../../validators/trim-required.validator';
 
 @Component({
   selector: 'app-change-chat-name-modal',
