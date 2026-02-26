@@ -41,7 +41,10 @@ export class UserChatPage {
 
   streamingMessageId: string = '';
 
-  constructor(readonly chatService: ChatService, readonly streamingStore: StreamingStore) {
+  constructor(
+    readonly chatService: ChatService,
+    readonly streamingStore: StreamingStore
+  ) {
     this.watchMessagesUpdate()
   }
   

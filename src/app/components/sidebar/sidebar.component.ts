@@ -10,6 +10,7 @@ import { TuiActiveZone } from '@taiga-ui/cdk/directives/active-zone';
 import { ChangeChatNameModal } from '../change-chat-name-modal/change-chat-name-modal';
 import { Chat, ChatState } from '../../types/chat';
 import { take } from 'rxjs';
+import { RouterLink } from '@angular/router';
 
 const TuiConfirmText: TuiConfirmData = {
   content: 'Это действие нельзя будет отменить',
@@ -23,6 +24,7 @@ const TuiConfirmText: TuiConfirmData = {
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     TuiScrollbar,
     TuiDataList,
     TuiDropdown,
@@ -52,13 +54,7 @@ export class SidebarComponent {
     this.chatService.navigateToChat(null)
   }
 
-  protected openChat(chatId: string): void {
-    this.chatService.navigateToChat(chatId)
-  }
-
-  protected handleOpenItemOptionsDropdown(event: MouseEvent, chatId: string): void {
-    event.stopPropagation();
-    
+  protected handleOpenItemOptionsDropdown(chatId: string): void {
     this.openItemOptionsDropdown(chatId)
   }
 

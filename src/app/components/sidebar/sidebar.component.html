@@ -10,11 +10,13 @@
     <div class="sidebar-list">
       @for (chat of chatService.chats(); track chat.id) {
         <div
-            role="button"
-            class="sidebar-chat sidebar-list__btn flex gap-3"
+            class="sidebar-chat sidebar-list__btn flex items-center items-stretch gap-3"
             [class.sidebar-list__btn--active]="chat.id === this.chatService.activeChatId()"
-            (click)="openChat(chat.id)"
           >
+            <a
+              class="sidebar-chat__link"
+              [routerLink]="['/chats', chat.id]"
+            >
             @if(chat.state === ChatState.THINKING) {
               <tui-loader [inheritColor]="true" />
             }
@@ -27,6 +29,7 @@
                 {{ chat.lastUpdate | date:'dd.MM.yy HH:mm' }} • {{ chat.model | modelLabel }}
               </div>
             </div>
+            </a>
 
             <button
               class="sidebar-chat__action"
@@ -38,7 +41,7 @@
               [tuiDropdown]="dropdownItemOptionsContent"
               [tuiDropdownManual]="isItemOptionsDropdownOpen(chat.id)"
               [tuiObscuredEnabled]="isItemOptionsDropdownOpen(chat.id)"
-              (click)="handleOpenItemOptionsDropdown($event, chat.id)"
+              (click)="handleOpenItemOptionsDropdown(chat.id)"
               (tuiActiveZoneChange)="onActiveZone($event)"
               (tuiObscured)="onObscured($event)"
             >
