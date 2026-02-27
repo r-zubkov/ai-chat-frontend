@@ -119,7 +119,7 @@ export class ChatService {
     const dataToUpdate: Partial<Omit<Chat, 'id'>> = {...chatUpdateData}
     if (triggerLastUpdate) dataToUpdate.lastUpdate = Date.now()
 
-    await this.chatRepositoryService.updateChat(chatId, {...chatUpdateData})
+    await this.chatRepositoryService.updateChat(chatId, {...dataToUpdate})
   }
 
   async deleteChat(chatId: string): Promise<void> {

@@ -1,4 +1,3 @@
-import { provideZoneChangeDetection } from "@angular/core";
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -9,7 +8,7 @@ import { provideHttpClient } from '@angular/common/http';
 bootstrapApplication(AppComponent, {
   ...appConfig,
   providers: [
-    provideZoneChangeDetection(),...(appConfig.providers || []),
+    ...(appConfig.providers || []),
     provideHttpClient(),
     provideAnimations(),
     provideEventPlugins(),
