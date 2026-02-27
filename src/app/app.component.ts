@@ -45,6 +45,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.cleanupResizeObserver();
     this.chatService.destroy()
   }
 
@@ -60,5 +61,10 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     this.resizeObserver.observe(document.body);
+  }
+
+  private cleanupResizeObserver(): void {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = undefined;
   }
 }

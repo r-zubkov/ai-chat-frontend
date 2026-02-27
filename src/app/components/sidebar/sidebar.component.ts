@@ -18,7 +18,6 @@ const TuiConfirmText: TuiConfirmData = {
   no: 'Нет',
 };
 
-
 @Component({
   selector: 'app-sidebar',
   standalone: true,
@@ -68,7 +67,7 @@ export class SidebarComponent {
         size: 'm',
         data: chat.title,
       })
-      .subscribe((title: any) => {
+      .subscribe((title: string) => {
         if (!title.trim()) {
           this.alerts.open('Название не может быть короче 1 символа', {appearance: 'negative'}).pipe(take(1)).subscribe()
           return
