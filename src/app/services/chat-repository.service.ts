@@ -5,8 +5,7 @@ import { chatDB } from '../common/chat.db';
 import { ChatMessage } from '../types/chat-message';
 import { Observable, Subject } from 'rxjs';
 import Dexie from 'dexie';
-
-const CURRENT_MODEL_SETTINGS_KEY = 'current-model';
+import { AppSettingKey, AppSettingsMap } from '../types/setting';
 
 export enum RepositoryEventType {
   READING = 'reading',
@@ -100,21 +99,21 @@ export class ChatRepositoryService {
     this._messagesUpdated$.next(RepositoryEventType.DELETING);
   }
 
-  async getSetting<T>(key: string): Promise<T | null> {
+  async getSetting<K extends AppSettingKey>(key: K): Promise<AppSettingsMap[K] | null> {
     const row = await chatDB.settings.get(key);
-    return (row?.value as unknown as T) ?? null;
+    return (row?.value as AppSettingsMap[K]) ?? null;
   }
 
-  async setSetting(key: string, value: any): Promise<void> {
+  async setSetting<K extends AppSettingKey>(key: K, value: AppSettingsMap[K]): Promise<void> {
     await chatDB.settings.put({ key, value });
   }
 
   async loadCurrentModel(): Promise<ModelType | null> {
-    return await this.getSetting<ModelType>(CURRENT_MODEL_SETTINGS_KEY);
+    return await this.getSetting(AppSettingKey.CURRENT_MODEL);
   }
 
   async saveCurrentModel(model: ModelType): Promise<void> {
-    await this.setSetting(CURRENT_MODEL_SETTINGS_KEY, model);
+    await this.setSetting(AppSettingKey.CURRENT_MODEL, model);
   }
 
   async clearAllData(): Promise<void> {

@@ -29,7 +29,7 @@ const MODEL_BASE_SYSTEM_PROMT = `
 interface SendMessageOptions {
   onSend: (msg: ChatMessage) => void;
   onFinish: (msg: ChatMessage) => void;
-  onError: (err: any) => void;
+  onError: (err: unknown) => void;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -308,7 +308,7 @@ export class ChatService {
         content += delta;
         this.streamingStore.set(assistantMessage.id, content);
       },
-      error: (err: any) => {
+      error: (err: unknown) => {
         clearInterval(persistInterval);
         this.updateChat(chat.id, { model, state: ChatState.ERROR, currentRequestId: null })
         this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })

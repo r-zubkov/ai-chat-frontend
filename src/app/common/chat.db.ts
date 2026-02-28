@@ -1,14 +1,14 @@
 import Dexie, { Table } from 'dexie';
 import { Chat } from '../types/chat';
 import { ChatMessage } from '../types/chat-message';
-import { Setting } from '../types/setting';
+import { AppSettingKey, Setting } from '../types/setting';
 import { Project } from '../types/project';
 
 export class ChatDB extends Dexie {
   projects!: Table<Project, string>;
   chats!: Table<Chat, string>;
   messages!: Table<ChatMessage, string>;
-  settings!: Table<Setting, string>;
+  settings!: Table<Setting, AppSettingKey>;
 
   constructor() {
     super('ai-chat-db');

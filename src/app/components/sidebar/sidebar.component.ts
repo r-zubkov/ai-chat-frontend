@@ -106,7 +106,7 @@ export class SidebarComponent {
     }
   }
  
-  protected onActiveZone(active: any): void {
+  protected onActiveZone(active: boolean): void {
     if (!active) {
       this.hideItemOptionsDropdown()
     }
