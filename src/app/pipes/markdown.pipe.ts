@@ -1,5 +1,4 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MarkdownService } from '../services/markdown.service';
 
 @Pipe({
@@ -8,14 +7,9 @@ import { MarkdownService } from '../services/markdown.service';
   pure: true,
 })
 export class MarkdownPipe implements PipeTransform {
-  constructor(
-    private readonly md: MarkdownService,
-    private readonly sanitizer: DomSanitizer,
-  ) {}
+  constructor(private readonly md: MarkdownService) {}
 
-  transform(value: string | null | undefined): SafeHtml {
-    const html = this.md.render(value || '');
-    // html мы генерим сами из markdown, без сырого html от пользователя
-    return this.sanitizer.bypassSecurityTrustHtml(html);
+  transform(value: string | null | undefined): string {
+    return this.md.render(value || '');
   }
 }
