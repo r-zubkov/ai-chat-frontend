@@ -32,7 +32,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
 
   constructor(
-    public readonly appSerivce: AppService,
+    public readonly appService: AppService,
     private readonly chatService: ChatService
   ) {
     this.chatService.loadCurrentModelFromDB()
@@ -57,7 +57,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private observeWidthChange(): void {
     this.resizeObserver = new ResizeObserver(entries => {
       const width = entries[0].contentRect.width;
-      this.appSerivce.updateMobileState(width);
+      this.appService.updateMobileState(width);
     });
 
     this.resizeObserver.observe(document.body);

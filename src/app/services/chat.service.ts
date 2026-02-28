@@ -62,7 +62,7 @@ export class ChatService {
 
   constructor(
     private readonly router: Router,
-    private readonly appServbice: AppService,
+    private readonly appService: AppService,
     private readonly chatRepositoryService: ChatRepositoryService,
     private readonly chatSocketService: ChatSocketService,
   ) {
@@ -231,8 +231,8 @@ export class ChatService {
       this.updateCurrentModel(this.globalCurrentModel());
     }
 
-    if (this.appServbice.isMobile()) {
-      this.appServbice.sidebarOpen.set(false);
+    if (this.appService.isMobile()) {
+      this.appService.sidebarOpen.set(false);
     }
   }
 
