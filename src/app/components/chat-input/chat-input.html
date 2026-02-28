@@ -1,4 +1,4 @@
-<form (submit)="send()">
+<form (ngSubmit)="send()">
   <tui-textfield [tuiTextfieldCleaner]='false' size="l">
     <textarea
       tuiTextarea 
@@ -19,8 +19,7 @@
         size='s'
         type="submit"
         class="ml-3"
-        [disabled]="!input().trim()"
-        (click)="send()"
+        [disabled]="!isSendAllowed"
       ></button>
     } @else {
       <button
@@ -28,7 +27,7 @@
         iconStart="@tui.x"
         appearance="primary"
         size='s'
-        type="submit"
+        type="button"
         class="ml-3"
         (click)="cancel()"
       ></button>

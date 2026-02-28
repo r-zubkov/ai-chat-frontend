@@ -15,17 +15,22 @@ import { TuiTextarea } from '@taiga-ui/kit';
   styleUrl: './chat-input.less',
 })
 export class ChatInput {
-  @Input() thinking!: boolean;
+  @Input() thinking = false;
   
   @Output() onSend = new EventEmitter<string>();
   @Output() onCancel = new EventEmitter<boolean>();
 
   protected input = signal<string>('');
+  protected readonly minInputLength = 1;
+
+  protected get isSendAllowed(): boolean {
+    return this.input().trim().length >= this.minInputLength && !this.thinking;
+  }
 
   protected send(): void {
     const text = this.input().trim();
 
-    if (!text || this.thinking) return;
+    if (!this.isSendAllowed) return;
 
     this.onSend.emit(text)
 
