@@ -10,7 +10,7 @@ import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
 import { SendMessageEvent, SendMessageEventType } from '../types/send-message-event';
 import { Router } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
+import { EMPTY, Observable, Subject, auditTime, catchError, concatMap, finalize, from, tap } from 'rxjs';
 import { ChatStore } from './chat.store';
 import { StreamingStore } from './streaming.store';
 
@@ -307,42 +307,80 @@ export class ChatService {
         });
 
         let lastPersistedContent = '';
+        let terminalMessageState = ChatMessageState.COMPLETED;
 
-        const persistStreamingContent = (): void => {
-          if (content === lastPersistedContent) return;
+        const persistQueue$ = new Subject<{ content: string; state?: ChatMessageState }>();
+        const persistTick$ = new Subject<void>();
 
-          lastPersistedContent = content;
-          this.chatRepositoryService.updateMessage(assistantMessage.id, { content })
-        };
+        persistQueue$
+          .pipe(
+            concatMap(payload => {
+              const update: Partial<ChatMessage> = { content: payload.content };
+              if (payload.state !== undefined) {
+                update.state = payload.state;
+              }
 
-        const persistInterval = setInterval(persistStreamingContent, PERSIST_INTERVAL_MS);
+              return from(this.chatRepositoryService.updateMessage(assistantMessage.id, update))
+                .pipe(
+                  tap(() => {
+                    lastPersistedContent = payload.content;
+                  }),
+                  catchError((persistError: unknown) => {
+                    console.error('Error persisting streaming content:', persistError);
+                    return EMPTY;
+                  })
+                );
+            }),
+          )
+          .subscribe();
 
-        stream$.subscribe({
-          next: (delta: string) => {
-            content += delta;
-            this.streamingStore.set(assistantMessage.id, content);
-          },
-          error: (err: unknown) => {
-            clearInterval(persistInterval);
-            this.updateChat(activeChatId, { model, state: ChatState.ERROR, currentRequestId: null })
-            this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })
+        persistTick$
+          .pipe(
+            auditTime(PERSIST_INTERVAL_MS),
+            tap(() => {
+              if (content === lastPersistedContent) return;
+              persistQueue$.next({ content });
+            }),
+            finalize(() => {
+              persistQueue$.next({ content, state: terminalMessageState });
+              persistQueue$.complete();
+            }),
+          )
+          .subscribe();
 
-            events$.error(err);
-          },
-          complete: () => {
-            clearInterval(persistInterval);
-            this.updateChat(activeChatId, { model, state: ChatState.IDLE, currentRequestId: null })
-            this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.COMPLETED })
+        stream$
+          .pipe(
+            tap((delta: string) => {
+              content += delta;
+              this.streamingStore.set(assistantMessage.id, content);
+              persistTick$.next();
+            }),
+            tap({
+              error: () => {
+                terminalMessageState = ChatMessageState.ERROR;
+              },
+            }),
+            finalize(() => {
+              persistTick$.complete();
+            }),
+          )
+          .subscribe({
+            error: (err: unknown) => {
+              this.updateChat(activeChatId, { model, state: ChatState.ERROR, currentRequestId: null })
+              events$.error(err);
+            },
+            complete: () => {
+              this.updateChat(activeChatId, { model, state: ChatState.IDLE, currentRequestId: null })
 
-            const finalAssistantMessage: ChatMessage = { ...assistantMessage, content };
-            events$.next({
-              type: SendMessageEventType.FINISHED,
-              chatId: activeChatId,
-              assistantMessage: finalAssistantMessage,
-            });
-            events$.complete();
-          },
-        });
+              const finalAssistantMessage: ChatMessage = { ...assistantMessage, content };
+              events$.next({
+                type: SendMessageEventType.FINISHED,
+                chatId: activeChatId,
+                assistantMessage: finalAssistantMessage,
+              });
+              events$.complete();
+            },
+          });
       } catch (err: unknown) {
         if (chatId) {
           this.updateChat(chatId, { model, state: ChatState.ERROR, currentRequestId: null })
