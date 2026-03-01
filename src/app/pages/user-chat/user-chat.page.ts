@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, signal, ViewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, Input, signal, ViewChild } from '@angular/core';
 import { ChatService } from '../../services/chat.service';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../../types/chat-message';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -25,6 +25,8 @@ import { StreamingStore } from '../../services/streaming.store';
   styleUrl: './user-chat.page.less',
 })
 export class UserChatPage {
+  private readonly destroyRef = inject(DestroyRef);
+
   @Input() set id(chatId: string) {
     this.chatService.initializeChat(chatId)
     this.loadMessages('instant')
@@ -38,8 +40,6 @@ export class UserChatPage {
   protected readonly ChatMessageRole = ChatMessageRole;
 
   protected readonly messages = signal<ChatMessage[]>([]);
-
-  streamingMessageId: string = '';
 
   constructor(
     readonly chatService: ChatService,
@@ -82,16 +82,11 @@ export class UserChatPage {
   }
 
   protected sendRequest(text: string): void {
-    this.chatService.sendMessage(
-      text, this.messages(), {
-        onSend: (msg) => {this.streamingMessageId = msg.id},
-        onFinish: (msg) => {this.streamingMessageId = ''},
-        onError: (err) => {
-          this.streamingMessageId = ''
-          console.error('Error sending message:', err)
-        }
-      }
-    )
+    this.chatService.sendMessage(text, this.messages())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: (err) => console.error('Error sending message:', err)
+      })
   }
 
   protected retryLasRequest(): void {

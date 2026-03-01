@@ -8,8 +8,9 @@ import { AppService } from './app.service';
 import { truncateAtWord } from '../helpers/text-utils';
 import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
+import { SendMessageEvent, SendMessageEventType } from '../types/send-message-event';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { ChatStore } from './chat.store';
 import { StreamingStore } from './streaming.store';
 
@@ -25,12 +26,6 @@ const MODEL_BASE_SYSTEM_PROMT = `
   - Если есть код — отдельный блок с короткими комментариями.
   - Если задачу можно сделать по шагам — пронумеруй шаги.
 `;
-
-interface SendMessageOptions {
-  onSend: (msg: ChatMessage) => void;
-  onFinish: (msg: ChatMessage) => void;
-  onError: (err: unknown) => void;
-}
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
@@ -242,89 +237,129 @@ export class ChatService {
 
   /* Отправка сообщений / работа с сокетами */
 
-  async sendMessage(
+  sendMessage(
     text: string,
     messageHistory: ChatMessage[],
-    options: SendMessageOptions
-  ): Promise<void> {
+  ): Observable<SendMessageEvent> {
+    const events$ = new Subject<SendMessageEvent>();
     const trimmed = text.trim();
     const model = this.currentModel();
-    if (!trimmed || !model) return;
-
-    let chat = this.activeChat();
-    if (!chat) {
-      const entity = this.createChatEntity(trimmed);
-      await this.chatRepositoryService.createChat(entity);
-
-      chat = entity;
+    if (!trimmed || !model) {
+      events$.complete();
+      return events$.asObservable();
     }
 
-    let sequelCounter = 0;
+    void (async () => {
+      let chat = this.activeChat();
+      let chatId: string | null = chat?.id ?? null;
+      let assistantMessageId: string | null = null;
+      let content = '';
 
-    const userMessage: ChatMessage = this.createMessageEntity({
-      sequelId: this.generateSequelId(sequelCounter++),
-      role: ChatMessageRole.USER,
-      model,
-      state: ChatMessageState.COMPLETED,
-      chatId: chat.id,
-      content: trimmed,
-    });
+      try {
+        if (!chat) {
+          const entity = this.createChatEntity(trimmed);
+          await this.chatRepositoryService.createChat(entity);
 
-    const assistantMessage: ChatMessage = this.createMessageEntity({
-      sequelId: this.generateSequelId(sequelCounter++),
-      role: ChatMessageRole.ASSISTANT,
-      model,
-      state: ChatMessageState.STREAMING,
-      chatId: chat.id,
-      content: '',
-    });
+          chat = entity;
+          chatId = entity.id;
+        }
 
-    // сохранение сообщений в бд
-    await this.chatRepositoryService.createMessages([userMessage, assistantMessage]);
+        let sequelCounter = 0;
+        const activeChatId = chatId;
+        if (!activeChatId) {
+          throw new Error('Chat ID is not available');
+        }
 
-    // system + хвост истории + текущий userMessage
-    const apiMessages = this.buildApiMessages(messageHistory, userMessage, model);
+        const userMessage: ChatMessage = this.createMessageEntity({
+          sequelId: this.generateSequelId(sequelCounter++),
+          role: ChatMessageRole.USER,
+          model,
+          state: ChatMessageState.COMPLETED,
+          chatId: activeChatId,
+          content: trimmed,
+        });
 
-    // отправка запроса к модели
-    const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(model, apiMessages);
+        const assistantMessage = this.createMessageEntity({
+          sequelId: this.generateSequelId(sequelCounter++),
+          role: ChatMessageRole.ASSISTANT,
+          model,
+          state: ChatMessageState.STREAMING,
+          chatId: activeChatId,
+          content: '',
+        });
+        assistantMessageId = assistantMessage.id;
 
-    // обновляем состояние чата
-    this.updateChat(chat.id, { model, state: ChatState.THINKING, currentRequestId: requestId })
+        // сохранение сообщений в бд
+        await this.chatRepositoryService.createMessages([userMessage, assistantMessage]);
 
-    let content = '';
-    let lastPersistedContent = '';
+        // system + хвост истории + текущий userMessage
+        const apiMessages = this.buildApiMessages(messageHistory, userMessage, model);
 
-    const persistStreamingContent = (): void => {
-      if (content === lastPersistedContent) return;
+        // отправка запроса к модели
+        const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(model, apiMessages);
 
-      lastPersistedContent = content;
-      this.chatRepositoryService.updateMessage(assistantMessage.id, { content })
-    };
+        // обновляем состояние чата
+        this.updateChat(activeChatId, { model, state: ChatState.THINKING, currentRequestId: requestId })
+        events$.next({
+          type: SendMessageEventType.SENT,
+          chatId: activeChatId,
+          userMessage,
+        });
 
-    const persistInterval = setInterval(persistStreamingContent, PERSIST_INTERVAL_MS);
+        let lastPersistedContent = '';
 
-    stream$.subscribe({
-      next: (delta: string) => {
-        content += delta;
-        this.streamingStore.set(assistantMessage.id, content);
-      },
-      error: (err: unknown) => {
-        clearInterval(persistInterval);
-        this.updateChat(chat.id, { model, state: ChatState.ERROR, currentRequestId: null })
-        this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })
+        const persistStreamingContent = (): void => {
+          if (content === lastPersistedContent) return;
 
-        options.onError(err);
-      },
-      complete: () => {
-        clearInterval(persistInterval);
-        this.updateChat(chat.id, { model, state: ChatState.IDLE, currentRequestId: null })
-        this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.COMPLETED })
+          lastPersistedContent = content;
+          this.chatRepositoryService.updateMessage(assistantMessage.id, { content })
+        };
 
-        options.onFinish({ ...assistantMessage, content });
-      },
-    });
+        const persistInterval = setInterval(persistStreamingContent, PERSIST_INTERVAL_MS);
 
-    options.onSend(userMessage);
+        stream$.subscribe({
+          next: (delta: string) => {
+            content += delta;
+            this.streamingStore.set(assistantMessage.id, content);
+          },
+          error: (err: unknown) => {
+            clearInterval(persistInterval);
+            this.updateChat(activeChatId, { model, state: ChatState.ERROR, currentRequestId: null })
+            this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.ERROR })
+
+            events$.error(err);
+          },
+          complete: () => {
+            clearInterval(persistInterval);
+            this.updateChat(activeChatId, { model, state: ChatState.IDLE, currentRequestId: null })
+            this.chatRepositoryService.updateMessage(assistantMessage.id, { content, state: ChatMessageState.COMPLETED })
+
+            const finalAssistantMessage: ChatMessage = { ...assistantMessage, content };
+            events$.next({
+              type: SendMessageEventType.FINISHED,
+              chatId: activeChatId,
+              assistantMessage: finalAssistantMessage,
+            });
+            events$.complete();
+          },
+        });
+      } catch (err: unknown) {
+        if (chatId) {
+          this.updateChat(chatId, { model, state: ChatState.ERROR, currentRequestId: null })
+        }
+
+        if (assistantMessageId) {
+          this.chatRepositoryService.updateMessage(
+            assistantMessageId,
+            { content, state: ChatMessageState.ERROR }
+          )
+        }
+
+        events$.error(err);
+      }
+    })();
+
+    return events$.asObservable();
   }
 
   stopRequest(requestId: string): void {

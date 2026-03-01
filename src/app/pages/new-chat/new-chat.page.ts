@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { ChatInput } from '../../components/chat-input/chat-input';
 import { ChatService } from '../../services/chat.service';
+import { SendMessageEventType } from '../../types/send-message-event';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-new-chat.page',
@@ -9,6 +11,8 @@ import { ChatService } from '../../services/chat.service';
   styleUrl: './new-chat.page.less',
 })
 export class NewChatPage implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(private readonly chatService: ChatService) {}
   
   ngOnInit(): void {
@@ -16,12 +20,15 @@ export class NewChatPage implements OnInit {
   }
 
   protected sendRequest(text: string): void {
-    this.chatService.sendMessage(
-      text, [], {
-        onSend: (msg) => this.chatService.navigateToChat(msg.chatId),
-        onFinish: (msg) => {},
-        onError: (err) => console.error('Error sending message:', err)
-      }
-    )
+    this.chatService.sendMessage(text, [])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (event) => {
+          if (event.type === SendMessageEventType.SENT) {
+            this.chatService.navigateToChat(event.userMessage.chatId)
+          }
+        },
+        error: (err) => console.error('Error sending message:', err)
+      })
   }
 }
