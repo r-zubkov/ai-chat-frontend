@@ -1,11 +1,9 @@
-<form (ngSubmit)="send()">
+<form [formGroup]="form" (ngSubmit)="send()">
   <tui-textfield [tuiTextfieldCleaner]='false' size="l">
     <textarea
       tuiTextarea 
       placeholder="Спросите что-нибудь..."
-      [ngModel]="input()"
-      (ngModelChange)="input.set($event)"
-      [ngModelOptions]="{ standalone: true }"
+      formControlName="message"
       [max]="20"
       [min]="1" 
       (keydown)="onKeyDown($event)"

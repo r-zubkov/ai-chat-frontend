@@ -1,12 +1,13 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TuiButton, TuiTextfield } from '@taiga-ui/core';
 import { TuiTextarea } from '@taiga-ui/kit';
+import { trimRequiredValidator } from '../../validators/trim-required.validator';
 
 @Component({
   selector: 'chat-input',
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     TuiTextarea,
     TuiTextfield,
     TuiButton,
@@ -20,21 +21,25 @@ export class ChatInput {
   @Output() onSend = new EventEmitter<string>();
   @Output() onCancel = new EventEmitter<boolean>();
 
-  protected input = signal<string>('');
-  protected readonly minInputLength = 1;
+  protected readonly form = new FormGroup({
+    message: new FormControl('', {
+      nonNullable: true,
+      validators: [trimRequiredValidator],
+    }),
+  });
 
   protected get isSendAllowed(): boolean {
-    return this.input().trim().length >= this.minInputLength && !this.thinking;
+    return this.form.valid && !this.thinking;
   }
 
   protected send(): void {
-    const text = this.input().trim();
+    const text = this.form.controls.message.value.trim();
 
     if (!this.isSendAllowed) return;
 
     this.onSend.emit(text)
 
-    this.input.set('');
+    this.form.controls.message.reset('');
   }
 
   protected cancel(): void {
@@ -42,6 +47,10 @@ export class ChatInput {
   }
 
   protected onKeyDown(event: KeyboardEvent): void {
+    // Если пользователь еще выбирает иероглиф — выходим
+    if (event.isComposing) return;
+
+    // Если нажат Enter без Shift — отправляем
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.send()
