@@ -1,12 +1,10 @@
-﻿import { inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Chat } from '../types/chat';
 import { ModelType } from '../types/model-type';
 import { ChatRepositoryService, RepositoryEventType } from './chat-repository.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AppService } from './app.service';
 import { ChatMessage } from '../types/chat-message';
 import { SendMessageEvent } from '../types/send-message-event';
-import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ChatStore } from './chat.store';
 import { ChatConversationService } from './chat-conversation.service';
@@ -16,8 +14,6 @@ import { ChatModelService } from './chat-model.service';
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private readonly chatStore = inject(ChatStore);
-  private readonly router = inject(Router);
-  private readonly appService = inject(AppService);
   private readonly chatRepositoryService = inject(ChatRepositoryService);
   private readonly chatConversationService = inject(ChatConversationService);
   private readonly chatPersistenceService = inject(ChatPersistenceService);
@@ -99,21 +95,6 @@ export class ChatService {
 
   updateCurrentModel(model: ModelType): Promise<void> {
     return this.chatModelService.updateCurrentModel(model);
-  }
-
-  /* Chat navigation */
-
-  initializeChat(chatId: string | null): void {
-    this.chatStore.setActiveChatId(chatId);
-    void this.chatModelService.syncCurrentModelForChat(chatId);
-
-    if (this.appService.isMobile()) {
-      this.appService.sidebarOpen.set(false);
-    }
-  }
-
-  navigateToChat(chatId: string | null): void {
-    this.router.navigate(['/chats', chatId || 'new']);
   }
 
   /* Message sending / socket operations */

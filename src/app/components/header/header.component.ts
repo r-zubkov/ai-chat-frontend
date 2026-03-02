@@ -4,6 +4,7 @@ import { TuiDataList, TuiDropdown, TuiIcon, TuiLink } from '@taiga-ui/core';
 import { ChatService } from '../../services/chat.service';
 import { ModelType } from '../../types/model-type';
 import { AppService } from '../../services/app.service';
+import { ChatNavigationService } from '../../services/chat-navigation.service';
 
 @Component({
   selector: 'app-header',
@@ -17,6 +18,7 @@ export class HeaderComponent {
 
   public readonly appService = inject(AppService);
   public readonly chatService = inject(ChatService);
+  private readonly chatNavigationService = inject(ChatNavigationService);
 
   protected readonly selectedModel = computed(() => {
     const currentModel = this.chatService.currentModel();
@@ -37,6 +39,6 @@ export class HeaderComponent {
   }
 
   protected newChat(): void {
-    this.chatService.navigateToChat(null);
+    this.chatNavigationService.navigateToChat(null);
   }
 }

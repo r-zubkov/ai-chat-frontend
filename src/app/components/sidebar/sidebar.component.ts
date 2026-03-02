@@ -19,6 +19,7 @@ import { ChangeChatNameModal } from '../change-chat-name-modal/change-chat-name-
 import { Chat, ChatState } from '../../types/chat';
 import { take } from 'rxjs';
 import { RouterLink } from '@angular/router';
+import { ChatNavigationService } from '../../services/chat-navigation.service';
 
 const TuiConfirmText: TuiConfirmData = {
   content: 'Это действие нельзя будет отменить',
@@ -51,11 +52,12 @@ export class SidebarComponent {
   private readonly alerts = inject(TuiAlertService);
   private readonly dialogs = inject(TuiDialogService);
   public readonly chatService = inject(ChatService);
+  private readonly chatNavigationService = inject(ChatNavigationService);
 
   protected readonly ChatState = ChatState;
 
   protected createNewChat(): void {
-    this.chatService.navigateToChat(null);
+    this.chatNavigationService.navigateToChat(null);
   }
 
   protected handleOpenItemOptionsDropdown(chatId: string): void {
@@ -92,7 +94,7 @@ export class SidebarComponent {
       .subscribe((confirm) => {
         if (confirm) {
           this.chatService.deleteChat(chat.id);
-          this.chatService.navigateToChat(null);
+          this.chatNavigationService.navigateToChat(null);
         }
       });
   }
@@ -103,7 +105,7 @@ export class SidebarComponent {
       .subscribe((confirm) => {
         if (confirm) {
           this.chatService.deleteAllChats();
-          this.chatService.navigateToChat(null);
+          this.chatNavigationService.navigateToChat(null);
         }
       });
   }
