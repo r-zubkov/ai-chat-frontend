@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+﻿import { inject, Injectable } from '@angular/core';
 import { Chat } from '../types/chat';
 import { ModelType } from '../types/model-type';
 import { ChatRepositoryService, RepositoryEventType } from './chat-repository.service';

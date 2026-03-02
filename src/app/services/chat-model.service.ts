@@ -49,18 +49,20 @@ export class ChatModelService {
     if (chatId) {
       const activeChat = this.activeChat();
       const model = activeChat?.model ?? this.globalCurrentModel();
+
       await this.updateCurrentModel(model);
+
       return;
     }
 
     await this.updateCurrentModel(this.globalCurrentModel());
   }
 
-  isModelAvailable(model: ModelType): boolean {
+  private isModelAvailable(model: ModelType): boolean {
     return this.models.some((item) => item.id === model);
   }
 
-  getDefaultModel(): ModelType {
+  private getDefaultModel(): ModelType {
     return this.models[0].id;
   }
 
