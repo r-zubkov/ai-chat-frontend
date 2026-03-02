@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ReactiveFormsModule, FormControl, FormsModule } from '@angular/forms';
 import { TuiSelect, TuiDataListWrapper, TuiChevron } from '@taiga-ui/kit';
 import { TuiTextfield, TuiIcon, TuiDropdown, TuiDataList, TuiLink } from '@taiga-ui/core';
@@ -24,6 +24,7 @@ import { AppService } from '../../services/app.service';
   ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.less'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {
   protected readonly modelControl = new FormControl<ModelOption | null>(null);

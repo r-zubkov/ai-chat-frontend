@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   TuiAlertService,
@@ -43,6 +43,7 @@ const TuiConfirmText: TuiConfirmData = {
   ],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.less'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SidebarComponent {
   private readonly openItems = new Set<string | number>();

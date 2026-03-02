@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TuiAutoFocus } from '@taiga-ui/cdk';
 import { TuiButton, TuiDialogContext, TuiError, TuiTextfield } from '@taiga-ui/core';
@@ -10,6 +10,7 @@ import { trimRequiredValidator } from '../../validators/trim-required.validator'
   imports: [ReactiveFormsModule, TuiAutoFocus, TuiButton, TuiError, TuiTextfield],
   templateUrl: './change-chat-name-modal.html',
   styleUrl: './change-chat-name-modal.less',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChangeChatNameModal {
   protected readonly context = injectContext<TuiDialogContext<string, string>>();
