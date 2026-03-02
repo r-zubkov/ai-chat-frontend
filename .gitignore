@@ -143,3 +143,6 @@ vite.config.ts.timestamp-*
 
 # vs code
 .vscode/
+
+#type script
+out-tsc/

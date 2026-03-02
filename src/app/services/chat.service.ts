@@ -23,19 +23,11 @@ import {
 } from 'rxjs';
 import { ChatStore } from './chat.store';
 import { StreamingStore } from './streaming.store';
-
-const API_HISTORY_LIMIT = 6;
-const PERSIST_INTERVAL_MS = 5000;
-
-const MODEL_BASE_SYSTEM_PROMT = `
-  Стиль:
-  - Короткие абзацы, буллет-пойнты.
-  - Markdown по умолчанию.
-  - Иногда уместный эмодзи в начале абзаца.
-  - Тон: спокойный, уверенный, без канцелярита.
-  - Если есть код — отдельный блок с короткими комментариями.
-  - Если задачу можно сделать по шагам — пронумеруй шаги.
-`;
+import {
+  API_HISTORY_LIMIT,
+  MODEL_BASE_SYSTEM_PROMT,
+  PERSIST_INTERVAL_MS,
+} from '../constants/chat.constants';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
