@@ -1,4 +1,11 @@
-import { Component, HostListener, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { tuiItemsHandlersProvider, TuiRoot } from '@taiga-ui/core';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { HeaderComponent } from './components/header/header.component';
@@ -22,6 +29,7 @@ interface ISelectItem {
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.less'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
