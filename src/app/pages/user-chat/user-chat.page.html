@@ -18,14 +18,17 @@
             @if (msg.role === ChatMessageRole.USER) {
               <div class="chat-message__content">{{ msg.content }}</div>
             } @else if (msg.role === ChatMessageRole.ASSISTANT) {
-              <div class="chat-message__content" [innerHTML]="(streamingStore.get(msg.id) || msg.content) | markdown"></div>
+              <div
+                class="chat-message__content"
+                [innerHTML]="streamingStore.get(msg.id) || msg.content | markdown"
+              ></div>
             }
 
             @if (last && chatService.activeChat()?.state === ChatState.THINKING) {
               <div class="chat-thinking mt-5">
                 <div class="thinking-loader"></div>
               </div>
-            } 
+            }
           </div>
         }
 

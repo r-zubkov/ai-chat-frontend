@@ -1,4 +1,4 @@
-@import "../../../styles/utils.less";
+@import '../../../styles/utils.less';
 
 .header {
   height: var(--header-height);
@@ -20,13 +20,16 @@
   margin-right: calc(var(--space-2) * -1);
   border-radius: var(--radius-lg);
   color: #ffffff;
-  transition: background 0.3s ease-in-out,
-              box-shadow 0.3s ease-in-out;
+  transition:
+    background 0.3s ease-in-out,
+    box-shadow 0.3s ease-in-out;
 
-  &:hover, &:active, &:focus {
+  &:hover,
+  &:active,
+  &:focus {
     color: #ffffff !important;
   }
-                     
+
   &:hover {
     background: var(--color-bg-button-hover);
   }
@@ -55,10 +58,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 32px; 
+  width: 32px;
   height: 32px;
   padding: 0;
-  background: transparent; 
+  background: transparent;
   border: none;
   cursor: pointer;
   position: relative;
@@ -83,17 +86,17 @@
 }
 
 .burger-btn span::before {
-  content: "";
+  content: '';
   transform: translateY(-10px);
 }
 
 .burger-btn span::after {
-  content: "";
+  content: '';
   transform: translateY(10px);
 }
 
 .burger-btn.open span {
-  background-color: transparent; 
+  background-color: transparent;
 }
 
 .burger-btn.open span::before {

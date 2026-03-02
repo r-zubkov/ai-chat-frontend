@@ -6,18 +6,13 @@ import { trimRequiredValidator } from '../../validators/trim-required.validator'
 
 @Component({
   selector: 'chat-input',
-  imports: [
-    ReactiveFormsModule,
-    TuiTextarea,
-    TuiTextfield,
-    TuiButton,
-  ],
+  imports: [ReactiveFormsModule, TuiTextarea, TuiTextfield, TuiButton],
   templateUrl: './chat-input.html',
   styleUrl: './chat-input.less',
 })
 export class ChatInput {
   @Input() thinking = false;
-  
+
   @Output() onSend = new EventEmitter<string>();
   @Output() onCancel = new EventEmitter<boolean>();
 
@@ -37,13 +32,13 @@ export class ChatInput {
 
     if (!this.isSendAllowed) return;
 
-    this.onSend.emit(text)
+    this.onSend.emit(text);
 
     this.form.controls.message.reset('');
   }
 
   protected cancel(): void {
-    this.onCancel.emit(true)
+    this.onCancel.emit(true);
   }
 
   protected onKeyDown(event: KeyboardEvent): void {
@@ -53,7 +48,7 @@ export class ChatInput {
     // Если нажат Enter без Shift — отправляем
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      this.send()
+      this.send();
     }
   }
 }

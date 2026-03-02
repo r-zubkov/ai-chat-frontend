@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { getCssValue } from '../helpers/get-css-value';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AppService {
   readonly sidebarOpen = signal<boolean>(true);
@@ -12,7 +12,7 @@ export class AppService {
     const mobileBP = parseFloat(getCssValue('--grid-lg'));
     this.isMobile.set(width <= mobileBP);
 
-    this.isMobile() ?  this.closeSidebar() : this.openSidebar();
+    this.isMobile() ? this.closeSidebar() : this.openSidebar();
   }
 
   openSidebar(): void {

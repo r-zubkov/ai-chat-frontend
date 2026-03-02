@@ -10,7 +10,17 @@ import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
 import { SendMessageEvent, SendMessageEventType } from '../types/send-message-event';
 import { Router } from '@angular/router';
-import { EMPTY, Observable, Subject, auditTime, catchError, concatMap, finalize, from, tap } from 'rxjs';
+import {
+  EMPTY,
+  Observable,
+  Subject,
+  auditTime,
+  catchError,
+  concatMap,
+  finalize,
+  from,
+  tap,
+} from 'rxjs';
 import { ChatStore } from './chat.store';
 import { StreamingStore } from './streaming.store';
 
@@ -40,7 +50,10 @@ export class ChatService {
   readonly models: Array<{ id: ModelType; label: string }> = [
     { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
     { id: ModelType.DEEPSEEK_32, label: ModelLabelMap[ModelType.DEEPSEEK_32]! },
-    { id: ModelType.GEMINI_3_FLASH_PREVIEW, label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]! },
+    {
+      id: ModelType.GEMINI_3_FLASH_PREVIEW,
+      label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]!,
+    },
     { id: ModelType.GPT_51, label: ModelLabelMap[ModelType.GPT_51]! },
   ];
 
@@ -61,11 +74,11 @@ export class ChatService {
     private readonly chatRepositoryService: ChatRepositoryService,
     private readonly chatSocketService: ChatSocketService,
   ) {
-    this.watchChatsUpdate()
+    this.watchChatsUpdate();
   }
 
   private generateSequelId(localCounter: number): number {
-    return Date.now() * 1000 + localCounter
+    return Date.now() * 1000 + localCounter;
   }
 
   /* Сборка истории сообщений для чата */
@@ -88,12 +101,16 @@ export class ChatService {
     return [systemMessage, ...messages];
   }
 
-  private buildApiMessages(messageHistory: ChatMessage[], userMessage: ChatMessage, model: ModelType): ChatMessage[] {
+  private buildApiMessages(
+    messageHistory: ChatMessage[],
+    userMessage: ChatMessage,
+    model: ModelType,
+  ): ChatMessage[] {
     const historyTail = messageHistory.slice(-API_HISTORY_LIMIT); // Берём хвост из N сообщений
     const historyWithLastUserMsg = [...historyTail, userMessage]; // Добавляем userMessage в конец
 
     // Добавляем SYSTEM в начало, не мутируя исходный массив
-    return this.applySystemPrompt(model, historyWithLastUserMsg); 
+    return this.applySystemPrompt(model, historyWithLastUserMsg);
   }
 
   /* Чаты */
@@ -109,22 +126,22 @@ export class ChatService {
   async updateChat(
     chatId: string,
     chatUpdateData: Partial<Omit<Chat, 'id'>>,
-    triggerLastUpdate: boolean = true
+    triggerLastUpdate: boolean = true,
   ): Promise<void> {
-    const dataToUpdate: Partial<Omit<Chat, 'id'>> = {...chatUpdateData}
-    if (triggerLastUpdate) dataToUpdate.lastUpdate = Date.now()
+    const dataToUpdate: Partial<Omit<Chat, 'id'>> = { ...chatUpdateData };
+    if (triggerLastUpdate) dataToUpdate.lastUpdate = Date.now();
 
-    await this.chatRepositoryService.updateChat(chatId, {...dataToUpdate})
+    await this.chatRepositoryService.updateChat(chatId, { ...dataToUpdate });
   }
 
   async deleteChat(chatId: string): Promise<void> {
-    await this.chatRepositoryService.deleteChat(chatId)
+    await this.chatRepositoryService.deleteChat(chatId);
   }
 
   async deleteAllChats(): Promise<void> {
-    this.stopAllRequests()
+    this.stopAllRequests();
 
-    await this.chatRepositoryService.deleteAllChats()
+    await this.chatRepositoryService.deleteAllChats();
   }
 
   async loadChatsFromDB(): Promise<void> {
@@ -150,12 +167,12 @@ export class ChatService {
   }
 
   private watchChatsUpdate(): void {
-    this.chatsUpdated$.pipe(takeUntilDestroyed()).subscribe(event => {
+    this.chatsUpdated$.pipe(takeUntilDestroyed()).subscribe((event) => {
       if (event === RepositoryEventType.CREATING || event === RepositoryEventType.DELETING) {
-        this.loadChatsCountFromDB()
+        this.loadChatsCountFromDB();
       }
-      this.loadChatsFromDB()
-    })
+      this.loadChatsFromDB();
+    });
   }
 
   /* Сообщения */
@@ -207,7 +224,7 @@ export class ChatService {
   }
 
   private isModelAvailable(modelId: ModelType): boolean {
-    return this.models.some(model => model.id === modelId);
+    return this.models.some((model) => model.id === modelId);
   }
 
   private getDefaultModel(): ModelType {
@@ -232,15 +249,12 @@ export class ChatService {
   }
 
   navigateToChat(chatId: string | null): void {
-    this.router.navigate(['/chats', chatId || 'new'])
+    this.router.navigate(['/chats', chatId || 'new']);
   }
 
   /* Отправка сообщений / работа с сокетами */
 
-  sendMessage(
-    text: string,
-    messageHistory: ChatMessage[],
-  ): Observable<SendMessageEvent> {
+  sendMessage(text: string, messageHistory: ChatMessage[]): Observable<SendMessageEvent> {
     const events$ = new Subject<SendMessageEvent>();
     const trimmed = text.trim();
     const model = this.currentModel();
@@ -296,10 +310,17 @@ export class ChatService {
         const apiMessages = this.buildApiMessages(messageHistory, userMessage, model);
 
         // отправка запроса к модели
-        const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(model, apiMessages);
+        const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(
+          model,
+          apiMessages,
+        );
 
         // обновляем состояние чата
-        this.updateChat(activeChatId, { model, state: ChatState.THINKING, currentRequestId: requestId })
+        this.updateChat(activeChatId, {
+          model,
+          state: ChatState.THINKING,
+          currentRequestId: requestId,
+        });
         events$.next({
           type: SendMessageEventType.SENT,
           chatId: activeChatId,
@@ -314,22 +335,23 @@ export class ChatService {
 
         persistQueue$
           .pipe(
-            concatMap(payload => {
+            concatMap((payload) => {
               const update: Partial<ChatMessage> = { content: payload.content };
               if (payload.state !== undefined) {
                 update.state = payload.state;
               }
 
-              return from(this.chatRepositoryService.updateMessage(assistantMessage.id, update))
-                .pipe(
-                  tap(() => {
-                    lastPersistedContent = payload.content;
-                  }),
-                  catchError((persistError: unknown) => {
-                    console.error('Error persisting streaming content:', persistError);
-                    return EMPTY;
-                  })
-                );
+              return from(
+                this.chatRepositoryService.updateMessage(assistantMessage.id, update),
+              ).pipe(
+                tap(() => {
+                  lastPersistedContent = payload.content;
+                }),
+                catchError((persistError: unknown) => {
+                  console.error('Error persisting streaming content:', persistError);
+                  return EMPTY;
+                }),
+              );
             }),
           )
           .subscribe();
@@ -366,11 +388,19 @@ export class ChatService {
           )
           .subscribe({
             error: (err: unknown) => {
-              this.updateChat(activeChatId, { model, state: ChatState.ERROR, currentRequestId: null })
+              this.updateChat(activeChatId, {
+                model,
+                state: ChatState.ERROR,
+                currentRequestId: null,
+              });
               events$.error(err);
             },
             complete: () => {
-              this.updateChat(activeChatId, { model, state: ChatState.IDLE, currentRequestId: null })
+              this.updateChat(activeChatId, {
+                model,
+                state: ChatState.IDLE,
+                currentRequestId: null,
+              });
 
               const finalAssistantMessage: ChatMessage = { ...assistantMessage, content };
               events$.next({
@@ -383,14 +413,14 @@ export class ChatService {
           });
       } catch (err: unknown) {
         if (chatId) {
-          this.updateChat(chatId, { model, state: ChatState.ERROR, currentRequestId: null })
+          this.updateChat(chatId, { model, state: ChatState.ERROR, currentRequestId: null });
         }
 
         if (assistantMessageId) {
-          this.chatRepositoryService.updateMessage(
-            assistantMessageId,
-            { content, state: ChatMessageState.ERROR }
-          )
+          this.chatRepositoryService.updateMessage(assistantMessageId, {
+            content,
+            state: ChatMessageState.ERROR,
+          });
         }
 
         events$.error(err);
@@ -411,23 +441,23 @@ export class ChatService {
   /* Обновление данных из indexed db */
 
   get projectsUpdated$(): Observable<RepositoryEventType> {
-    return this.chatRepositoryService.projectsUpdated$
+    return this.chatRepositoryService.projectsUpdated$;
   }
 
   get chatsUpdated$(): Observable<RepositoryEventType> {
-    return this.chatRepositoryService.chatsUpdated$
+    return this.chatRepositoryService.chatsUpdated$;
   }
 
   get messagesUpdated$(): Observable<RepositoryEventType> {
-    return this.chatRepositoryService.messagesUpdated$
+    return this.chatRepositoryService.messagesUpdated$;
   }
 
   get settingsUpdated$(): Observable<RepositoryEventType> {
-    return this.chatRepositoryService.settingsUpdated$
+    return this.chatRepositoryService.settingsUpdated$;
   }
 
   destroy(): void {
-    this.stopAllRequests()
-    this.chatSocketService.destroy()
+    this.stopAllRequests();
+    this.chatSocketService.destroy();
   }
 }

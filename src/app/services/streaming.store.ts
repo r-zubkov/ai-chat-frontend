@@ -1,4 +1,4 @@
-import { computed, Injectable, signal } from "@angular/core";
+import { computed, Injectable, signal } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class StreamingStore {
@@ -7,7 +7,7 @@ export class StreamingStore {
   content = computed(() => this._content());
 
   set(id: string, message: string): void {
-    this._content.update(map => {
+    this._content.update((map) => {
       map.set(id, message);
       return new Map(map);
     });
@@ -18,7 +18,7 @@ export class StreamingStore {
   }
 
   remove(id: string): void {
-    this._content.update(map => {
+    this._content.update((map) => {
       map.delete(id);
       return new Map(map);
     });

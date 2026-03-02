@@ -1,32 +1,16 @@
 <form [formGroup]="form" (ngSubmit)="submit()">
   <div>
     <tui-textfield>
-      <input
-        name="name"
-        tuiAutoFocus
-        tuiTextfield
-        formControlName="name"
-      />
+      <input name="name" tuiAutoFocus tuiTextfield formControlName="name" />
     </tui-textfield>
-    @if(nameControl.invalid && nameControl.touched) {
-      <tui-error [error]="'Название не может быть короче 1 символа'"/>
+    @if (nameControl.invalid && nameControl.touched) {
+      <tui-error [error]="'Название не может быть короче 1 символа'" />
     }
   </div>
   <footer>
-    <button
-      appearance="secondary"
-      tuiButton
-      type="button"
-      (click)="context.$implicit.complete()"
-    >
+    <button appearance="secondary" tuiButton type="button" (click)="context.$implicit.complete()">
       Отмена
     </button>
-    <button
-      tuiButton
-      type="submit"
-      [disabled]="form.invalid"
-    >
-      Сохранить
-    </button>
+    <button tuiButton type="submit" [disabled]="form.invalid">Сохранить</button>
   </footer>
 </form>

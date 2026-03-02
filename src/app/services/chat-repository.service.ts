@@ -11,7 +11,7 @@ export enum RepositoryEventType {
   READING = 'reading',
   CREATING = 'creating',
   UPDATING = 'updating',
-  DELETING = 'deleting'
+  DELETING = 'deleting',
 }
 
 @Injectable({ providedIn: 'root' })
@@ -22,15 +22,11 @@ export class ChatRepositoryService {
   _settingsUpdated$ = new Subject<RepositoryEventType>();
 
   async getChats(limit = 50): Promise<Chat[]> {
-    return chatDB.chats
-      .orderBy('lastUpdate')
-      .reverse()
-      .limit(limit)
-      .toArray();
+    return chatDB.chats.orderBy('lastUpdate').reverse().limit(limit).toArray();
   }
 
   async getChatsCount(): Promise<number> {
-    return chatDB.chats.count()
+    return chatDB.chats.count();
   }
 
   async createChat(chat: Chat): Promise<void> {
@@ -64,9 +60,9 @@ export class ChatRepositoryService {
       .between([chatId, Dexie.minKey], [chatId, Dexie.maxKey])
       .toArray();
   }
-  
+
   async getMessagesCount(): Promise<number> {
-    return chatDB.messages.count()
+    return chatDB.messages.count();
   }
 
   async createMessage(message: ChatMessage): Promise<void> {
@@ -85,8 +81,8 @@ export class ChatRepositoryService {
   }
 
   async deleteMessage(id: string): Promise<void> {
-      await chatDB.messages.where('id').equals(id).delete();
-      this._messagesUpdated$.next(RepositoryEventType.DELETING);
+    await chatDB.messages.where('id').equals(id).delete();
+    this._messagesUpdated$.next(RepositoryEventType.DELETING);
   }
 
   async deleteAllChats(): Promise<void> {
@@ -131,18 +127,18 @@ export class ChatRepositoryService {
   }
 
   get projectsUpdated$(): Observable<RepositoryEventType> {
-    return this._projectsUpdated$.asObservable()
+    return this._projectsUpdated$.asObservable();
   }
 
   get chatsUpdated$(): Observable<RepositoryEventType> {
-    return this._chatsUpdated$.asObservable()
+    return this._chatsUpdated$.asObservable();
   }
 
   get messagesUpdated$(): Observable<RepositoryEventType> {
-    return this._messagesUpdated$.asObservable()
-  } 
+    return this._messagesUpdated$.asObservable();
+  }
 
   get settingsUpdated$(): Observable<RepositoryEventType> {
-    return this._settingsUpdated$.asObservable()
-  } 
+    return this._settingsUpdated$.asObservable();
+  }
 }

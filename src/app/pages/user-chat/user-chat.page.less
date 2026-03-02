@@ -42,7 +42,9 @@
   position: relative;
 }
 
-.thinking-loader, .thinking-loader:before, .thinking-loader:after {
+.thinking-loader,
+.thinking-loader:before,
+.thinking-loader:after {
   border-radius: 50%;
   width: 2.5em;
   height: 2.5em;
@@ -54,7 +56,7 @@
   top: -11px;
   left: 14px;
   transform: scale(0.6);
-  color: #FFF;
+  color: #fff;
   font-size: 7px;
   position: relative;
   text-indent: -9999em;
@@ -75,15 +77,25 @@
 }
 
 @keyframes bblFadInOut {
-  0%, 80%, 100% { box-shadow: 0 2.5em 0 -1.3em }
-  40% { box-shadow: 0 2.5em 0 0 }
+  0%,
+  80%,
+  100% {
+    box-shadow: 0 2.5em 0 -1.3em;
+  }
+  40% {
+    box-shadow: 0 2.5em 0 0;
+  }
 }
 
 // input
 .chat-input-wrapper {
   height: var(--chat-input-wrapper-height);
   width: calc(100% - var(--chat-messages-side-padding) * 2);
-  max-width: clamp(0px, calc(100vw - var(--chat-messages-side-padding) * 2), calc(var(--chat-max-width) + 2px));
+  max-width: clamp(
+    0px,
+    calc(100vw - var(--chat-messages-side-padding) * 2),
+    calc(var(--chat-max-width) + 2px)
+  );
   min-width: 0;
   margin: auto;
   position: relative;

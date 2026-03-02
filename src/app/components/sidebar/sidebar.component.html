@@ -1,6 +1,10 @@
 <div class="sidebar-root flex flex-col">
   <div class="sidebar-list sidebar-header">
-    <button type="button" class="sidebar-list__btn sidebar-action-btn sidebar-new-btn" (click)="createNewChat()">
+    <button
+      type="button"
+      class="sidebar-list__btn sidebar-action-btn sidebar-new-btn"
+      (click)="createNewChat()"
+    >
       <tui-icon icon="@tui.message-circle-plus" [style.font-size.rem]="1" />
       <span>Новый чат</span>
     </button>
@@ -10,14 +14,11 @@
     <div class="sidebar-list">
       @for (chat of chatService.chats(); track chat.id) {
         <div
-            class="sidebar-chat sidebar-list__btn flex items-center items-stretch gap-3"
-            [class.sidebar-list__btn--active]="chat.id === this.chatService.activeChatId()"
-          >
-            <a
-              class="sidebar-chat__link"
-              [routerLink]="['/chats', chat.id]"
-            >
-            @if(chat.state === ChatState.THINKING) {
+          class="sidebar-chat sidebar-list__btn flex items-center items-stretch gap-3"
+          [class.sidebar-list__btn--active]="chat.id === this.chatService.activeChatId()"
+        >
+          <a class="sidebar-chat__link" [routerLink]="['/chats', chat.id]">
+            @if (chat.state === ChatState.THINKING) {
               <tui-loader [inheritColor]="true" />
             }
 
@@ -26,56 +27,52 @@
                 {{ chat.title }}
               </div>
               <div class="sidebar-chat__model opacity-60">
-                {{ chat.lastUpdate | date:'dd.MM.yy HH:mm' }} • {{ chat.model | modelLabel }}
+                {{ chat.lastUpdate | date: 'dd.MM.yy HH:mm' }} • {{ chat.model | modelLabel }}
               </div>
             </div>
-            </a>
+          </a>
 
-            <button
-              class="sidebar-chat__action"
-              type="button"
-              [class.dropdown-open]="isItemOptionsDropdownOpen(chat.id)"
-              tuiActiveZone
-              tuiDropdownAlign="right"
-              [tuiDropdownSided]="true"
-              [tuiDropdown]="dropdownItemOptionsContent"
-              [tuiDropdownManual]="isItemOptionsDropdownOpen(chat.id)"
-              [tuiObscuredEnabled]="isItemOptionsDropdownOpen(chat.id)"
-              (click)="handleOpenItemOptionsDropdown(chat.id)"
-              (tuiActiveZoneChange)="onActiveZone($event)"
-              (tuiObscured)="onObscured($event)"
-            >
-              <tui-icon icon="@tui.ellipsis-vertical" [style.font-size.rem]="1" />
+          <button
+            class="sidebar-chat__action"
+            type="button"
+            [class.dropdown-open]="isItemOptionsDropdownOpen(chat.id)"
+            tuiActiveZone
+            tuiDropdownAlign="right"
+            [tuiDropdownSided]="true"
+            [tuiDropdown]="dropdownItemOptionsContent"
+            [tuiDropdownManual]="isItemOptionsDropdownOpen(chat.id)"
+            [tuiObscuredEnabled]="isItemOptionsDropdownOpen(chat.id)"
+            (click)="handleOpenItemOptionsDropdown(chat.id)"
+            (tuiActiveZoneChange)="onActiveZone($event)"
+            (tuiObscured)="onObscured($event)"
+          >
+            <tui-icon icon="@tui.ellipsis-vertical" [style.font-size.rem]="1" />
 
-              <ng-template #dropdownItemOptionsContent>
-                <tui-data-list>
-                  <button
-                    tuiOption
-                    type="button"
-                    (click)="handleRenameChat(chat)"
-                  >
-                    <tui-icon icon="@tui.pencil" [style.font-size.rem]="1" />
-                    <span class="ml-2">Переименовать</span>
-                  </button>
-                  <button
-                    class="tui-text-danger"
-                    tuiOption
-                    type="button"
-                    (click)="handleDeleteChat(chat)"
-                  >
-                    <tui-icon icon="@tui.trash-2" [style.font-size.rem]="1" />
-                    <span class="ml-2">Удалить</span>
-                  </button>
-                </tui-data-list>
-              </ng-template>
-            </button>
-          </div>
-        }
+            <ng-template #dropdownItemOptionsContent>
+              <tui-data-list>
+                <button tuiOption type="button" (click)="handleRenameChat(chat)">
+                  <tui-icon icon="@tui.pencil" [style.font-size.rem]="1" />
+                  <span class="ml-2">Переименовать</span>
+                </button>
+                <button
+                  class="tui-text-danger"
+                  tuiOption
+                  type="button"
+                  (click)="handleDeleteChat(chat)"
+                >
+                  <tui-icon icon="@tui.trash-2" [style.font-size.rem]="1" />
+                  <span class="ml-2">Удалить</span>
+                </button>
+              </tui-data-list>
+            </ng-template>
+          </button>
+        </div>
+      }
     </div>
   </tui-scrollbar>
 
   <div class="sidebar-list sidebar-footer">
-    @if(chatService.chats().length) {
+    @if (chatService.chats().length) {
       <button
         type="button"
         class="sidebar-list__btn sidebar-action-btn"

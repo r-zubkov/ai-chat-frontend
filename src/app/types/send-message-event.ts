@@ -7,12 +7,12 @@ export enum SendMessageEventType {
 
 export type SendMessageEvent =
   | {
-    type: SendMessageEventType.SENT;
-    chatId: string;
-    userMessage: ChatMessage;
-  }
+      type: SendMessageEventType.SENT;
+      chatId: string;
+      userMessage: ChatMessage;
+    }
   | {
-    type: SendMessageEventType.FINISHED;
-    chatId: string;
-    assistantMessage: ChatMessage;
-  };
+      type: SendMessageEventType.FINISHED;
+      chatId: string;
+      assistantMessage: ChatMessage;
+    };

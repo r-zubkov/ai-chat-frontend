@@ -14,21 +14,22 @@ export class NewChatPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   constructor(private readonly chatService: ChatService) {}
-  
+
   ngOnInit(): void {
-    this.chatService.initializeChat(null)
+    this.chatService.initializeChat(null);
   }
 
   protected sendRequest(text: string): void {
-    this.chatService.sendMessage(text, [])
+    this.chatService
+      .sendMessage(text, [])
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (event) => {
           if (event.type === SendMessageEventType.SENT) {
-            this.chatService.navigateToChat(event.userMessage.chatId)
+            this.chatService.navigateToChat(event.userMessage.chatId);
           }
         },
-        error: (err) => console.error('Error sending message:', err)
-      })
+        error: (err) => console.error('Error sending message:', err),
+      });
   }
 }

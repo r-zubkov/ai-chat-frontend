@@ -1,9 +1,9 @@
-import { ModelType } from "./model-type";
+import { ModelType } from './model-type';
 
 export enum ChatState {
   IDLE = 'idle',
   THINKING = 'thinking',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 export interface Chat {

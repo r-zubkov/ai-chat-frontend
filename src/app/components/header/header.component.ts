@@ -20,8 +20,8 @@ import { AppService } from '../../services/app.service';
     TuiSelect,
     TuiTextfield,
     TuiDropdown,
-    TuiDataList
-],
+    TuiDataList,
+  ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.less'],
 })
@@ -34,35 +34,32 @@ export class HeaderComponent {
 
   constructor(
     public readonly appService: AppService,
-    public readonly chatService: ChatService
+    public readonly chatService: ChatService,
   ) {
-    this.subscribeToModelValueChanges()
-    this.subscribeToCurrentModel()
+    this.subscribeToModelValueChanges();
+    this.subscribeToCurrentModel();
   }
 
   private subscribeToCurrentModel(): void {
     toObservable(this.chatService.currentModel)
       .pipe(takeUntilDestroyed())
-      .subscribe(value => {
-        const found = this.chatService.models.find(model => model.id === value) ?? null;
-        if (found) this.selectedModel = found.label
-
+      .subscribe((value) => {
+        const found = this.chatService.models.find((model) => model.id === value) ?? null;
+        if (found) this.selectedModel = found.label;
 
         this.modelControl.setValue(found, { emitEvent: false });
       });
   }
 
   private subscribeToModelValueChanges(): void {
-    this.modelControl.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe(value => {
-        if (value) this.chatService.updateCurrentModel(value.id as ModelType)
-      });
+    this.modelControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
+      if (value) this.chatService.updateCurrentModel(value.id as ModelType);
+    });
   }
 
   protected onClick(model: string): void {
     if (model) {
-      this.chatService.updateCurrentModel(model as ModelType)
+      this.chatService.updateCurrentModel(model as ModelType);
     }
 
     this.modelSelectionOpen = false;
@@ -73,10 +70,10 @@ export class HeaderComponent {
   }
 
   protected toggleMenu(): void {
-    this.appService.toggleSidebar()
+    this.appService.toggleSidebar();
   }
 
   protected newChat(): void {
-    this.chatService.navigateToChat(null)
+    this.chatService.navigateToChat(null);
   }
 }

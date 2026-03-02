@@ -13,12 +13,7 @@ interface ISelectItem {
 
 @Component({
   selector: 'app-root',
-  imports: [
-    RouterOutlet,
-    TuiRoot,
-    SidebarComponent,
-    HeaderComponent,
-],
+  imports: [RouterOutlet, TuiRoot, SidebarComponent, HeaderComponent],
   providers: [
     tuiItemsHandlersProvider({
       stringify: signal((x: ISelectItem) => x.label),
@@ -33,11 +28,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   constructor(
     public readonly appService: AppService,
-    private readonly chatService: ChatService
+    private readonly chatService: ChatService,
   ) {
-    this.chatService.loadCurrentModelFromDB()
-    this.chatService.loadChatsFromDB()
-    this.chatService.loadChatsCountFromDB()
+    this.chatService.loadCurrentModelFromDB();
+    this.chatService.loadChatsFromDB();
+    this.chatService.loadChatsCountFromDB();
   }
 
   ngOnInit(): void {
@@ -46,16 +41,16 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.cleanupResizeObserver();
-    this.chatService.destroy()
+    this.chatService.destroy();
   }
 
   @HostListener('window:beforeunload')
   onBeforeUnload() {
-    this.chatService.destroy()
+    this.chatService.destroy();
   }
 
   private observeWidthChange(): void {
-    this.resizeObserver = new ResizeObserver(entries => {
+    this.resizeObserver = new ResizeObserver((entries) => {
       const width = entries[0].contentRect.width;
       this.appService.updateMobileState(width);
     });

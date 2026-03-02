@@ -1,15 +1,15 @@
-import { ModelType } from "./model-type";
+import { ModelType } from './model-type';
 
 export enum ChatMessageRole {
   USER = 'user',
   ASSISTANT = 'assistant',
-  SYSTEM = 'system'
+  SYSTEM = 'system',
 }
 
 export enum ChatMessageState {
   STREAMING = 'streaming',
   COMPLETED = 'completed',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 export interface ChatMessage {

@@ -1,11 +1,11 @@
 <header class="header flex items-center justify-between gap-4 px-4">
-  @if(appService.isMobile()) {
+  @if (appService.isMobile()) {
     <button
       class="burger-btn"
       aria-label="Меню"
       [class.open]="appService.sidebarOpen()"
       (click)="toggleMenu()"
-      >
+    >
       <span></span>
     </button>
   }
@@ -32,11 +32,8 @@
     ></button>
   </div>
 
-  @if(appService.isMobile()) {
-    <button
-      class="header__new-chat"
-      (click)="newChat()"
-      >
+  @if (appService.isMobile()) {
+    <button class="header__new-chat" (click)="newChat()">
       <tui-icon icon="@tui.message-circle-plus" [style.font-size.rem]="1.25" />
     </button>
   }
@@ -45,12 +42,7 @@
 <ng-template #dropdown>
   <tui-data-list>
     @for (model of chatService.models; track model) {
-      <button
-        tuiOption
-        type="button"
-        class="item gap-2"
-        (click)="onClick(model.id)"
-        >
+      <button tuiOption type="button" class="item gap-2" (click)="onClick(model.id)">
         {{ model.label }}
         @if (itemIsActive(model.id)) {
           <tui-icon icon="@tui.check" [style.font-size.rem]="1" />
@@ -59,4 +51,3 @@
     }
   </tui-data-list>
 </ng-template>
-

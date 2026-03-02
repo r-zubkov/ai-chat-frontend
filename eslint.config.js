@@ -1,0 +1,24 @@
+const js = require('@eslint/js');
+const tseslint = require('typescript-eslint');
+const angular = require('angular-eslint');
+const eslintConfigPrettier = require('eslint-config-prettier/flat');
+
+module.exports = tseslint.config(
+  {
+    ignores: ['dist/**', '.angular/**', 'node_modules/**', 'coverage/**'],
+  },
+  {
+    files: ['**/*.ts'],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+      ...angular.configs.tsRecommended,
+      eslintConfigPrettier,
+    ],
+    processor: angular.processInlineTemplates,
+  },
+  {
+    files: ['**/*.html'],
+    extends: [...angular.configs.templateRecommended, eslintConfigPrettier],
+  },
+);

@@ -14,13 +14,7 @@ import { StreamingStore } from '../../services/streaming.store';
 
 @Component({
   selector: 'app-user-chat.page',
-  imports: [
-    MarkdownPipe,
-    TuiScrollbar,
-    TuiButton,
-    ChatInput,
-    ModelLabelPipe
-  ],
+  imports: [MarkdownPipe, TuiScrollbar, TuiButton, ChatInput, ModelLabelPipe],
   templateUrl: './user-chat.page.html',
   styleUrl: './user-chat.page.less',
 })
@@ -28,11 +22,11 @@ export class UserChatPage {
   private readonly destroyRef = inject(DestroyRef);
 
   @Input() set id(chatId: string) {
-    this.chatService.initializeChat(chatId)
-    this.loadMessages('instant')
+    this.chatService.initializeChat(chatId);
+    this.loadMessages('instant');
   }
 
-  @ViewChild(TuiScrollbar, {read: ElementRef})
+  @ViewChild(TuiScrollbar, { read: ElementRef })
   private readonly scrollBar?: ElementRef<HTMLElement>;
 
   protected readonly ChatState = ChatState;
@@ -43,21 +37,21 @@ export class UserChatPage {
 
   constructor(
     readonly chatService: ChatService,
-    readonly streamingStore: StreamingStore
+    readonly streamingStore: StreamingStore,
   ) {
-    this.watchMessagesUpdate()
+    this.watchMessagesUpdate();
   }
-  
+
   private async loadMessages(scrollEffect: 'instant' | 'smooth' | null = null): Promise<void> {
-    const messages = await this.chatService.getActiveChatMessages()
+    const messages = await this.chatService.getActiveChatMessages();
 
     // редирект на новый чат если нет сообщений
     if (!messages.length) {
-      this.chatService.navigateToChat(null)
-      return
-    } 
+      this.chatService.navigateToChat(null);
+      return;
+    }
 
-    this.messages.set(messages)
+    this.messages.set(messages);
 
     // Удаляем временный стрим только после загрузки сообщений из БД,
     // чтобы не было пустого кадра и дергания скролла.
@@ -67,38 +61,39 @@ export class UserChatPage {
         msg.state !== ChatMessageState.STREAMING &&
         this.streamingStore.get(msg.id)
       ) {
-        this.streamingStore.remove(msg.id)
+        this.streamingStore.remove(msg.id);
       }
     }
 
-    if (scrollEffect) setTimeout(() => this.scrollToBottom(scrollEffect), 50)
+    if (scrollEffect) setTimeout(() => this.scrollToBottom(scrollEffect), 50);
   }
 
   private watchMessagesUpdate(): void {
-    this.chatService.messagesUpdated$.pipe(takeUntilDestroyed()).subscribe(event => {
-      const scrollEffect = event === RepositoryEventType.UPDATING ? null : 'smooth'
-      this.loadMessages(scrollEffect)
-    })
+    this.chatService.messagesUpdated$.pipe(takeUntilDestroyed()).subscribe((event) => {
+      const scrollEffect = event === RepositoryEventType.UPDATING ? null : 'smooth';
+      this.loadMessages(scrollEffect);
+    });
   }
 
   protected sendRequest(text: string): void {
-    this.chatService.sendMessage(text, this.messages())
+    this.chatService
+      .sendMessage(text, this.messages())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        error: (err) => console.error('Error sending message:', err)
-      })
+        error: (err) => console.error('Error sending message:', err),
+      });
   }
 
   protected retryLasRequest(): void {
     const lastUserMsg = this.messages()
-    .filter(msg => msg.role === ChatMessageRole.USER)
-    .at(-1);
+      .filter((msg) => msg.role === ChatMessageRole.USER)
+      .at(-1);
 
     if (lastUserMsg) this.sendRequest(lastUserMsg.content);
   }
 
   protected cancelRequest(): void {
-    this.chatService.stopRequest(this.chatService.activeChat()?.currentRequestId || '')
+    this.chatService.stopRequest(this.chatService.activeChat()?.currentRequestId || '');
   }
 
   private scrollToMessage(messageId: string, behavior: ScrollBehavior = 'smooth'): void {
@@ -110,23 +105,22 @@ export class UserChatPage {
 
     const messageTopOffset = target.offsetTop;
     const messagesGap = remToPx(parseFloat(getCssValue('--chat-messages-gap')));
-    const topOffset = messageTopOffset - messagesGap
+    const topOffset = messageTopOffset - messagesGap;
 
-    this.scrollTo(container,topOffset, behavior)
+    this.scrollTo(container, topOffset, behavior);
   }
 
   private scrollToBottom(behavior: ScrollBehavior = 'auto'): void {
     const container = this.scrollBar?.nativeElement;
     if (!container) return;
 
-    this.scrollTo(container, container.scrollHeight, behavior)
+    this.scrollTo(container, container.scrollHeight, behavior);
   }
 
   private scrollTo(container: HTMLElement, top: number, behavior: ScrollBehavior = 'auto'): void {
     container.scrollTo({
       top: top,
       behavior,
-    })
+    });
   }
 }
-

@@ -28,19 +28,19 @@ export class ChatApiService {
   sendChatCompletion(
     model: string,
     messages: { role: string; content: string }[],
-    stream = false
+    stream = false,
   ): Observable<string> {
     return this.http
       .post<TimewebResponse>(`${this.baseUrl}/chat`, {
         model,
         messages,
-        stream
+        stream,
       })
       .pipe(
         map((response) => {
           const choice = response.choices?.[0];
           return choice?.message?.content ?? '';
-        })
+        }),
       );
   }
 }

@@ -1,4 +1,4 @@
-import { ModelType } from "../types/model-type";
+import { ModelType } from '../types/model-type';
 
 export const ModelLabelMap: Partial<Record<ModelType, string>> = {
   [ModelType.GPT_5]: 'GPT 5',
@@ -17,4 +17,4 @@ export const ModelLabelMap: Partial<Record<ModelType, string>> = {
   // Fallback
   [ModelType.GPT5]: 'GPT 5',
   [ModelType.GPT5_MINI]: 'GPT 5 mini',
-}
+};

@@ -1,20 +1,20 @@
 <form [formGroup]="form" (ngSubmit)="send()">
-  <tui-textfield [tuiTextfieldCleaner]='false' size="l">
+  <tui-textfield [tuiTextfieldCleaner]="false" size="l">
     <textarea
-      tuiTextarea 
+      tuiTextarea
       placeholder="Спросите что-нибудь..."
       formControlName="message"
       [max]="20"
-      [min]="1" 
+      [min]="1"
       (keydown)="onKeyDown($event)"
-    ></textarea> 
-    
+    ></textarea>
+
     @if (!thinking) {
       <button
         tuiButton
         iconStart="@tui.arrow-up"
         appearance="primary"
-        size='s'
+        size="s"
         type="submit"
         class="ml-3"
         [disabled]="!isSendAllowed"
@@ -24,7 +24,7 @@
         tuiButton
         iconStart="@tui.x"
         appearance="primary"
-        size='s'
+        size="s"
         type="button"
         class="ml-3"
         (click)="cancel()"
