@@ -23,7 +23,7 @@ import { StreamingStore } from './streaming.store';
 import { ChatPersistenceService } from './chat-persistence.service';
 
 @Injectable({ providedIn: 'root' })
-export class ChatMessagingService {
+export class ChatConversationService {
   private readonly chatStore = inject(ChatStore);
   private readonly chatSocketService = inject(ChatSocketService);
   private readonly streamingStore = inject(StreamingStore);

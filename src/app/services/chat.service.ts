@@ -10,7 +10,7 @@ import { SendMessageEvent } from '../types/send-message-event';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ChatStore } from './chat.store';
-import { ChatMessagingService } from './chat-messaging.service';
+import { ChatConversationService } from './chat-conversation.service';
 import { ChatPersistenceService } from './chat-persistence.service';
 
 @Injectable({ providedIn: 'root' })
@@ -19,7 +19,7 @@ export class ChatService {
   private readonly router = inject(Router);
   private readonly appService = inject(AppService);
   private readonly chatRepositoryService = inject(ChatRepositoryService);
-  private readonly chatMessagingService = inject(ChatMessagingService);
+  private readonly chatConversationService = inject(ChatConversationService);
   private readonly chatPersistenceService = inject(ChatPersistenceService);
 
   readonly models: Array<{ id: ModelType; label: string }> = [
@@ -166,15 +166,15 @@ export class ChatService {
   /* Отправка сообщений / работа с сокетами */
 
   sendMessage(text: string, messageHistory: ChatMessage[]): Observable<SendMessageEvent> {
-    return this.chatMessagingService.sendMessage(text, messageHistory);
+    return this.chatConversationService.sendMessage(text, messageHistory);
   }
 
   stopRequest(requestId: string): void {
-    this.chatMessagingService.stopRequest(requestId);
+    this.chatConversationService.stopRequest(requestId);
   }
 
   stopAllRequests(): void {
-    this.chatMessagingService.stopAllRequests();
+    this.chatConversationService.stopAllRequests();
   }
 
   /* Обновление данных из indexed db */
@@ -196,6 +196,6 @@ export class ChatService {
   }
 
   destroy(): void {
-    this.chatMessagingService.destroy();
+    this.chatConversationService.destroy();
   }
 }
