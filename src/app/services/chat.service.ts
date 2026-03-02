@@ -1,10 +1,9 @@
-﻿import { inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Chat } from '../types/chat';
 import { ModelType } from '../types/model-type';
 import { ChatRepositoryService, RepositoryEventType } from './chat-repository.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
-import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage } from '../types/chat-message';
 import { SendMessageEvent } from '../types/send-message-event';
 import { Router } from '@angular/router';
@@ -12,6 +11,7 @@ import { Observable } from 'rxjs';
 import { ChatStore } from './chat.store';
 import { ChatConversationService } from './chat-conversation.service';
 import { ChatPersistenceService } from './chat-persistence.service';
+import { ChatModelService } from './chat-model.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
@@ -21,24 +21,15 @@ export class ChatService {
   private readonly chatRepositoryService = inject(ChatRepositoryService);
   private readonly chatConversationService = inject(ChatConversationService);
   private readonly chatPersistenceService = inject(ChatPersistenceService);
+  private readonly chatModelService = inject(ChatModelService);
 
-  readonly models: Array<{ id: ModelType; label: string }> = [
-    { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
-    { id: ModelType.DEEPSEEK_32, label: ModelLabelMap[ModelType.DEEPSEEK_32]! },
-    {
-      id: ModelType.GEMINI_3_FLASH_PREVIEW,
-      label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]!,
-    },
-    { id: ModelType.GPT_51, label: ModelLabelMap[ModelType.GPT_51]! },
-  ];
+  readonly models = this.chatModelService.models;
 
   readonly chats = this.chatStore.chats;
   readonly chatsCount = this.chatStore.chatsCount;
   readonly activeChatId = this.chatStore.activeChatId;
   readonly activeChat = this.chatStore.activeChat;
-  readonly currentModel = this.chatStore.currentModel;
-
-  private readonly globalCurrentModel = this.chatStore.globalCurrentModel;
+  readonly currentModel = this.chatModelService.currentModel;
 
   private readonly chatsLimitStep: number = 50;
   private chatsLimit: number = this.chatsLimitStep;
@@ -47,7 +38,7 @@ export class ChatService {
     this.watchChatsUpdate();
   }
 
-  /* Чаты */
+  /* Chats */
 
   getChats(limit: number): Promise<Chat[]> {
     return this.chatRepositoryService.getChats(limit);
@@ -94,65 +85,27 @@ export class ChatService {
     });
   }
 
-  /* Сообщения */
+  /* Messages */
 
   async getActiveChatMessages(): Promise<ChatMessage[]> {
     return this.chatRepositoryService.getMessages(this.activeChatId() || '');
   }
 
-  /* Взаимодействие с моделями чатов */
+  /* Chat model interactions */
 
-  async loadCurrentModelFromDB(): Promise<void> {
-    const loaded = await this.chatRepositoryService.loadCurrentModel();
-
-    let modelToSet: ModelType;
-
-    if (loaded && this.isModelAvailable(loaded)) {
-      modelToSet = loaded;
-    } else {
-      modelToSet = this.getDefaultModel();
-    }
-
-    this.chatStore.setCurrentModel(modelToSet);
-    this.chatStore.setGlobalCurrentModel(modelToSet);
+  loadCurrentModelFromDB(): Promise<void> {
+    return this.chatModelService.loadCurrentModelFromDB();
   }
 
-  async updateCurrentModel(model: ModelType): Promise<void> {
-    let modelToSet: ModelType;
-
-    if (this.isModelAvailable(model)) {
-      modelToSet = model;
-    } else {
-      modelToSet = this.getDefaultModel();
-    }
-
-    this.chatStore.setCurrentModel(modelToSet);
-
-    if (!this.activeChatId()) {
-      this.chatStore.setGlobalCurrentModel(modelToSet);
-      await this.chatRepositoryService.saveCurrentModel(modelToSet);
-    }
+  updateCurrentModel(model: ModelType): Promise<void> {
+    return this.chatModelService.updateCurrentModel(model);
   }
 
-  private isModelAvailable(modelId: ModelType): boolean {
-    return this.models.some((model) => model.id === modelId);
-  }
-
-  private getDefaultModel(): ModelType {
-    return this.models[0].id;
-  }
-
-  /* Навигация по чатам */
+  /* Chat navigation */
 
   initializeChat(chatId: string | null): void {
     this.chatStore.setActiveChatId(chatId);
-    const activeChat = this.activeChat();
-
-    if (activeChat) {
-      this.updateCurrentModel(activeChat.model);
-    } else {
-      this.updateCurrentModel(this.globalCurrentModel());
-    }
+    void this.chatModelService.syncCurrentModelForChat(chatId);
 
     if (this.appService.isMobile()) {
       this.appService.sidebarOpen.set(false);
@@ -163,7 +116,7 @@ export class ChatService {
     this.router.navigate(['/chats', chatId || 'new']);
   }
 
-  /* Отправка сообщений / работа с сокетами */
+  /* Message sending / socket operations */
 
   sendMessage(text: string, messageHistory: ChatMessage[]): Observable<SendMessageEvent> {
     return this.chatConversationService.sendMessage(text, messageHistory);
@@ -177,7 +130,7 @@ export class ChatService {
     this.chatConversationService.stopAllRequests();
   }
 
-  /* Обновление данных из indexed db */
+  /* IndexedDB update streams */
 
   get projectsUpdated$(): Observable<RepositoryEventType> {
     return this.chatRepositoryService.projectsUpdated$;

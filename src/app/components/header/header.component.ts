@@ -23,15 +23,12 @@ export class HeaderComponent {
     return this.chatService.models.find((model) => model.id === currentModel)?.label ?? null;
   });
 
-  protected onClick(model: string): void {
-    if (model) {
-      this.chatService.updateCurrentModel(model as ModelType);
-    }
-
+  protected onClick(model: ModelType): void {
+    this.chatService.updateCurrentModel(model);
     this.modelSelectionOpen = false;
   }
 
-  protected itemIsActive(model: string): boolean {
+  protected itemIsActive(model: ModelType): boolean {
     return model === this.chatService.currentModel();
   }
 
