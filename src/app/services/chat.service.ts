@@ -5,7 +5,6 @@ import { ChatRepositoryService, RepositoryEventType } from './chat-repository.se
 import { ChatSocketService } from './chat-socket.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppService } from './app.service';
-import { truncateAtWord } from '../helpers/text-utils';
 import { ModelLabelMap } from '../maps/model-label.map';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
 import { SendMessageEvent, SendMessageEventType } from '../types/send-message-event';
@@ -23,11 +22,9 @@ import {
 } from 'rxjs';
 import { ChatStore } from './chat.store';
 import { StreamingStore } from './streaming.store';
-import {
-  API_HISTORY_LIMIT,
-  MODEL_BASE_SYSTEM_PROMT,
-  PERSIST_INTERVAL_MS,
-} from '../constants/chat.constants';
+import { MODEL_BASE_SYSTEM_PROMT, PERSIST_INTERVAL_MS } from '../constants/chat.constants';
+import { createChatEntity, createMessageEntity, generateSequelId } from '../helpers/chat.helpers';
+import { buildApiMessages } from '../helpers/chat-api.helpers';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
@@ -67,42 +64,6 @@ export class ChatService {
     private readonly chatSocketService: ChatSocketService,
   ) {
     this.watchChatsUpdate();
-  }
-
-  private generateSequelId(localCounter: number): number {
-    return Date.now() * 1000 + localCounter;
-  }
-
-  /* Сборка истории сообщений для чата */
-
-  private applySystemPrompt(model: ModelType, messages: ChatMessage[]): ChatMessage[] {
-    const systemPrompt = this.modelSystemPrompts[model];
-    if (!systemPrompt) return messages;
-
-    const systemMessage: ChatMessage = {
-      id: '',
-      sequelId: 0,
-      chatId: '',
-      role: ChatMessageRole.SYSTEM,
-      content: systemPrompt,
-      model,
-      state: ChatMessageState.COMPLETED,
-      timestamp: 0,
-    };
-
-    return [systemMessage, ...messages];
-  }
-
-  private buildApiMessages(
-    messageHistory: ChatMessage[],
-    userMessage: ChatMessage,
-    model: ModelType,
-  ): ChatMessage[] {
-    const historyTail = messageHistory.slice(-API_HISTORY_LIMIT); // Берём хвост из N сообщений
-    const historyWithLastUserMsg = [...historyTail, userMessage]; // Добавляем userMessage в конец
-
-    // Добавляем SYSTEM в начало, не мутируя исходный массив
-    return this.applySystemPrompt(model, historyWithLastUserMsg);
   }
 
   /* Чаты */
@@ -146,18 +107,6 @@ export class ChatService {
     this.chatStore.setChatsCount(count);
   }
 
-  private createChatEntity(name: string): Chat {
-    return {
-      id: crypto.randomUUID(),
-      title: truncateAtWord(name, 100, null),
-      state: ChatState.IDLE,
-      model: this.currentModel() as ModelType,
-      projectId: null,
-      currentRequestId: null,
-      lastUpdate: Date.now(),
-    };
-  }
-
   private watchChatsUpdate(): void {
     this.chatsUpdated$.pipe(takeUntilDestroyed()).subscribe((event) => {
       if (event === RepositoryEventType.CREATING || event === RepositoryEventType.DELETING) {
@@ -171,14 +120,6 @@ export class ChatService {
 
   async getActiveChatMessages(): Promise<ChatMessage[]> {
     return this.chatRepositoryService.getMessages(this.activeChatId() || '');
-  }
-
-  private createMessageEntity(msg: Omit<ChatMessage, 'id' | 'timestamp'>): ChatMessage {
-    return {
-      ...msg,
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-    };
   }
 
   /* Взаимодействие с моделями чатов */
@@ -263,7 +204,7 @@ export class ChatService {
 
       try {
         if (!chat) {
-          const entity = this.createChatEntity(trimmed);
+          const entity = createChatEntity(trimmed, model);
           await this.chatRepositoryService.createChat(entity);
 
           chat = entity;
@@ -276,8 +217,8 @@ export class ChatService {
           throw new Error('Chat ID is not available');
         }
 
-        const userMessage: ChatMessage = this.createMessageEntity({
-          sequelId: this.generateSequelId(sequelCounter++),
+        const userMessage: ChatMessage = createMessageEntity({
+          sequelId: generateSequelId(sequelCounter++),
           role: ChatMessageRole.USER,
           model,
           state: ChatMessageState.COMPLETED,
@@ -285,8 +226,8 @@ export class ChatService {
           content: trimmed,
         });
 
-        const assistantMessage = this.createMessageEntity({
-          sequelId: this.generateSequelId(sequelCounter++),
+        const assistantMessage = createMessageEntity({
+          sequelId: generateSequelId(sequelCounter++),
           role: ChatMessageRole.ASSISTANT,
           model,
           state: ChatMessageState.STREAMING,
@@ -299,7 +240,12 @@ export class ChatService {
         await this.chatRepositoryService.createMessages([userMessage, assistantMessage]);
 
         // system + хвост истории + текущий userMessage
-        const apiMessages = this.buildApiMessages(messageHistory, userMessage, model);
+        const apiMessages = buildApiMessages(
+          messageHistory,
+          userMessage,
+          model,
+          this.modelSystemPrompts,
+        );
 
         // отправка запроса к модели
         const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(
