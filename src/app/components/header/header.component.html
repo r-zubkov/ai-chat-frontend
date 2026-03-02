@@ -26,7 +26,7 @@
       type="button"
       class="header__model-selection"
       [class.open]="modelSelectionOpen"
-      [textContent]="selectedModel"
+      [textContent]="selectedModel()"
       [tuiDropdown]="dropdown"
       [(tuiDropdownOpen)]="modelSelectionOpen"
     ></button>

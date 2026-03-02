@@ -223,11 +223,11 @@ export class ChatService {
     }
   }
 
-  private isModelAvailable(modelId: ModelType): boolean {
+  isModelAvailable(modelId: ModelType): boolean {
     return this.models.some((model) => model.id === modelId);
   }
 
-  private getDefaultModel(): ModelType {
+  getDefaultModel(): ModelType {
     return this.models[0].id;
   }
 
