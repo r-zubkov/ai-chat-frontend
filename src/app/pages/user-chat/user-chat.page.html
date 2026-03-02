@@ -54,8 +54,8 @@
   <div class="chat-input">
     <chat-input
       [thinking]="chatService.activeChat()?.state === ChatState.THINKING"
-      (onSend)="sendRequest($event)"
-      (onCancel)="cancelRequest()"
+      (sent)="sendRequest($event)"
+      (canceled)="cancelRequest()"
     ></chat-input>
   </div>
 </div>

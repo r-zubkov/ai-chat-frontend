@@ -50,13 +50,9 @@ export class SidebarComponent {
 
   private readonly alerts = inject(TuiAlertService);
   private readonly dialogs = inject(TuiDialogService);
+  public readonly chatService = inject(ChatService);
 
   protected readonly ChatState = ChatState;
-
-  constructor(
-    public readonly chatService: ChatService,
-    private readonly dialogService: TuiDialogService,
-  ) {}
 
   protected createNewChat(): void {
     this.chatService.navigateToChat(null);
@@ -91,7 +87,7 @@ export class SidebarComponent {
   protected handleDeleteChat(chat: Chat): void {
     this.hideItemOptionsDropdown();
 
-    this.dialogService
+    this.dialogs
       .open<boolean>(TUI_CONFIRM, { size: 's', label: 'Удалить чат?', data: TuiConfirmText })
       .subscribe((confirm) => {
         if (confirm) {
@@ -102,7 +98,7 @@ export class SidebarComponent {
   }
 
   protected handleOpenClearConfirmationModal(): void {
-    this.dialogService
+    this.dialogs
       .open<boolean>(TUI_CONFIRM, { size: 's', label: 'Очистить историю?', data: TuiConfirmText })
       .subscribe((confirm) => {
         if (confirm) {

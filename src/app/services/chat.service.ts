@@ -30,6 +30,10 @@ import { buildApiMessages } from '../helpers/chat-api.helpers';
 export class ChatService {
   private readonly chatStore = inject(ChatStore);
   private readonly streamingStore = inject(StreamingStore);
+  private readonly router = inject(Router);
+  private readonly appService = inject(AppService);
+  private readonly chatRepositoryService = inject(ChatRepositoryService);
+  private readonly chatSocketService = inject(ChatSocketService);
 
   readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
     [ModelType.GPT_51]: MODEL_BASE_SYSTEM_PROMT,
@@ -57,12 +61,7 @@ export class ChatService {
   private readonly chatsLimitStep: number = 50;
   private chatsLimit: number = this.chatsLimitStep;
 
-  constructor(
-    private readonly router: Router,
-    private readonly appService: AppService,
-    private readonly chatRepositoryService: ChatRepositoryService,
-    private readonly chatSocketService: ChatSocketService,
-  ) {
+  constructor() {
     this.watchChatsUpdate();
   }
 

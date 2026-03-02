@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { Observable, Observer } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ChatMessage } from '../types/chat-message';
+import { ChatChunkPayload, ChatDonePayload, ChatErrorPayload } from '../types/chat-payload';
 
 @Injectable({ providedIn: 'root' })
 export class ChatSocketService {

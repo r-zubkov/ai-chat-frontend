@@ -1,14 +1,14 @@
-interface ChatChunkPayload {
+export interface ChatChunkPayload {
   requestId: string;
   delta: string;
 }
 
-interface ChatDonePayload {
+export interface ChatDonePayload {
   requestId: string;
   aborted?: boolean;
 }
 
-interface ChatErrorPayload {
+export interface ChatErrorPayload {
   requestId: string;
   error: string;
 }

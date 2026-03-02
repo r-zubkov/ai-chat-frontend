@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { inject, Pipe, PipeTransform } from '@angular/core';
 import { MarkdownService } from '../services/markdown.service';
 
 @Pipe({
@@ -7,7 +7,7 @@ import { MarkdownService } from '../services/markdown.service';
   pure: true,
 })
 export class MarkdownPipe implements PipeTransform {
-  constructor(private readonly md: MarkdownService) {}
+  private readonly md = inject(MarkdownService);
 
   transform(value: string | null | undefined): string {
     return this.md.render(value || '');

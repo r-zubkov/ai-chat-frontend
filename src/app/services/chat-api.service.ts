@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -23,7 +23,7 @@ interface TimewebResponse {
 export class ChatApiService {
   private readonly baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   sendChatCompletion(
     model: string,

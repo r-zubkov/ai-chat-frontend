@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+﻿import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TuiButton, TuiTextfield } from '@taiga-ui/core';
 import { TuiTextarea } from '@taiga-ui/kit';
@@ -13,8 +13,8 @@ import { TuiTextarea } from '@taiga-ui/kit';
 export class ChatInput {
   @Input() thinking = false;
 
-  @Output() onSend = new EventEmitter<string>();
-  @Output() onCancel = new EventEmitter<boolean>();
+  @Output() sent = new EventEmitter<string>();
+  @Output() canceled = new EventEmitter<boolean>();
 
   protected readonly form = new FormGroup({
     message: new FormControl('', {
@@ -31,20 +31,20 @@ export class ChatInput {
 
     if (!this.isSendAllowed) return;
 
-    this.onSend.emit(text);
+    this.sent.emit(text);
 
     this.form.controls.message.reset('');
   }
 
   protected cancel(): void {
-    this.onCancel.emit(true);
+    this.canceled.emit(true);
   }
 
   protected onKeyDown(event: KeyboardEvent): void {
-    // Если пользователь еще выбирает иероглиф — выходим
+    // Ð•ÑÐ»Ð¸ Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÑŒ ÐµÑ‰Ðµ Ð²Ñ‹Ð±Ð¸Ñ€Ð°ÐµÑ‚ Ð¸ÐµÑ€Ð¾Ð³Ð»Ð¸Ñ„ â€” Ð²Ñ‹Ñ…Ð¾Ð´Ð¸Ð¼
     if (event.isComposing) return;
 
-    // Если нажат Enter без Shift — отправляем
+    // Ð•ÑÐ»Ð¸ Ð½Ð°Ð¶Ð°Ñ‚ Enter Ð±ÐµÐ· Shift â€” Ð¾Ñ‚Ð¿Ñ€Ð°Ð²Ð»ÑÐµÐ¼
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.send();

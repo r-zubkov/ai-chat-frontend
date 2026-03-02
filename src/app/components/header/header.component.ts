@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TuiChevron } from '@taiga-ui/kit';
 import { TuiDataList, TuiDropdown, TuiIcon, TuiLink } from '@taiga-ui/core';
 import { ChatService } from '../../services/chat.service';
@@ -15,15 +15,13 @@ import { AppService } from '../../services/app.service';
 export class HeaderComponent {
   protected modelSelectionOpen: boolean = false;
 
+  public readonly appService = inject(AppService);
+  public readonly chatService = inject(ChatService);
+
   protected readonly selectedModel = computed(() => {
     const currentModel = this.chatService.currentModel();
     return this.chatService.models.find((model) => model.id === currentModel)?.label ?? null;
   });
-
-  constructor(
-    public readonly appService: AppService,
-    public readonly chatService: ChatService,
-  ) {}
 
   protected onClick(model: string): void {
     if (model) {

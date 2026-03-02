@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   HostListener,
+  inject,
   OnDestroy,
   OnInit,
   signal,
@@ -34,10 +35,10 @@ interface ISelectItem {
 export class AppComponent implements OnInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
 
-  constructor(
-    public readonly appService: AppService,
-    private readonly chatService: ChatService,
-  ) {
+  readonly appService = inject(AppService);
+  private readonly chatService = inject(ChatService);
+
+  constructor() {
     this.chatService.loadCurrentModelFromDB();
     this.chatService.loadChatsFromDB();
     this.chatService.loadChatsCountFromDB();

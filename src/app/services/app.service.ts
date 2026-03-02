@@ -12,7 +12,11 @@ export class AppService {
     const mobileBP = parseFloat(getCssValue('--grid-lg'));
     this.isMobile.set(width <= mobileBP);
 
-    this.isMobile() ? this.closeSidebar() : this.openSidebar();
+    if (this.isMobile()) {
+      this.closeSidebar();
+    } else {
+      this.openSidebar();
+    }
   }
 
   openSidebar(): void {

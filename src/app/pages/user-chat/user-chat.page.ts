@@ -31,6 +31,9 @@ import { StreamingStore } from '../../services/streaming.store';
 export class UserChatPage {
   private readonly destroyRef = inject(DestroyRef);
 
+  readonly chatService = inject(ChatService);
+  readonly streamingStore = inject(StreamingStore);
+
   @Input() set id(chatId: string) {
     this.chatService.initializeChat(chatId);
     this.loadMessages('instant');
@@ -45,10 +48,7 @@ export class UserChatPage {
 
   protected readonly messages = signal<ChatMessage[]>([]);
 
-  constructor(
-    readonly chatService: ChatService,
-    readonly streamingStore: StreamingStore,
-  ) {
+  constructor() {
     this.watchMessagesUpdate();
   }
 

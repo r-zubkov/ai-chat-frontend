@@ -13,8 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 })
 export class NewChatPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
-
-  constructor(private readonly chatService: ChatService) {}
+  private readonly chatService = inject(ChatService);
 
   ngOnInit(): void {
     this.chatService.initializeChat(null);
