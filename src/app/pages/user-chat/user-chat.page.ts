@@ -1,4 +1,13 @@
-import { Component, DestroyRef, ElementRef, inject, Input, signal, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  inject,
+  Input,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { ChatService } from '../../services/chat.service';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../../types/chat-message';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -17,6 +26,7 @@ import { StreamingStore } from '../../services/streaming.store';
   imports: [MarkdownPipe, TuiScrollbar, TuiButton, ChatInput, ModelLabelPipe],
   templateUrl: './user-chat.page.html',
   styleUrl: './user-chat.page.less',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserChatPage {
   private readonly destroyRef = inject(DestroyRef);

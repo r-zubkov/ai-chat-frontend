@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { ChatInput } from '../../components/chat-input/chat-input';
 import { ChatService } from '../../services/chat.service';
 import { SendMessageEventType } from '../../types/send-message-event';
@@ -9,6 +9,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   imports: [ChatInput],
   templateUrl: './new-chat.page.html',
   styleUrl: './new-chat.page.less',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewChatPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);

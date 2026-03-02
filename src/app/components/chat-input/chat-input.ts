@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TuiButton, TuiTextfield } from '@taiga-ui/core';
 import { TuiTextarea } from '@taiga-ui/kit';
@@ -9,6 +9,7 @@ import { trimRequiredValidator } from '../../validators/trim-required.validator'
   imports: [ReactiveFormsModule, TuiTextarea, TuiTextfield, TuiButton],
   templateUrl: './chat-input.html',
   styleUrl: './chat-input.less',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatInput {
   @Input() thinking = false;
