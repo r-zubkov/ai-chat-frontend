@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Chat, ChatState } from '../types/chat';
+import { ChatState } from '../types/chat';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
 import { ModelType } from '../types/model-type';
 import { SendMessageEvent, SendMessageEventType } from '../types/send-message-event';
@@ -17,17 +17,17 @@ import {
 import { MODEL_BASE_SYSTEM_PROMT, PERSIST_INTERVAL_MS } from '../constants/chat.constants';
 import { buildApiMessages } from '../helpers/chat-api.helpers';
 import { createChatEntity, createMessageEntity, generateSequelId } from '../helpers/chat.helpers';
-import { ChatRepositoryService } from './chat-repository.service';
 import { ChatSocketService } from './chat-socket.service';
 import { ChatStore } from './chat.store';
 import { StreamingStore } from './streaming.store';
+import { ChatPersistenceService } from './chat-persistence.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatMessagingService {
   private readonly chatStore = inject(ChatStore);
-  private readonly chatRepositoryService = inject(ChatRepositoryService);
   private readonly chatSocketService = inject(ChatSocketService);
   private readonly streamingStore = inject(StreamingStore);
+  private readonly chatPersistenceService = inject(ChatPersistenceService);
 
   private readonly activeChat = this.chatStore.activeChat;
   private readonly currentModel = this.chatStore.currentModel;
@@ -55,7 +55,7 @@ export class ChatMessagingService {
       try {
         if (!chat) {
           const entity = createChatEntity(trimmed, model);
-          await this.chatRepositoryService.createChat(entity);
+          await this.chatPersistenceService.createChat(entity);
 
           chat = entity;
           chatId = entity.id;
@@ -86,7 +86,7 @@ export class ChatMessagingService {
         });
         assistantMessageId = assistantMessage.id;
 
-        await this.chatRepositoryService.createMessages([userMessage, assistantMessage]);
+        await this.chatPersistenceService.createMessages([userMessage, assistantMessage]);
 
         const apiMessages = buildApiMessages(
           messageHistory,
@@ -100,7 +100,7 @@ export class ChatMessagingService {
           apiMessages,
         );
 
-        void this.updateChat(activeChatId, {
+        void this.chatPersistenceService.updateChat(activeChatId, {
           model,
           state: ChatState.THINKING,
           currentRequestId: requestId,
@@ -126,7 +126,7 @@ export class ChatMessagingService {
               }
 
               return from(
-                this.chatRepositoryService.updateMessage(assistantMessage.id, update),
+                this.chatPersistenceService.updateMessage(assistantMessage.id, update),
               ).pipe(
                 tap(() => {
                   lastPersistedContent = payload.content;
@@ -172,7 +172,7 @@ export class ChatMessagingService {
           )
           .subscribe({
             error: (err: unknown) => {
-              void this.updateChat(activeChatId, {
+              void this.chatPersistenceService.updateChat(activeChatId, {
                 model,
                 state: ChatState.ERROR,
                 currentRequestId: null,
@@ -180,7 +180,7 @@ export class ChatMessagingService {
               events$.error(err);
             },
             complete: () => {
-              void this.updateChat(activeChatId, {
+              void this.chatPersistenceService.updateChat(activeChatId, {
                 model,
                 state: ChatState.IDLE,
                 currentRequestId: null,
@@ -197,11 +197,15 @@ export class ChatMessagingService {
           });
       } catch (err: unknown) {
         if (chatId) {
-          void this.updateChat(chatId, { model, state: ChatState.ERROR, currentRequestId: null });
+          void this.chatPersistenceService.updateChat(chatId, {
+            model,
+            state: ChatState.ERROR,
+            currentRequestId: null,
+          });
         }
 
         if (assistantMessageId) {
-          void this.chatRepositoryService.updateMessage(assistantMessageId, {
+          void this.chatPersistenceService.updateMessage(assistantMessageId, {
             content,
             state: ChatMessageState.ERROR,
           });
@@ -225,15 +229,5 @@ export class ChatMessagingService {
   destroy(): void {
     this.stopAllRequests();
     this.chatSocketService.destroy();
-  }
-
-  private async updateChat(
-    chatId: string,
-    chatUpdateData: Partial<Omit<Chat, 'id'>>,
-  ): Promise<void> {
-    await this.chatRepositoryService.updateChat(chatId, {
-      ...chatUpdateData,
-      lastUpdate: Date.now(),
-    });
   }
 }

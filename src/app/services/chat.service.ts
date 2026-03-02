@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ChatStore } from './chat.store';
 import { ChatMessagingService } from './chat-messaging.service';
+import { ChatPersistenceService } from './chat-persistence.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
@@ -19,6 +20,7 @@ export class ChatService {
   private readonly appService = inject(AppService);
   private readonly chatRepositoryService = inject(ChatRepositoryService);
   private readonly chatMessagingService = inject(ChatMessagingService);
+  private readonly chatPersistenceService = inject(ChatPersistenceService);
 
   readonly models: Array<{ id: ModelType; label: string }> = [
     { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
@@ -55,25 +57,22 @@ export class ChatService {
     return this.chatRepositoryService.getChatsCount();
   }
 
-  async updateChat(
+  updateChat(
     chatId: string,
     chatUpdateData: Partial<Omit<Chat, 'id'>>,
     triggerLastUpdate: boolean = true,
   ): Promise<void> {
-    const dataToUpdate: Partial<Omit<Chat, 'id'>> = { ...chatUpdateData };
-    if (triggerLastUpdate) dataToUpdate.lastUpdate = Date.now();
-
-    await this.chatRepositoryService.updateChat(chatId, { ...dataToUpdate });
+    return this.chatPersistenceService.updateChat(chatId, chatUpdateData, triggerLastUpdate);
   }
 
-  async deleteChat(chatId: string): Promise<void> {
-    await this.chatRepositoryService.deleteChat(chatId);
+  deleteChat(chatId: string): Promise<void> {
+    return this.chatPersistenceService.deleteChat(chatId);
   }
 
   async deleteAllChats(): Promise<void> {
     this.stopAllRequests();
 
-    await this.chatRepositoryService.deleteAllChats();
+    await this.chatPersistenceService.deleteAllChats();
   }
 
   async loadChatsFromDB(): Promise<void> {
