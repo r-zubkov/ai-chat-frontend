@@ -21,6 +21,7 @@ import { getCssValue } from '../../helpers/get-css-value';
 import { RepositoryEventType } from '../../services/chat-repository.service';
 import { StreamingStore } from '../../services/streaming.store';
 import { ChatNavigationService } from '../../services/chat-navigation.service';
+import { AppUiService } from '../../services/app-ui.service';
 
 @Component({
   selector: 'app-user-chat.page',
@@ -35,9 +36,12 @@ export class UserChatPage {
   readonly chatService = inject(ChatService);
   readonly streamingStore = inject(StreamingStore);
   private readonly chatNavigationService = inject(ChatNavigationService);
+  private readonly appUiService = inject(AppUiService);
 
   @Input() set id(chatId: string) {
-    this.chatNavigationService.initializeChat(chatId);
+    void this.chatNavigationService
+      .initializeChat(chatId)
+      .finally(() => this.appUiService.closeSidebarOnMobile());
     this.loadMessages('instant');
   }
 

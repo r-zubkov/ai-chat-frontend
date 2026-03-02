@@ -3,7 +3,7 @@ import { TuiChevron } from '@taiga-ui/kit';
 import { TuiDataList, TuiDropdown, TuiIcon, TuiLink } from '@taiga-ui/core';
 import { ChatService } from '../../services/chat.service';
 import { ModelType } from '../../types/model-type';
-import { AppService } from '../../services/app.service';
+import { AppUiService } from '../../services/app-ui.service';
 import { ChatNavigationService } from '../../services/chat-navigation.service';
 
 @Component({
@@ -16,7 +16,7 @@ import { ChatNavigationService } from '../../services/chat-navigation.service';
 export class HeaderComponent {
   protected modelSelectionOpen: boolean = false;
 
-  public readonly appService = inject(AppService);
+  public readonly appUiService = inject(AppUiService);
   public readonly chatService = inject(ChatService);
   private readonly chatNavigationService = inject(ChatNavigationService);
 
@@ -35,7 +35,7 @@ export class HeaderComponent {
   }
 
   protected toggleMenu(): void {
-    this.appService.toggleSidebar();
+    this.appUiService.toggleSidebar();
   }
 
   protected newChat(): void {

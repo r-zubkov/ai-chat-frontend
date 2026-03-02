@@ -11,7 +11,7 @@ import { tuiItemsHandlersProvider, TuiRoot } from '@taiga-ui/core';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { HeaderComponent } from './components/header/header.component';
 import { ChatService } from './services/chat.service';
-import { AppService } from './services/app.service';
+import { AppUiService } from './services/app-ui.service';
 import { RouterOutlet } from '@angular/router';
 
 interface ISelectItem {
@@ -35,7 +35,7 @@ interface ISelectItem {
 export class AppComponent implements OnInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
 
-  readonly appService = inject(AppService);
+  readonly appUiService = inject(AppUiService);
   private readonly chatService = inject(ChatService);
 
   constructor() {
@@ -61,7 +61,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private observeWidthChange(): void {
     this.resizeObserver = new ResizeObserver((entries) => {
       const width = entries[0].contentRect.width;
-      this.appService.updateMobileState(width);
+      this.appUiService.updateMobileState(width);
     });
 
     this.resizeObserver.observe(document.body);
