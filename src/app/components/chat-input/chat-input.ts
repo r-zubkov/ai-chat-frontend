@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TuiButton, TuiTextfield } from '@taiga-ui/core';
 import { TuiTextarea } from '@taiga-ui/kit';
-import { trimRequiredValidator } from '../../validators/trim-required.validator';
 
 @Component({
   selector: 'chat-input',
@@ -20,12 +19,11 @@ export class ChatInput {
   protected readonly form = new FormGroup({
     message: new FormControl('', {
       nonNullable: true,
-      validators: [trimRequiredValidator],
     }),
   });
 
   protected get isSendAllowed(): boolean {
-    return this.form.valid && !this.thinking;
+    return !this.thinking && this.form.controls.message.value.trim().length > 0;
   }
 
   protected send(): void {
