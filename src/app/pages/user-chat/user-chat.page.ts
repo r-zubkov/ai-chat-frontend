@@ -40,7 +40,7 @@ export class UserChatPage {
 
   @Input() set id(chatId: string) {
     void this.chatNavigationService
-      .initializeChat(chatId)
+      .setupActiveChat(chatId)
       .finally(() => this.appUiService.closeSidebarOnMobile());
     this.loadMessages('instant');
   }

@@ -21,7 +21,7 @@ export class NewChatPage implements OnInit {
 
   ngOnInit(): void {
     void this.chatNavigationService
-      .initializeChat(null)
+      .setupActiveChat(null)
       .finally(() => this.appUiService.closeSidebarOnMobile());
   }
 

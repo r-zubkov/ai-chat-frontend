@@ -5,11 +5,11 @@ import { ChatStore } from './chat.store';
 
 @Injectable({ providedIn: 'root' })
 export class ChatNavigationService {
+  private readonly router = inject(Router);
   private readonly chatStore = inject(ChatStore);
   private readonly chatModelService = inject(ChatModelService);
-  private readonly router = inject(Router);
 
-  async initializeChat(chatId: string | null): Promise<void> {
+  async setupActiveChat(chatId: string | null): Promise<void> {
     this.chatStore.setActiveChatId(chatId);
     await this.chatModelService.syncCurrentModelForChat(chatId);
   }
