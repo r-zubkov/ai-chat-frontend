@@ -12,7 +12,4 @@ export enum ModelType {
   GEMINI_25_FLASH_LIGHT = 'gemini-25-flash-light',
   GEMINI_3_FLASH_PREVIEW = 'gemini-3-flash-preview',
   DEEPSEEK_32 = 'deepseek-32',
-  // Fallback
-  GPT5 = 'gpt5',
-  GPT5_MINI = 'gpt5-mini',
 }

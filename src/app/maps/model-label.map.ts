@@ -14,7 +14,4 @@ export const ModelLabelMap: Partial<Record<ModelType, string>> = {
   [ModelType.GEMINI_25_FLASH_LIGHT]: 'Gemini 2.5 Flash Light',
   [ModelType.GEMINI_3_FLASH_PREVIEW]: 'Gemini 3 Flash',
   [ModelType.DEEPSEEK_32]: 'DeepSeek V3.2',
-  // Fallback
-  [ModelType.GPT5]: 'GPT 5',
-  [ModelType.GPT5_MINI]: 'GPT 5 mini',
 };
