@@ -3,6 +3,8 @@ import { ChatInput } from '../../components/chat-input/chat-input';
 import { ChatService } from '../../services/chat.service';
 import { SendMessageEventType } from '../../types/send-message-event';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ChatNavigationService } from '../../services/chat-navigation.service';
+import { AppUiService } from '../../services/app-ui.service';
 
 @Component({
   selector: 'app-new-chat.page',
@@ -14,9 +16,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class NewChatPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly chatService = inject(ChatService);
+  private readonly chatNavigationService = inject(ChatNavigationService);
+  private readonly appUiService = inject(AppUiService);
 
   ngOnInit(): void {
-    this.chatService.initializeChat(null);
+    void this.chatNavigationService
+      .setupActiveChat(null)
+      .finally(() => this.appUiService.closeSidebarOnMobile());
   }
 
   protected sendRequest(text: string): void {
@@ -26,7 +32,7 @@ export class NewChatPage implements OnInit {
       .subscribe({
         next: (event) => {
           if (event.type === SendMessageEventType.SENT) {
-            this.chatService.navigateToChat(event.userMessage.chatId);
+            this.chatNavigationService.navigateToChat(event.userMessage.chatId);
           }
         },
         error: (err) => console.error('Error sending message:', err),

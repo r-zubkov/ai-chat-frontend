@@ -1,62 +1,31 @@
 import { inject, Injectable } from '@angular/core';
-import { Chat, ChatState } from '../types/chat';
+import { Chat } from '../types/chat';
 import { ModelType } from '../types/model-type';
 import { ChatRepositoryService, RepositoryEventType } from './chat-repository.service';
-import { ChatSocketService } from './chat-socket.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AppService } from './app.service';
-import { ModelLabelMap } from '../maps/model-label.map';
-import { ChatMessage, ChatMessageRole, ChatMessageState } from '../types/chat-message';
-import { SendMessageEvent, SendMessageEventType } from '../types/send-message-event';
-import { Router } from '@angular/router';
-import {
-  EMPTY,
-  Observable,
-  Subject,
-  auditTime,
-  catchError,
-  concatMap,
-  finalize,
-  from,
-  tap,
-} from 'rxjs';
+import { ChatMessage } from '../types/chat-message';
+import { SendMessageEvent } from '../types/send-message-event';
+import { Observable } from 'rxjs';
 import { ChatStore } from './chat.store';
-import { StreamingStore } from './streaming.store';
-import { MODEL_BASE_SYSTEM_PROMT, PERSIST_INTERVAL_MS } from '../constants/chat.constants';
-import { createChatEntity, createMessageEntity, generateSequelId } from '../helpers/chat.helpers';
-import { buildApiMessages } from '../helpers/chat-api.helpers';
+import { ChatConversationService } from './chat-conversation.service';
+import { ChatPersistenceService } from './chat-persistence.service';
+import { ChatModelService } from './chat-model.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private readonly chatStore = inject(ChatStore);
-  private readonly streamingStore = inject(StreamingStore);
-  private readonly router = inject(Router);
-  private readonly appService = inject(AppService);
   private readonly chatRepositoryService = inject(ChatRepositoryService);
-  private readonly chatSocketService = inject(ChatSocketService);
+  private readonly chatConversationService = inject(ChatConversationService);
+  private readonly chatPersistenceService = inject(ChatPersistenceService);
+  private readonly chatModelService = inject(ChatModelService);
 
-  readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
-    [ModelType.GPT_51]: MODEL_BASE_SYSTEM_PROMT,
-    [ModelType.GEMINI_3_FLASH_PREVIEW]: MODEL_BASE_SYSTEM_PROMT,
-  };
-
-  readonly models: Array<{ id: ModelType; label: string }> = [
-    { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
-    { id: ModelType.DEEPSEEK_32, label: ModelLabelMap[ModelType.DEEPSEEK_32]! },
-    {
-      id: ModelType.GEMINI_3_FLASH_PREVIEW,
-      label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]!,
-    },
-    { id: ModelType.GPT_51, label: ModelLabelMap[ModelType.GPT_51]! },
-  ];
+  readonly models = this.chatModelService.models;
 
   readonly chats = this.chatStore.chats;
   readonly chatsCount = this.chatStore.chatsCount;
   readonly activeChatId = this.chatStore.activeChatId;
   readonly activeChat = this.chatStore.activeChat;
-  readonly currentModel = this.chatStore.currentModel;
-
-  private readonly globalCurrentModel = this.chatStore.globalCurrentModel;
+  readonly currentModel = this.chatModelService.currentModel;
 
   private readonly chatsLimitStep: number = 50;
   private chatsLimit: number = this.chatsLimitStep;
@@ -65,7 +34,7 @@ export class ChatService {
     this.watchChatsUpdate();
   }
 
-  /* Чаты */
+  /* Chats */
 
   getChats(limit: number): Promise<Chat[]> {
     return this.chatRepositoryService.getChats(limit);
@@ -75,25 +44,22 @@ export class ChatService {
     return this.chatRepositoryService.getChatsCount();
   }
 
-  async updateChat(
+  updateChat(
     chatId: string,
     chatUpdateData: Partial<Omit<Chat, 'id'>>,
     triggerLastUpdate: boolean = true,
   ): Promise<void> {
-    const dataToUpdate: Partial<Omit<Chat, 'id'>> = { ...chatUpdateData };
-    if (triggerLastUpdate) dataToUpdate.lastUpdate = Date.now();
-
-    await this.chatRepositoryService.updateChat(chatId, { ...dataToUpdate });
+    return this.chatPersistenceService.updateChat(chatId, chatUpdateData, triggerLastUpdate);
   }
 
-  async deleteChat(chatId: string): Promise<void> {
-    await this.chatRepositoryService.deleteChat(chatId);
+  deleteChat(chatId: string): Promise<void> {
+    return this.chatPersistenceService.deleteChat(chatId);
   }
 
   async deleteAllChats(): Promise<void> {
     this.stopAllRequests();
 
-    await this.chatRepositoryService.deleteAllChats();
+    await this.chatPersistenceService.deleteAllChats();
   }
 
   async loadChatsFromDB(): Promise<void> {
@@ -115,267 +81,37 @@ export class ChatService {
     });
   }
 
-  /* Сообщения */
+  /* Messages */
 
   async getActiveChatMessages(): Promise<ChatMessage[]> {
     return this.chatRepositoryService.getMessages(this.activeChatId() || '');
   }
 
-  /* Взаимодействие с моделями чатов */
+  /* Chat model interactions */
 
-  async loadCurrentModelFromDB(): Promise<void> {
-    const loaded = await this.chatRepositoryService.loadCurrentModel();
-
-    let modelToSet: ModelType;
-
-    if (loaded && this.isModelAvailable(loaded)) {
-      modelToSet = loaded;
-    } else {
-      modelToSet = this.getDefaultModel();
-    }
-
-    this.chatStore.setCurrentModel(modelToSet);
-    this.chatStore.setGlobalCurrentModel(modelToSet);
+  loadCurrentModelFromDB(): Promise<void> {
+    return this.chatModelService.loadCurrentModelFromDB();
   }
 
-  async updateCurrentModel(model: ModelType): Promise<void> {
-    let modelToSet: ModelType;
-
-    if (this.isModelAvailable(model)) {
-      modelToSet = model;
-    } else {
-      modelToSet = this.getDefaultModel();
-    }
-
-    this.chatStore.setCurrentModel(modelToSet);
-
-    if (!this.activeChatId()) {
-      this.chatStore.setGlobalCurrentModel(modelToSet);
-      await this.chatRepositoryService.saveCurrentModel(modelToSet);
-    }
+  updateCurrentModel(model: ModelType): Promise<void> {
+    return this.chatModelService.updateCurrentModel(model);
   }
 
-  private isModelAvailable(modelId: ModelType): boolean {
-    return this.models.some((model) => model.id === modelId);
-  }
-
-  private getDefaultModel(): ModelType {
-    return this.models[0].id;
-  }
-
-  /* Навигация по чатам */
-
-  initializeChat(chatId: string | null): void {
-    this.chatStore.setActiveChatId(chatId);
-    const activeChat = this.activeChat();
-
-    if (activeChat) {
-      this.updateCurrentModel(activeChat.model);
-    } else {
-      this.updateCurrentModel(this.globalCurrentModel());
-    }
-
-    if (this.appService.isMobile()) {
-      this.appService.sidebarOpen.set(false);
-    }
-  }
-
-  navigateToChat(chatId: string | null): void {
-    this.router.navigate(['/chats', chatId || 'new']);
-  }
-
-  /* Отправка сообщений / работа с сокетами */
+  /* Message sending / socket operations */
 
   sendMessage(text: string, messageHistory: ChatMessage[]): Observable<SendMessageEvent> {
-    const events$ = new Subject<SendMessageEvent>();
-    const trimmed = text.trim();
-    const model = this.currentModel();
-    if (!trimmed || !model) {
-      events$.complete();
-      return events$.asObservable();
-    }
-
-    void (async () => {
-      let chat = this.activeChat();
-      let chatId: string | null = chat?.id ?? null;
-      let assistantMessageId: string | null = null;
-      let content = '';
-
-      try {
-        if (!chat) {
-          const entity = createChatEntity(trimmed, model);
-          await this.chatRepositoryService.createChat(entity);
-
-          chat = entity;
-          chatId = entity.id;
-        }
-
-        let sequelCounter = 0;
-        const activeChatId = chatId;
-        if (!activeChatId) {
-          throw new Error('Chat ID is not available');
-        }
-
-        const userMessage: ChatMessage = createMessageEntity({
-          sequelId: generateSequelId(sequelCounter++),
-          role: ChatMessageRole.USER,
-          model,
-          state: ChatMessageState.COMPLETED,
-          chatId: activeChatId,
-          content: trimmed,
-        });
-
-        const assistantMessage = createMessageEntity({
-          sequelId: generateSequelId(sequelCounter++),
-          role: ChatMessageRole.ASSISTANT,
-          model,
-          state: ChatMessageState.STREAMING,
-          chatId: activeChatId,
-          content: '',
-        });
-        assistantMessageId = assistantMessage.id;
-
-        // сохранение сообщений в бд
-        await this.chatRepositoryService.createMessages([userMessage, assistantMessage]);
-
-        // system + хвост истории + текущий userMessage
-        const apiMessages = buildApiMessages(
-          messageHistory,
-          userMessage,
-          model,
-          this.modelSystemPrompts,
-        );
-
-        // отправка запроса к модели
-        const { requestId, stream$ } = this.chatSocketService.sendChatCompletion(
-          model,
-          apiMessages,
-        );
-
-        // обновляем состояние чата
-        this.updateChat(activeChatId, {
-          model,
-          state: ChatState.THINKING,
-          currentRequestId: requestId,
-        });
-        events$.next({
-          type: SendMessageEventType.SENT,
-          chatId: activeChatId,
-          userMessage,
-        });
-
-        let lastPersistedContent = '';
-        let terminalMessageState = ChatMessageState.COMPLETED;
-
-        const persistQueue$ = new Subject<{ content: string; state?: ChatMessageState }>();
-        const persistTick$ = new Subject<void>();
-
-        persistQueue$
-          .pipe(
-            concatMap((payload) => {
-              const update: Partial<ChatMessage> = { content: payload.content };
-              if (payload.state !== undefined) {
-                update.state = payload.state;
-              }
-
-              return from(
-                this.chatRepositoryService.updateMessage(assistantMessage.id, update),
-              ).pipe(
-                tap(() => {
-                  lastPersistedContent = payload.content;
-                }),
-                catchError((persistError: unknown) => {
-                  console.error('Error persisting streaming content:', persistError);
-                  return EMPTY;
-                }),
-              );
-            }),
-          )
-          .subscribe();
-
-        persistTick$
-          .pipe(
-            auditTime(PERSIST_INTERVAL_MS),
-            tap(() => {
-              if (content === lastPersistedContent) return;
-              persistQueue$.next({ content });
-            }),
-            finalize(() => {
-              persistQueue$.next({ content, state: terminalMessageState });
-              persistQueue$.complete();
-            }),
-          )
-          .subscribe();
-
-        stream$
-          .pipe(
-            tap((delta: string) => {
-              content += delta;
-              this.streamingStore.set(assistantMessage.id, content);
-              persistTick$.next();
-            }),
-            tap({
-              error: () => {
-                terminalMessageState = ChatMessageState.ERROR;
-              },
-            }),
-            finalize(() => {
-              persistTick$.complete();
-            }),
-          )
-          .subscribe({
-            error: (err: unknown) => {
-              this.updateChat(activeChatId, {
-                model,
-                state: ChatState.ERROR,
-                currentRequestId: null,
-              });
-              events$.error(err);
-            },
-            complete: () => {
-              this.updateChat(activeChatId, {
-                model,
-                state: ChatState.IDLE,
-                currentRequestId: null,
-              });
-
-              const finalAssistantMessage: ChatMessage = { ...assistantMessage, content };
-              events$.next({
-                type: SendMessageEventType.FINISHED,
-                chatId: activeChatId,
-                assistantMessage: finalAssistantMessage,
-              });
-              events$.complete();
-            },
-          });
-      } catch (err: unknown) {
-        if (chatId) {
-          this.updateChat(chatId, { model, state: ChatState.ERROR, currentRequestId: null });
-        }
-
-        if (assistantMessageId) {
-          this.chatRepositoryService.updateMessage(assistantMessageId, {
-            content,
-            state: ChatMessageState.ERROR,
-          });
-        }
-
-        events$.error(err);
-      }
-    })();
-
-    return events$.asObservable();
+    return this.chatConversationService.sendMessage(text, messageHistory);
   }
 
   stopRequest(requestId: string): void {
-    this.chatSocketService.abortRequest(requestId);
+    this.chatConversationService.stopRequest(requestId);
   }
 
   stopAllRequests(): void {
-    this.chatSocketService.abortAllRequests();
+    this.chatConversationService.stopAllRequests();
   }
 
-  /* Обновление данных из indexed db */
+  /* IndexedDB update streams */
 
   get projectsUpdated$(): Observable<RepositoryEventType> {
     return this.chatRepositoryService.projectsUpdated$;
@@ -394,7 +130,6 @@ export class ChatService {
   }
 
   destroy(): void {
-    this.stopAllRequests();
-    this.chatSocketService.destroy();
+    this.chatConversationService.destroy();
   }
 }

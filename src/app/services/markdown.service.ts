@@ -17,7 +17,7 @@ export class MarkdownService {
             const { value } = hljs.highlight(str, { language: lang });
             return `<pre><code class="hljs language-${lang}">${value}</code></pre>`;
           } catch {
-            // Fall back to auto-detected highlighting.
+            // Переключение на автоопределение подсветки, если основной метод не сработал.
           }
         }
 

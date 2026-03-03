@@ -3,7 +3,8 @@ import { TuiChevron } from '@taiga-ui/kit';
 import { TuiDataList, TuiDropdown, TuiIcon, TuiLink } from '@taiga-ui/core';
 import { ChatService } from '../../services/chat.service';
 import { ModelType } from '../../types/model-type';
-import { AppService } from '../../services/app.service';
+import { AppUiService } from '../../services/app-ui.service';
+import { ChatNavigationService } from '../../services/chat-navigation.service';
 
 @Component({
   selector: 'app-header',
@@ -15,31 +16,29 @@ import { AppService } from '../../services/app.service';
 export class HeaderComponent {
   protected modelSelectionOpen: boolean = false;
 
-  public readonly appService = inject(AppService);
+  public readonly appUiService = inject(AppUiService);
   public readonly chatService = inject(ChatService);
+  private readonly chatNavigationService = inject(ChatNavigationService);
 
   protected readonly selectedModel = computed(() => {
     const currentModel = this.chatService.currentModel();
     return this.chatService.models.find((model) => model.id === currentModel)?.label ?? null;
   });
 
-  protected onClick(model: string): void {
-    if (model) {
-      this.chatService.updateCurrentModel(model as ModelType);
-    }
-
+  protected onClick(model: ModelType): void {
+    this.chatService.updateCurrentModel(model);
     this.modelSelectionOpen = false;
   }
 
-  protected itemIsActive(model: string): boolean {
+  protected itemIsActive(model: ModelType): boolean {
     return model === this.chatService.currentModel();
   }
 
   protected toggleMenu(): void {
-    this.appService.toggleSidebar();
+    this.appUiService.toggleSidebar();
   }
 
   protected newChat(): void {
-    this.chatService.navigateToChat(null);
+    this.chatNavigationService.navigateToChat(null);
   }
 }

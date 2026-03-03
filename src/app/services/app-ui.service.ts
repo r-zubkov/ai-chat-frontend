@@ -4,7 +4,7 @@ import { getCssValue } from '../helpers/get-css-value';
 @Injectable({
   providedIn: 'root',
 })
-export class AppService {
+export class AppUiService {
   readonly sidebarOpen = signal<boolean>(true);
   readonly isMobile = signal<boolean>(false);
 
@@ -25,6 +25,12 @@ export class AppService {
 
   closeSidebar(): void {
     if (this.sidebarOpen()) this.sidebarOpen.set(false);
+  }
+
+  closeSidebarOnMobile(): void {
+    if (this.isMobile()) {
+      this.closeSidebar();
+    }
   }
 
   toggleSidebar(): void {

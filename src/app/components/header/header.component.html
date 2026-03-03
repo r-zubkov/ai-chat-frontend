@@ -1,9 +1,9 @@
 <header class="header flex items-center justify-between gap-4 px-4">
-  @if (appService.isMobile()) {
+  @if (appUiService.isMobile()) {
     <button
       class="burger-btn"
       aria-label="Меню"
-      [class.open]="appService.sidebarOpen()"
+      [class.open]="appUiService.sidebarOpen()"
       (click)="toggleMenu()"
     >
       <span></span>
@@ -32,7 +32,7 @@
     ></button>
   </div>
 
-  @if (appService.isMobile()) {
+  @if (appUiService.isMobile()) {
     <button class="header__new-chat" (click)="newChat()">
       <tui-icon icon="@tui.message-circle-plus" [style.font-size.rem]="1.25" />
     </button>
