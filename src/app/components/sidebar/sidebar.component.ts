@@ -9,7 +9,7 @@ import {
   TuiLoader,
   TuiScrollbar,
 } from '@taiga-ui/core';
-import { ChatService } from '../../services/chat.service';
+import { ChatFacadeService } from '../../services/chat-facade.service';
 import { TUI_CONFIRM, TuiConfirmData } from '@taiga-ui/kit';
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import { ModelLabelPipe } from '../../pipes/model-label.pipe';
@@ -51,7 +51,7 @@ export class SidebarComponent {
 
   private readonly alerts = inject(TuiAlertService);
   private readonly dialogs = inject(TuiDialogService);
-  public readonly chatService = inject(ChatService);
+  public readonly chatService = inject(ChatFacadeService);
   private readonly chatNavigationService = inject(ChatNavigationService);
 
   protected readonly ChatState = ChatState;

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TuiChevron } from '@taiga-ui/kit';
 import { TuiDataList, TuiDropdown, TuiIcon, TuiLink } from '@taiga-ui/core';
-import { ChatService } from '../../services/chat.service';
+import { ChatFacadeService } from '../../services/chat-facade.service';
 import { ModelType } from '../../types/model-type';
 import { AppUiService } from '../../services/app-ui.service';
 import { ChatNavigationService } from '../../services/chat-navigation.service';
@@ -17,7 +17,7 @@ export class HeaderComponent {
   protected modelSelectionOpen: boolean = false;
 
   public readonly appUiService = inject(AppUiService);
-  public readonly chatService = inject(ChatService);
+  public readonly chatService = inject(ChatFacadeService);
   private readonly chatNavigationService = inject(ChatNavigationService);
 
   protected readonly selectedModel = computed(() => {

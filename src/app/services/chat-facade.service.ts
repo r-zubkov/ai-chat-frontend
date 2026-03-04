@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { Chat } from '../types/chat';
 import { ModelType } from '../types/model-type';
-import { ChatRepositoryService, RepositoryEventType } from './chat-repository.service';
+import { RepositoryEventType } from '../types/repository-event-type';
+import { ChatRepositoryService } from './chat-repository.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatMessage } from '../types/chat-message';
 import { SendMessageEvent } from '../types/send-message-event';
@@ -12,7 +13,7 @@ import { ChatPersistenceService } from './chat-persistence.service';
 import { ChatModelService } from './chat-model.service';
 
 @Injectable({ providedIn: 'root' })
-export class ChatService {
+export class ChatFacadeService {
   private readonly chatStore = inject(ChatStore);
   private readonly chatRepositoryService = inject(ChatRepositoryService);
   private readonly chatConversationService = inject(ChatConversationService);

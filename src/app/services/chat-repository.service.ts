@@ -6,13 +6,7 @@ import { ChatMessage } from '../types/chat-message';
 import { Observable, Subject } from 'rxjs';
 import Dexie from 'dexie';
 import { AppSettingKey, AppSettingsMap } from '../types/setting';
-
-export enum RepositoryEventType {
-  READING = 'reading',
-  CREATING = 'creating',
-  UPDATING = 'updating',
-  DELETING = 'deleting',
-}
+import { RepositoryEventType } from '../types/repository-event-type';
 
 @Injectable({ providedIn: 'root' })
 export class ChatRepositoryService {

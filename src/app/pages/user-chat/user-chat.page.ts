@@ -8,7 +8,7 @@ import {
   signal,
   ViewChild,
 } from '@angular/core';
-import { ChatService } from '../../services/chat.service';
+import { ChatFacadeService } from '../../services/chat-facade.service';
 import { ChatMessage, ChatMessageRole, ChatMessageState } from '../../types/chat-message';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
@@ -18,7 +18,7 @@ import { ChatInput } from '../../components/chat-input/chat-input';
 import { ModelLabelPipe } from '../../pipes/model-label.pipe';
 import { remToPx } from '../../helpers/rem-to-px';
 import { getCssValue } from '../../helpers/get-css-value';
-import { RepositoryEventType } from '../../services/chat-repository.service';
+import { RepositoryEventType } from '../../types/repository-event-type';
 import { StreamingStore } from '../../services/streaming.store';
 import { ChatNavigationService } from '../../services/chat-navigation.service';
 import { AppUiService } from '../../services/app-ui.service';
@@ -33,7 +33,7 @@ import { AppUiService } from '../../services/app-ui.service';
 export class UserChatPage {
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly chatService = inject(ChatService);
+  readonly chatService = inject(ChatFacadeService);
   readonly streamingStore = inject(StreamingStore);
   private readonly chatNavigationService = inject(ChatNavigationService);
   private readonly appUiService = inject(AppUiService);

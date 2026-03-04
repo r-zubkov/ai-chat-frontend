@@ -20,6 +20,9 @@ interface TimewebResponse {
 }
 
 @Injectable({ providedIn: 'root' })
+/**
+ * Reserved HTTP fallback gateway. Not used in the primary runtime chat flow.
+ */
 export class ChatApiService {
   private readonly baseUrl = environment.apiUrl;
 

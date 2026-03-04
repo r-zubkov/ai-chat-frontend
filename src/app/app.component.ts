@@ -10,7 +10,7 @@ import {
 import { tuiItemsHandlersProvider, TuiRoot } from '@taiga-ui/core';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { HeaderComponent } from './components/header/header.component';
-import { ChatService } from './services/chat.service';
+import { ChatFacadeService } from './services/chat-facade.service';
 import { AppUiService } from './services/app-ui.service';
 import { RouterOutlet } from '@angular/router';
 
@@ -36,7 +36,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
 
   readonly appUiService = inject(AppUiService);
-  private readonly chatService = inject(ChatService);
+  private readonly chatService = inject(ChatFacadeService);
 
   constructor() {
     this.chatService.loadCurrentModelFromDB();
