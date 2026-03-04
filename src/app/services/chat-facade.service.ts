@@ -6,38 +6,33 @@ import { ChatRepositoryService } from './chat-repository.service';
 import { ChatMessage } from '../types/chat-message';
 import { SendMessageEvent } from '../types/send-message-event';
 import { Observable } from 'rxjs';
-import { ChatStore } from './chat.store';
 import { ChatConversationService } from './chat-conversation.service';
-import { ChatMutationService } from './chat-mutation.service';
 import { ChatModelService } from './chat-model.service';
+import { ChatsFacadeService } from './chats/chats-facade.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatFacadeService {
-  private readonly chatStore = inject(ChatStore);
   private readonly chatRepositoryService = inject(ChatRepositoryService);
   private readonly chatConversationService = inject(ChatConversationService);
-  private readonly chatMutationService = inject(ChatMutationService);
   private readonly chatModelService = inject(ChatModelService);
+  private readonly chatsDomain = inject(ChatsFacadeService);
 
   readonly models = this.chatModelService.models;
 
-  readonly chats = this.chatStore.chats;
-  readonly chatsCount = this.chatStore.chatsCount;
-  readonly activeChatId = this.chatStore.activeChatId;
-  readonly activeChat = this.chatStore.activeChat;
+  readonly chats = this.chatsDomain.chats;
+  readonly chatsCount = this.chatsDomain.chatsCount;
+  readonly activeChatId = this.chatsDomain.activeChatId;
+  readonly activeChat = this.chatsDomain.activeChat;
   readonly currentModel = this.chatModelService.currentModel;
-
-  private readonly chatsLimitStep: number = 50;
-  private chatsLimit: number = this.chatsLimitStep;
 
   /* Chats */
 
   getChats(limit: number): Promise<Chat[]> {
-    return this.chatRepositoryService.getChats(limit);
+    return this.chatsDomain.getChats(limit);
   }
 
   getChatsCount(): Promise<number> {
-    return this.chatRepositoryService.getChatsCount();
+    return this.chatsDomain.getChatsCount();
   }
 
   updateChat(
@@ -45,27 +40,25 @@ export class ChatFacadeService {
     chatUpdateData: Partial<Omit<Chat, 'id'>>,
     triggerLastUpdate: boolean = true,
   ): Promise<void> {
-    return this.chatMutationService.updateChat(chatId, chatUpdateData, triggerLastUpdate);
+    return this.chatsDomain.updateChat(chatId, chatUpdateData, triggerLastUpdate);
   }
 
   deleteChat(chatId: string): Promise<void> {
-    return this.chatMutationService.deleteChat(chatId);
+    return this.chatsDomain.deleteChat(chatId);
   }
 
   async deleteAllChats(): Promise<void> {
     this.stopAllRequests();
 
-    await this.chatMutationService.deleteAllChats();
+    await this.chatsDomain.deleteAllChats();
   }
 
-  async loadChatsFromDB(): Promise<void> {
-    const chats = await this.getChats(this.chatsLimit);
-    this.chatStore.setChats(chats);
+  loadChatsFromDB(): Promise<void> {
+    return this.chatsDomain.loadChatsFromDB();
   }
 
-  async loadChatsCountFromDB(): Promise<void> {
-    const count = await this.getChatsCount();
-    this.chatStore.setChatsCount(count);
+  loadChatsCountFromDB(): Promise<void> {
+    return this.chatsDomain.loadChatsCountFromDB();
   }
 
   /* Messages */
