@@ -18,19 +18,19 @@ import { MODEL_BASE_SYSTEM_PROMT, PERSIST_INTERVAL_MS } from '../constants/chat.
 import { buildApiMessages } from '../helpers/chat-api.helpers';
 import { createChatEntity, createMessageEntity, generateSequelId } from '../helpers/chat.helpers';
 import { ChatSocketService } from './chat-socket.service';
-import { ChatStore } from './chat.store';
+import { ChatsStore } from './chats/chats.store';
 import { StreamingStore } from './streaming.store';
-import { ChatMutationService } from './chat-mutation.service';
+import { ChatMutationService } from './chats/mutation.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatConversationService {
-  private readonly chatStore = inject(ChatStore);
+  private readonly chatsStore = inject(ChatsStore);
   private readonly chatSocketService = inject(ChatSocketService);
   private readonly streamingStore = inject(StreamingStore);
   private readonly chatMutationService = inject(ChatMutationService);
 
-  private readonly activeChat = this.chatStore.activeChat;
-  private readonly currentModel = this.chatStore.currentModel;
+  private readonly activeChat = this.chatsStore.activeChat;
+  private readonly currentModel = this.chatsStore.currentModel;
 
   private readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
     [ModelType.GPT_51]: MODEL_BASE_SYSTEM_PROMT,

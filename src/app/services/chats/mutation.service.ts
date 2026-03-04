@@ -1,13 +1,13 @@
 import { inject, Injectable } from '@angular/core';
-import { Chat } from '../types/chat';
-import { ChatMessage } from '../types/chat-message';
-import { ChatRepositoryService } from './chat-repository.service';
-import { ChatStore } from './chat.store';
+import { Chat } from '../../types/chat';
+import { ChatMessage } from '../../types/chat-message';
+import { ChatRepositoryService } from '../chat-repository.service';
+import { ChatsStore } from './chats.store';
 
 @Injectable({ providedIn: 'root' })
 export class ChatMutationService {
   private readonly chatRepositoryService = inject(ChatRepositoryService);
-  private readonly chatStore = inject(ChatStore);
+  private readonly chatsStore = inject(ChatsStore);
 
   private readonly chatsLimit = 50;
 
@@ -28,7 +28,7 @@ export class ChatMutationService {
 
     await this.chatRepositoryService.updateChat(chatId, dataToUpdate);
 
-    const patched = this.chatStore.patchChat(chatId, dataToUpdate);
+    const patched = this.chatsStore.patchChat(chatId, dataToUpdate);
     if (!patched) {
       await this.reloadChatsSnapshot();
     }
@@ -58,7 +58,7 @@ export class ChatMutationService {
       this.chatRepositoryService.getChatsCount(),
     ]);
 
-    this.chatStore.setChats(chats);
-    this.chatStore.setChatsCount(chatsCount);
+    this.chatsStore.setChats(chats);
+    this.chatsStore.setChatsCount(chatsCount);
   }
 }

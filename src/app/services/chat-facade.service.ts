@@ -8,7 +8,7 @@ import { SendMessageEvent } from '../types/send-message-event';
 import { Observable } from 'rxjs';
 import { ChatConversationService } from './chat-conversation.service';
 import { ChatModelService } from './chat-model.service';
-import { ChatsFacadeService } from './chats/chats-facade.service';
+import { ChatsFacadeService } from './chats/facade.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatFacadeService {

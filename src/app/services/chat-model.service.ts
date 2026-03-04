@@ -3,11 +3,11 @@ import { ModelLabelMap } from '../maps/model-label.map';
 import { ModelOption } from '../types/model-option';
 import { ModelType } from '../types/model-type';
 import { ChatRepositoryService } from './chat-repository.service';
-import { ChatStore } from './chat.store';
+import { ChatsStore } from './chats/chats.store';
 
 @Injectable({ providedIn: 'root' })
 export class ChatModelService {
-  private readonly chatStore = inject(ChatStore);
+  private readonly chatsStore = inject(ChatsStore);
   private readonly chatRepositoryService = inject(ChatRepositoryService);
 
   readonly models: ModelOption[] = [
@@ -20,27 +20,27 @@ export class ChatModelService {
     { id: ModelType.GPT_51, label: ModelLabelMap[ModelType.GPT_51]! },
   ];
 
-  readonly currentModel = this.chatStore.currentModel;
+  readonly currentModel = this.chatsStore.currentModel;
 
-  private readonly activeChat = this.chatStore.activeChat;
-  private readonly activeChatId = this.chatStore.activeChatId;
-  private readonly globalCurrentModel = this.chatStore.globalCurrentModel;
+  private readonly activeChat = this.chatsStore.activeChat;
+  private readonly activeChatId = this.chatsStore.activeChatId;
+  private readonly globalCurrentModel = this.chatsStore.globalCurrentModel;
 
   async loadCurrentModelFromDB(): Promise<void> {
     const loaded = await this.chatRepositoryService.loadCurrentModel();
     const modelToSet = loaded ? this.normalizeModel(loaded) : this.getDefaultModel();
 
-    this.chatStore.setCurrentModel(modelToSet);
-    this.chatStore.setGlobalCurrentModel(modelToSet);
+    this.chatsStore.setCurrentModel(modelToSet);
+    this.chatsStore.setGlobalCurrentModel(modelToSet);
   }
 
   async updateCurrentModel(model: ModelType): Promise<void> {
     const modelToSet = this.normalizeModel(model);
 
-    this.chatStore.setCurrentModel(modelToSet);
+    this.chatsStore.setCurrentModel(modelToSet);
 
     if (!this.activeChatId()) {
-      this.chatStore.setGlobalCurrentModel(modelToSet);
+      this.chatsStore.setGlobalCurrentModel(modelToSet);
       await this.chatRepositoryService.saveCurrentModel(modelToSet);
     }
   }

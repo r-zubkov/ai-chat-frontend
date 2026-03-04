@@ -1,7 +1,7 @@
 import { computed } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
-import { Chat } from '../types/chat';
-import { ModelType } from '../types/model-type';
+import { Chat } from '../../types/chat';
+import { ModelType } from '../../types/model-type';
 
 interface ChatStoreState {
   chats: Chat[];
@@ -19,7 +19,7 @@ const initialState: ChatStoreState = {
   globalCurrentModel: ModelType.GROK_4_FAST,
 };
 
-export const ChatStore = signalStore(
+export const ChatsStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
   withComputed((store) => ({

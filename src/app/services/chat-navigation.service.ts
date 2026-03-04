@@ -1,16 +1,16 @@
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { ChatModelService } from './chat-model.service';
-import { ChatStore } from './chat.store';
+import { ChatsStore } from './chats/chats.store';
 
 @Injectable({ providedIn: 'root' })
 export class ChatNavigationService {
   private readonly router = inject(Router);
-  private readonly chatStore = inject(ChatStore);
+  private readonly chatsStore = inject(ChatsStore);
   private readonly chatModelService = inject(ChatModelService);
 
   async setupActiveChat(chatId: string | null): Promise<void> {
-    this.chatStore.setActiveChatId(chatId);
+    this.chatsStore.setActiveChatId(chatId);
     await this.chatModelService.syncCurrentModelForChat(chatId);
   }
 
