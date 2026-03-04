@@ -31,6 +31,21 @@ export const ChatStore = signalStore(
     setChats(chats: Chat[]): void {
       patchState(store, { chats });
     },
+    patchChat(chatId: string, data: Partial<Omit<Chat, 'id'>>): boolean {
+      const chats = store.chats();
+      const targetIndex = chats.findIndex((chat) => chat.id === chatId);
+      if (targetIndex < 0) return false;
+
+      const updatedChats = [...chats];
+      updatedChats[targetIndex] = { ...updatedChats[targetIndex], ...data };
+
+      if (data.lastUpdate !== undefined) {
+        updatedChats.sort((a, b) => b.lastUpdate - a.lastUpdate);
+      }
+
+      patchState(store, { chats: updatedChats });
+      return true;
+    },
     setChatsCount(chatsCount: number): void {
       patchState(store, { chatsCount });
     },

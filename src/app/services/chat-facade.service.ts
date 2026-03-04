@@ -3,13 +3,12 @@ import { Chat } from '../types/chat';
 import { ModelType } from '../types/model-type';
 import { RepositoryEventType } from '../types/repository-event-type';
 import { ChatRepositoryService } from './chat-repository.service';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatMessage } from '../types/chat-message';
 import { SendMessageEvent } from '../types/send-message-event';
 import { Observable } from 'rxjs';
 import { ChatStore } from './chat.store';
 import { ChatConversationService } from './chat-conversation.service';
-import { ChatPersistenceService } from './chat-persistence.service';
+import { ChatMutationService } from './chat-mutation.service';
 import { ChatModelService } from './chat-model.service';
 
 @Injectable({ providedIn: 'root' })
@@ -17,7 +16,7 @@ export class ChatFacadeService {
   private readonly chatStore = inject(ChatStore);
   private readonly chatRepositoryService = inject(ChatRepositoryService);
   private readonly chatConversationService = inject(ChatConversationService);
-  private readonly chatPersistenceService = inject(ChatPersistenceService);
+  private readonly chatMutationService = inject(ChatMutationService);
   private readonly chatModelService = inject(ChatModelService);
 
   readonly models = this.chatModelService.models;
@@ -30,10 +29,6 @@ export class ChatFacadeService {
 
   private readonly chatsLimitStep: number = 50;
   private chatsLimit: number = this.chatsLimitStep;
-
-  constructor() {
-    this.watchChatsUpdate();
-  }
 
   /* Chats */
 
@@ -50,17 +45,17 @@ export class ChatFacadeService {
     chatUpdateData: Partial<Omit<Chat, 'id'>>,
     triggerLastUpdate: boolean = true,
   ): Promise<void> {
-    return this.chatPersistenceService.updateChat(chatId, chatUpdateData, triggerLastUpdate);
+    return this.chatMutationService.updateChat(chatId, chatUpdateData, triggerLastUpdate);
   }
 
   deleteChat(chatId: string): Promise<void> {
-    return this.chatPersistenceService.deleteChat(chatId);
+    return this.chatMutationService.deleteChat(chatId);
   }
 
   async deleteAllChats(): Promise<void> {
     this.stopAllRequests();
 
-    await this.chatPersistenceService.deleteAllChats();
+    await this.chatMutationService.deleteAllChats();
   }
 
   async loadChatsFromDB(): Promise<void> {
@@ -71,15 +66,6 @@ export class ChatFacadeService {
   async loadChatsCountFromDB(): Promise<void> {
     const count = await this.getChatsCount();
     this.chatStore.setChatsCount(count);
-  }
-
-  private watchChatsUpdate(): void {
-    this.chatsUpdated$.pipe(takeUntilDestroyed()).subscribe((event) => {
-      if (event === RepositoryEventType.CREATING || event === RepositoryEventType.DELETING) {
-        this.loadChatsCountFromDB();
-      }
-      this.loadChatsFromDB();
-    });
   }
 
   /* Messages */
@@ -116,10 +102,6 @@ export class ChatFacadeService {
 
   get projectsUpdated$(): Observable<RepositoryEventType> {
     return this.chatRepositoryService.projectsUpdated$;
-  }
-
-  get chatsUpdated$(): Observable<RepositoryEventType> {
-    return this.chatRepositoryService.chatsUpdated$;
   }
 
   get messagesUpdated$(): Observable<RepositoryEventType> {

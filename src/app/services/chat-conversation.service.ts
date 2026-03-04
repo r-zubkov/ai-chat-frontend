@@ -20,14 +20,14 @@ import { createChatEntity, createMessageEntity, generateSequelId } from '../help
 import { ChatSocketService } from './chat-socket.service';
 import { ChatStore } from './chat.store';
 import { StreamingStore } from './streaming.store';
-import { ChatPersistenceService } from './chat-persistence.service';
+import { ChatMutationService } from './chat-mutation.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatConversationService {
   private readonly chatStore = inject(ChatStore);
   private readonly chatSocketService = inject(ChatSocketService);
   private readonly streamingStore = inject(StreamingStore);
-  private readonly chatPersistenceService = inject(ChatPersistenceService);
+  private readonly chatMutationService = inject(ChatMutationService);
 
   private readonly activeChat = this.chatStore.activeChat;
   private readonly currentModel = this.chatStore.currentModel;
@@ -55,7 +55,7 @@ export class ChatConversationService {
       try {
         if (!chat) {
           const entity = createChatEntity(trimmed, model);
-          await this.chatPersistenceService.createChat(entity);
+          await this.chatMutationService.createChat(entity);
 
           chat = entity;
           chatId = entity.id;
@@ -86,7 +86,7 @@ export class ChatConversationService {
         });
         assistantMessageId = assistantMessage.id;
 
-        await this.chatPersistenceService.createMessages([userMessage, assistantMessage]);
+        await this.chatMutationService.createMessages([userMessage, assistantMessage]);
 
         const apiMessages = buildApiMessages(
           messageHistory,
@@ -100,7 +100,7 @@ export class ChatConversationService {
           apiMessages,
         );
 
-        void this.chatPersistenceService.updateChat(activeChatId, {
+        void this.chatMutationService.updateChat(activeChatId, {
           model,
           state: ChatState.THINKING,
           currentRequestId: requestId,
@@ -125,9 +125,7 @@ export class ChatConversationService {
                 update.state = payload.state;
               }
 
-              return from(
-                this.chatPersistenceService.updateMessage(assistantMessage.id, update),
-              ).pipe(
+              return from(this.chatMutationService.updateMessage(assistantMessage.id, update)).pipe(
                 tap(() => {
                   lastPersistedContent = payload.content;
                 }),
@@ -172,7 +170,7 @@ export class ChatConversationService {
           )
           .subscribe({
             error: (err: unknown) => {
-              void this.chatPersistenceService.updateChat(activeChatId, {
+              void this.chatMutationService.updateChat(activeChatId, {
                 model,
                 state: ChatState.ERROR,
                 currentRequestId: null,
@@ -180,7 +178,7 @@ export class ChatConversationService {
               events$.error(err);
             },
             complete: () => {
-              void this.chatPersistenceService.updateChat(activeChatId, {
+              void this.chatMutationService.updateChat(activeChatId, {
                 model,
                 state: ChatState.IDLE,
                 currentRequestId: null,
@@ -197,7 +195,7 @@ export class ChatConversationService {
           });
       } catch (err: unknown) {
         if (chatId) {
-          void this.chatPersistenceService.updateChat(chatId, {
+          void this.chatMutationService.updateChat(chatId, {
             model,
             state: ChatState.ERROR,
             currentRequestId: null,
@@ -205,7 +203,7 @@ export class ChatConversationService {
         }
 
         if (assistantMessageId) {
-          void this.chatPersistenceService.updateMessage(assistantMessageId, {
+          void this.chatMutationService.updateMessage(assistantMessageId, {
             content,
             state: ChatMessageState.ERROR,
           });

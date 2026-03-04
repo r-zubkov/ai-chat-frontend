@@ -11,7 +11,6 @@ import { RepositoryEventType } from '../types/repository-event-type';
 @Injectable({ providedIn: 'root' })
 export class ChatRepositoryService {
   _projectsUpdated$ = new Subject<RepositoryEventType>();
-  _chatsUpdated$ = new Subject<RepositoryEventType>();
   _messagesUpdated$ = new Subject<RepositoryEventType>();
   _settingsUpdated$ = new Subject<RepositoryEventType>();
 
@@ -25,17 +24,14 @@ export class ChatRepositoryService {
 
   async createChat(chat: Chat): Promise<void> {
     await chatDB.chats.put(chat);
-    this._chatsUpdated$.next(RepositoryEventType.CREATING);
   }
 
   async createChats(chats: Chat[]): Promise<void> {
     await chatDB.chats.bulkPut(chats);
-    this._chatsUpdated$.next(RepositoryEventType.CREATING);
   }
 
   async updateChat(id: string, data: Partial<Chat>): Promise<void> {
     await chatDB.chats.update(id, { ...data });
-    this._chatsUpdated$.next(RepositoryEventType.UPDATING);
   }
 
   async deleteChat(id: string): Promise<void> {
@@ -44,7 +40,6 @@ export class ChatRepositoryService {
       await chatDB.messages.where('chatId').equals(id).delete();
     });
 
-    this._chatsUpdated$.next(RepositoryEventType.DELETING);
     this._messagesUpdated$.next(RepositoryEventType.DELETING);
   }
 
@@ -85,7 +80,6 @@ export class ChatRepositoryService {
       await chatDB.messages.clear();
     });
 
-    this._chatsUpdated$.next(RepositoryEventType.DELETING);
     this._messagesUpdated$.next(RepositoryEventType.DELETING);
   }
 
@@ -115,17 +109,12 @@ export class ChatRepositoryService {
     });
 
     this._projectsUpdated$.next(RepositoryEventType.DELETING);
-    this._chatsUpdated$.next(RepositoryEventType.DELETING);
     this._messagesUpdated$.next(RepositoryEventType.DELETING);
     this._settingsUpdated$.next(RepositoryEventType.DELETING);
   }
 
   get projectsUpdated$(): Observable<RepositoryEventType> {
     return this._projectsUpdated$.asObservable();
-  }
-
-  get chatsUpdated$(): Observable<RepositoryEventType> {
-    return this._chatsUpdated$.asObservable();
   }
 
   get messagesUpdated$(): Observable<RepositoryEventType> {
