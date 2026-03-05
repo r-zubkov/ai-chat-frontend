@@ -101,10 +101,6 @@ export class ChatFacadeService {
     return this.chatRepositoryService.messagesUpdated$;
   }
 
-  get settingsUpdated$(): Observable<RepositoryEventType> {
-    return this.chatRepositoryService.settingsUpdated$;
-  }
-
   destroy(): void {
     this.chatConversationService.destroy();
   }

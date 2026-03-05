@@ -12,7 +12,6 @@ import { RepositoryEventType } from '../types/repository-event-type';
 export class ChatRepositoryService {
   _projectsUpdated$ = new Subject<RepositoryEventType>();
   _messagesUpdated$ = new Subject<RepositoryEventType>();
-  _settingsUpdated$ = new Subject<RepositoryEventType>();
 
   async getChats(limit = 50): Promise<Chat[]> {
     return chatDB.chats.orderBy('lastUpdate').reverse().limit(limit).toArray();
@@ -110,7 +109,6 @@ export class ChatRepositoryService {
 
     this._projectsUpdated$.next(RepositoryEventType.DELETING);
     this._messagesUpdated$.next(RepositoryEventType.DELETING);
-    this._settingsUpdated$.next(RepositoryEventType.DELETING);
   }
 
   get projectsUpdated$(): Observable<RepositoryEventType> {
@@ -119,9 +117,5 @@ export class ChatRepositoryService {
 
   get messagesUpdated$(): Observable<RepositoryEventType> {
     return this._messagesUpdated$.asObservable();
-  }
-
-  get settingsUpdated$(): Observable<RepositoryEventType> {
-    return this._settingsUpdated$.asObservable();
   }
 }
