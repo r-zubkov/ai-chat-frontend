@@ -9,7 +9,9 @@
       <app-header></app-header>
 
       <main class="chat-container flex flex-1 justify-center">
-        <router-outlet></router-outlet>
+        @if (isInitialDataLoaded()) {
+          <router-outlet></router-outlet>
+        }
       </main>
     </div>
   </div>

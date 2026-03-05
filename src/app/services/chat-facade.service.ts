@@ -53,12 +53,20 @@ export class ChatFacadeService {
     await this.chatsDomain.deleteAllChats();
   }
 
-  loadChatsFromDB(): Promise<void> {
+  private loadChatsFromDB(): Promise<void> {
     return this.chatsDomain.loadChatsFromDB();
   }
 
-  loadChatsCountFromDB(): Promise<void> {
+  private loadChatsCountFromDB(): Promise<void> {
     return this.chatsDomain.loadChatsCountFromDB();
+  }
+
+  async loadInitialDataFromDB(): Promise<void> {
+    await Promise.allSettled([
+      this.loadCurrentModelFromDB(),
+      this.loadChatsFromDB(),
+      this.loadChatsCountFromDB(),
+    ]);
   }
 
   /* Messages */
@@ -69,7 +77,7 @@ export class ChatFacadeService {
 
   /* Chat model interactions */
 
-  loadCurrentModelFromDB(): Promise<void> {
+  private loadCurrentModelFromDB(): Promise<void> {
     return this.settingsDomain.loadCurrentModelFromDB();
   }
 

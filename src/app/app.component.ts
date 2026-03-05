@@ -1,4 +1,4 @@
-import {
+﻿import {
   ChangeDetectionStrategy,
   Component,
   HostListener,
@@ -38,14 +38,11 @@ export class AppComponent implements OnInit, OnDestroy {
   readonly appUiService = inject(AppUiService);
   private readonly chatService = inject(ChatFacadeService);
 
-  constructor() {
-    this.chatService.loadCurrentModelFromDB();
-    this.chatService.loadChatsFromDB();
-    this.chatService.loadChatsCountFromDB();
-  }
+  readonly isInitialDataLoaded = signal(false);
 
   ngOnInit(): void {
     this.observeWidthChange();
+    void this.loadInitialDataFromDB();
   }
 
   ngOnDestroy(): void {
@@ -56,6 +53,11 @@ export class AppComponent implements OnInit, OnDestroy {
   @HostListener('window:beforeunload')
   onBeforeUnload() {
     this.chatService.destroy();
+  }
+
+  private async loadInitialDataFromDB(): Promise<void> {
+    await this.chatService.loadInitialDataFromDB();
+    this.isInitialDataLoaded.set(true);
   }
 
   private observeWidthChange(): void {
