@@ -1,17 +1,17 @@
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { ChatModelService } from './chat-model.service';
-import { ChatsStore } from './chats/chats.store';
+import { ChatsFacadeService } from './chats/facade.service';
+import { SettingsFacadeService } from './settings/facade.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatNavigationService {
   private readonly router = inject(Router);
-  private readonly chatsStore = inject(ChatsStore);
-  private readonly chatModelService = inject(ChatModelService);
+  private readonly chatsDomain = inject(ChatsFacadeService);
+  private readonly settingsDomain = inject(SettingsFacadeService);
 
   async setupActiveChat(chatId: string | null): Promise<void> {
-    this.chatsStore.setActiveChatId(chatId);
-    await this.chatModelService.syncCurrentModelForChat(chatId);
+    this.chatsDomain.setActiveChatId(chatId);
+    await this.settingsDomain.syncCurrentModelForChat(chatId);
   }
 
   navigateToChat(chatId: string | null): void {

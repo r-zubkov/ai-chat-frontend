@@ -18,19 +18,19 @@ import { MODEL_BASE_SYSTEM_PROMT, PERSIST_INTERVAL_MS } from '../constants/chat.
 import { buildApiMessages } from '../helpers/chat-api.helpers';
 import { createChatEntity, createMessageEntity, generateSequelId } from '../helpers/chat.helpers';
 import { ChatSocketService } from './chat-socket.service';
-import { ChatsStore } from './chats/chats.store';
 import { StreamingStore } from './streaming.store';
-import { ChatMutationService } from './chats/mutation.service';
+import { SettingsFacadeService } from './settings/facade.service';
+import { ChatsFacadeService } from './chats/facade.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatConversationService {
-  private readonly chatsStore = inject(ChatsStore);
+  private readonly chatsDomain = inject(ChatsFacadeService);
+  private readonly settingsDomain = inject(SettingsFacadeService);
   private readonly chatSocketService = inject(ChatSocketService);
   private readonly streamingStore = inject(StreamingStore);
-  private readonly chatMutationService = inject(ChatMutationService);
 
-  private readonly activeChat = this.chatsStore.activeChat;
-  private readonly currentModel = this.chatsStore.currentModel;
+  private readonly activeChat = this.chatsDomain.activeChat;
+  private readonly currentModel = this.settingsDomain.currentModel;
 
   private readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
     [ModelType.GPT_51]: MODEL_BASE_SYSTEM_PROMT,
@@ -55,7 +55,7 @@ export class ChatConversationService {
       try {
         if (!chat) {
           const entity = createChatEntity(trimmed, model);
-          await this.chatMutationService.createChat(entity);
+          await this.chatsDomain.createChat(entity);
 
           chat = entity;
           chatId = entity.id;
@@ -86,7 +86,7 @@ export class ChatConversationService {
         });
         assistantMessageId = assistantMessage.id;
 
-        await this.chatMutationService.createMessages([userMessage, assistantMessage]);
+        await this.chatsDomain.createMessages([userMessage, assistantMessage]);
 
         const apiMessages = buildApiMessages(
           messageHistory,
@@ -100,7 +100,7 @@ export class ChatConversationService {
           apiMessages,
         );
 
-        void this.chatMutationService.updateChat(activeChatId, {
+        void this.chatsDomain.updateChat(activeChatId, {
           model,
           state: ChatState.THINKING,
           currentRequestId: requestId,
@@ -125,7 +125,7 @@ export class ChatConversationService {
                 update.state = payload.state;
               }
 
-              return from(this.chatMutationService.updateMessage(assistantMessage.id, update)).pipe(
+              return from(this.chatsDomain.updateMessage(assistantMessage.id, update)).pipe(
                 tap(() => {
                   lastPersistedContent = payload.content;
                 }),
@@ -170,7 +170,7 @@ export class ChatConversationService {
           )
           .subscribe({
             error: (err: unknown) => {
-              void this.chatMutationService.updateChat(activeChatId, {
+              void this.chatsDomain.updateChat(activeChatId, {
                 model,
                 state: ChatState.ERROR,
                 currentRequestId: null,
@@ -178,7 +178,7 @@ export class ChatConversationService {
               events$.error(err);
             },
             complete: () => {
-              void this.chatMutationService.updateChat(activeChatId, {
+              void this.chatsDomain.updateChat(activeChatId, {
                 model,
                 state: ChatState.IDLE,
                 currentRequestId: null,
@@ -195,7 +195,7 @@ export class ChatConversationService {
           });
       } catch (err: unknown) {
         if (chatId) {
-          void this.chatMutationService.updateChat(chatId, {
+          void this.chatsDomain.updateChat(chatId, {
             model,
             state: ChatState.ERROR,
             currentRequestId: null,
@@ -203,7 +203,7 @@ export class ChatConversationService {
         }
 
         if (assistantMessageId) {
-          void this.chatMutationService.updateMessage(assistantMessageId, {
+          void this.chatsDomain.updateMessage(assistantMessageId, {
             content,
             state: ChatMessageState.ERROR,
           });

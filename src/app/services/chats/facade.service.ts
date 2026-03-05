@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Chat } from '../../types/chat';
+import { ChatMessage } from '../../types/chat-message';
 import { ChatMutationService } from './mutation.service';
 import { ChatRepositoryService } from '../chat-repository.service';
 import { ChatsStore } from './chats.store';
@@ -26,6 +27,14 @@ export class ChatsFacadeService {
     return this.chatRepositoryService.getChatsCount();
   }
 
+  setActiveChatId(chatId: string | null): void {
+    this.chatsStore.setActiveChatId(chatId);
+  }
+
+  createChat(chat: Chat): Promise<void> {
+    return this.chatMutationService.createChat(chat);
+  }
+
   updateChat(
     chatId: string,
     chatUpdateData: Partial<Omit<Chat, 'id'>>,
@@ -40,6 +49,14 @@ export class ChatsFacadeService {
 
   deleteAllChats(): Promise<void> {
     return this.chatMutationService.deleteAllChats();
+  }
+
+  createMessages(messages: ChatMessage[]): Promise<void> {
+    return this.chatMutationService.createMessages(messages);
+  }
+
+  updateMessage(messageId: string, data: Partial<ChatMessage>): Promise<void> {
+    return this.chatMutationService.updateMessage(messageId, data);
   }
 
   async loadChatsFromDB(): Promise<void> {

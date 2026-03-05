@@ -7,23 +7,23 @@ import { ChatMessage } from '../types/chat-message';
 import { SendMessageEvent } from '../types/send-message-event';
 import { Observable } from 'rxjs';
 import { ChatConversationService } from './chat-conversation.service';
-import { ChatModelService } from './chat-model.service';
 import { ChatsFacadeService } from './chats/facade.service';
+import { SettingsFacadeService } from './settings/facade.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatFacadeService {
+  private readonly chatsDomain = inject(ChatsFacadeService);
+  private readonly settingsDomain = inject(SettingsFacadeService);
   private readonly chatRepositoryService = inject(ChatRepositoryService);
   private readonly chatConversationService = inject(ChatConversationService);
-  private readonly chatModelService = inject(ChatModelService);
-  private readonly chatsDomain = inject(ChatsFacadeService);
 
-  readonly models = this.chatModelService.models;
+  readonly models = this.settingsDomain.models;
 
   readonly chats = this.chatsDomain.chats;
   readonly chatsCount = this.chatsDomain.chatsCount;
   readonly activeChatId = this.chatsDomain.activeChatId;
   readonly activeChat = this.chatsDomain.activeChat;
-  readonly currentModel = this.chatModelService.currentModel;
+  readonly currentModel = this.settingsDomain.currentModel;
 
   /* Chats */
 
@@ -70,11 +70,11 @@ export class ChatFacadeService {
   /* Chat model interactions */
 
   loadCurrentModelFromDB(): Promise<void> {
-    return this.chatModelService.loadCurrentModelFromDB();
+    return this.settingsDomain.loadCurrentModelFromDB();
   }
 
   updateCurrentModel(model: ModelType): Promise<void> {
-    return this.chatModelService.updateCurrentModel(model);
+    return this.settingsDomain.updateCurrentModel(model);
   }
 
   /* Message sending / socket operations */

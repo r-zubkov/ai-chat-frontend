@@ -1,14 +1,18 @@
 import { inject, Injectable } from '@angular/core';
-import { ModelLabelMap } from '../maps/model-label.map';
-import { ModelOption } from '../types/model-option';
-import { ModelType } from '../types/model-type';
-import { ChatRepositoryService } from './chat-repository.service';
-import { ChatsStore } from './chats/chats.store';
+import { ModelLabelMap } from '../../maps/model-label.map';
+import { ModelOption } from '../../types/model-option';
+import { ModelType } from '../../types/model-type';
+import { ChatRepositoryService } from '../chat-repository.service';
+import { ChatsFacadeService } from '../chats/facade.service';
+import { SettingsMutationService } from './mutation.service';
+import { SettingsStore } from './settings.store';
 
 @Injectable({ providedIn: 'root' })
-export class ChatModelService {
-  private readonly chatsStore = inject(ChatsStore);
+export class SettingsFacadeService {
   private readonly chatRepositoryService = inject(ChatRepositoryService);
+  private readonly chatsDomain = inject(ChatsFacadeService);
+  private readonly settingsMutationService = inject(SettingsMutationService);
+  private readonly settingsStore = inject(SettingsStore);
 
   readonly models: ModelOption[] = [
     { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
@@ -20,28 +24,26 @@ export class ChatModelService {
     { id: ModelType.GPT_51, label: ModelLabelMap[ModelType.GPT_51]! },
   ];
 
-  readonly currentModel = this.chatsStore.currentModel;
+  readonly currentModel = this.settingsStore.currentModel;
 
-  private readonly activeChat = this.chatsStore.activeChat;
-  private readonly activeChatId = this.chatsStore.activeChatId;
-  private readonly globalCurrentModel = this.chatsStore.globalCurrentModel;
+  private readonly activeChat = this.chatsDomain.activeChat;
+  private readonly activeChatId = this.chatsDomain.activeChatId;
+  private readonly globalCurrentModel = this.settingsStore.globalCurrentModel;
 
   async loadCurrentModelFromDB(): Promise<void> {
     const loaded = await this.chatRepositoryService.loadCurrentModel();
     const modelToSet = loaded ? this.normalizeModel(loaded) : this.getDefaultModel();
 
-    this.chatsStore.setCurrentModel(modelToSet);
-    this.chatsStore.setGlobalCurrentModel(modelToSet);
+    this.settingsMutationService.hydrateCurrentModel(modelToSet);
   }
 
   async updateCurrentModel(model: ModelType): Promise<void> {
     const modelToSet = this.normalizeModel(model);
 
-    this.chatsStore.setCurrentModel(modelToSet);
+    this.settingsMutationService.setCurrentModel(modelToSet);
 
     if (!this.activeChatId()) {
-      this.chatsStore.setGlobalCurrentModel(modelToSet);
-      await this.chatRepositoryService.saveCurrentModel(modelToSet);
+      await this.settingsMutationService.setGlobalCurrentModel(modelToSet);
     }
   }
 
@@ -51,7 +53,6 @@ export class ChatModelService {
       const model = activeChat?.model ?? this.globalCurrentModel();
 
       await this.updateCurrentModel(model);
-
       return;
     }
 
