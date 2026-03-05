@@ -1,11 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { ModelLabelMap } from '../../maps/model-label.map';
 import { ModelOption } from '../../types/model-option';
 import { ModelType } from '../../types/model-type';
 import { ChatRepositoryService } from '../chat-repository.service';
 import { ChatsFacadeService } from '../chats/facade.service';
 import { SettingsMutationService } from './mutation.service';
 import { SettingsStore } from './settings.store';
+import { AVAILABLE_MODEL_LIST } from '../../constants/chat.constants';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsFacadeService {
@@ -14,15 +14,7 @@ export class SettingsFacadeService {
   private readonly settingsMutationService = inject(SettingsMutationService);
   private readonly settingsStore = inject(SettingsStore);
 
-  readonly models: ModelOption[] = [
-    { id: ModelType.GROK_4_FAST, label: ModelLabelMap[ModelType.GROK_4_FAST]! },
-    { id: ModelType.DEEPSEEK_32, label: ModelLabelMap[ModelType.DEEPSEEK_32]! },
-    {
-      id: ModelType.GEMINI_3_FLASH_PREVIEW,
-      label: ModelLabelMap[ModelType.GEMINI_3_FLASH_PREVIEW]!,
-    },
-    { id: ModelType.GPT_51, label: ModelLabelMap[ModelType.GPT_51]! },
-  ];
+  readonly models: ModelOption[] = AVAILABLE_MODEL_LIST;
 
   readonly currentModel = this.settingsStore.currentModel;
 

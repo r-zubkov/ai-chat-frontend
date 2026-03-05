@@ -1,5 +1,6 @@
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { ModelType } from '../../types/model-type';
+import { AVAILABLE_MODEL_LIST } from '../../constants/chat.constants';
 
 interface SettingsStoreState {
   currentModel: ModelType;
@@ -7,8 +8,8 @@ interface SettingsStoreState {
 }
 
 const initialState: SettingsStoreState = {
-  currentModel: ModelType.GROK_4_FAST,
-  globalCurrentModel: ModelType.GROK_4_FAST,
+  currentModel: AVAILABLE_MODEL_LIST[0].id,
+  globalCurrentModel: AVAILABLE_MODEL_LIST[0].id,
 };
 
 export const SettingsStore = signalStore(
