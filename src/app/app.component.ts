@@ -1,4 +1,4 @@
-﻿import {
+import {
   ChangeDetectionStrategy,
   Component,
   HostListener,
@@ -13,6 +13,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { ChatFacadeService } from './services/chat-facade.service';
 import { AppUiService } from './services/app-ui.service';
 import { RouterOutlet } from '@angular/router';
+import { AppStateService } from './services/app-state.service';
 
 interface ISelectItem {
   readonly id: string | number;
@@ -37,12 +38,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
   readonly appUiService = inject(AppUiService);
   private readonly chatService = inject(ChatFacadeService);
+  private readonly appStateService = inject(AppStateService);
 
-  readonly isInitialDataLoaded = signal(false);
+  constructor() {
+    this.appStateService.registerInitialDataLoad(this.chatService.loadInitialDataFromDB());
+  }
 
   ngOnInit(): void {
     this.observeWidthChange();
-    void this.loadInitialDataFromDB();
   }
 
   ngOnDestroy(): void {
@@ -53,11 +56,6 @@ export class AppComponent implements OnInit, OnDestroy {
   @HostListener('window:beforeunload')
   onBeforeUnload() {
     this.chatService.destroy();
-  }
-
-  private async loadInitialDataFromDB(): Promise<void> {
-    await this.chatService.loadInitialDataFromDB();
-    this.isInitialDataLoaded.set(true);
   }
 
   private observeWidthChange(): void {

@@ -1,10 +1,12 @@
 import { Routes } from '@angular/router';
+import { initialDataGuard } from './guards/initial-data.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'chats', pathMatch: 'full' },
 
   {
     path: 'chats',
+    canMatch: [initialDataGuard],
     children: [
       { path: '', redirectTo: 'new', pathMatch: 'full' },
       {
