@@ -4,11 +4,11 @@ import { TuiDataList, TuiDropdown, TuiIcon, TuiLink } from '@taiga-ui/core';
 import { ChatFacadeService } from '../../services/chat-facade.service';
 import { ModelType } from '../../types/model-type';
 import { AppUiService } from '../../services/app-ui.service';
-import { ChatNavigationService } from '../../services/chat-navigation.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-header',
-  imports: [TuiChevron, TuiIcon, TuiLink, TuiDropdown, TuiDataList],
+  imports: [TuiChevron, TuiIcon, TuiLink, TuiDropdown, TuiDataList, RouterLink],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.less'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,7 +18,6 @@ export class HeaderComponent {
 
   public readonly appUiService = inject(AppUiService);
   public readonly chatService = inject(ChatFacadeService);
-  private readonly chatNavigationService = inject(ChatNavigationService);
 
   protected readonly selectedModel = computed(() => {
     const currentModel = this.chatService.currentModel();
@@ -36,9 +35,5 @@ export class HeaderComponent {
 
   protected toggleMenu(): void {
     this.appUiService.toggleSidebar();
-  }
-
-  protected newChat(): void {
-    this.chatNavigationService.navigateToChat(null);
   }
 }

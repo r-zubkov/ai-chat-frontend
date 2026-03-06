@@ -56,10 +56,6 @@ export class SidebarComponent {
 
   protected readonly ChatState = ChatState;
 
-  protected createNewChat(): void {
-    this.chatNavigationService.navigateToChat(null);
-  }
-
   protected handleOpenItemOptionsDropdown(chatId: string): void {
     this.openItemOptionsDropdown(chatId);
   }

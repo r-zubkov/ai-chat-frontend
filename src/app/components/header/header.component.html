@@ -33,9 +33,9 @@
   </div>
 
   @if (appUiService.isMobile()) {
-    <button class="header__new-chat" (click)="newChat()">
+    <a class="header__new-chat" aria-label="Новый чат" [routerLink]="['/chats', 'new']">
       <tui-icon icon="@tui.message-circle-plus" [style.font-size.rem]="1.25" />
-    </button>
+    </a>
   }
 </header>
 
