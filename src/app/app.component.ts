@@ -1,32 +1,33 @@
-import {
+﻿import {
   ChangeDetectionStrategy,
   Component,
   HostListener,
-  inject,
   OnDestroy,
   OnInit,
+  inject,
   signal,
 } from '@angular/core';
-import { tuiItemsHandlersProvider, TuiRoot } from '@taiga-ui/core';
-import { SidebarComponent } from './components/sidebar/sidebar.component';
-import { HeaderComponent } from './components/header/header.component';
-import { ChatFacadeService } from './services/chat-facade.service';
-import { AppUiService } from './services/app-ui.service';
 import { RouterOutlet } from '@angular/router';
-import { AppStateService } from './services/app-state.service';
+import { tuiItemsHandlersProvider, TuiRoot } from '@taiga-ui/core';
+import { ChatStore } from '@entities/chat';
+import { SettingsStore } from '@entities/settings';
+import { SendMessageService } from '@features/send-message';
+import { ChatHeaderComponent, ChatSidebarComponent } from '@widgets';
+import { AppStateService } from './app-state.service';
+import { AppUiService } from './app-ui.service';
 
-interface ISelectItem {
+interface SelectItem {
   readonly id: string | number;
   readonly label: string;
 }
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TuiRoot, SidebarComponent, HeaderComponent],
+  imports: [RouterOutlet, TuiRoot, ChatSidebarComponent, ChatHeaderComponent],
   providers: [
     tuiItemsHandlersProvider({
-      stringify: signal((x: ISelectItem) => x.label),
-      identityMatcher: signal((a: ISelectItem, b: ISelectItem) => a.id === b.id),
+      stringify: signal((x: SelectItem) => x.label),
+      identityMatcher: signal((a: SelectItem, b: SelectItem) => a.id === b.id),
     }),
   ],
   templateUrl: './app.component.html',
@@ -36,12 +37,18 @@ interface ISelectItem {
 export class AppComponent implements OnInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
 
-  readonly appUiService = inject(AppUiService);
-  private readonly chatService = inject(ChatFacadeService);
-  private readonly appStateService = inject(AppStateService);
+  readonly appUi = inject(AppUiService);
+  private readonly appState = inject(AppStateService);
+  private readonly chatStore = inject(ChatStore);
+  private readonly settingsStore = inject(SettingsStore);
+  private readonly sendMessage = inject(SendMessageService);
 
   constructor() {
-    this.appStateService.registerInitialDataLoad(this.chatService.loadInitialDataFromDB());
+    this.appState.registerInitialDataLoad(
+      Promise.all([this.settingsStore.loadSettings(), this.chatStore.loadAll()]).then(
+        () => undefined,
+      ),
+    );
   }
 
   ngOnInit(): void {
@@ -50,18 +57,18 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.cleanupResizeObserver();
-    this.chatService.destroy();
+    this.sendMessage.destroy();
   }
 
   @HostListener('window:beforeunload')
-  onBeforeUnload() {
-    this.chatService.destroy();
+  onBeforeUnload(): void {
+    this.sendMessage.destroy();
   }
 
   private observeWidthChange(): void {
     this.resizeObserver = new ResizeObserver((entries) => {
       const width = entries[0].contentRect.width;
-      this.appUiService.updateMobileState(width);
+      this.appUi.updateMobileState(width);
     });
 
     this.resizeObserver.observe(document.body);
