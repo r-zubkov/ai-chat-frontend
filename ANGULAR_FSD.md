@@ -175,12 +175,12 @@ export class UserListComponent {
 // ✅ features/delete-user/delete-user.service.ts
 @Injectable({ providedIn: 'root' })
 export class DeleteUserService {
-  private readonly userRepo = inject(UserRepository);
+  private readonly userRepository = inject(UserRepository);
   private readonly userStore = inject(UserStore);
   private readonly router = inject(Router);
 
   async execute(userId: UserId): Promise<void> {
-    await this.userRepo.delete(userId);
+    await this.userRepository.delete(userId);
     this.userStore.removeUser(userId);
     await this.router.navigate(['/users']);
   }
@@ -214,9 +214,9 @@ export const UserStore = signalStore(
   withComputed(({ users, activeUserId }) => ({
     activeUser: computed(() => users().find((u) => u.id === activeUserId()) ?? null),
   })),
-  withMethods((store, repo = inject(UserRepository)) => ({
+  withMethods((store, userRepository = inject(UserRepository)) => ({
     async loadAll() {
-      patchState(store, { users: await repo.getAll() });
+      patchState(store, { users: await userRepository.getAll() });
     },
     removeUser(id: UserId) {
       patchState(store, { users: store.users().filter((u) => u.id !== id) });
@@ -384,11 +384,11 @@ export const OrderStore = signalStore(
     pendingOrders: computed(() => orders().filter((o) => o.status === 'PENDING')),
   })),
 
-  withMethods((store, repo = inject(OrderRepository)) => ({
+  withMethods((store, orderRepository = inject(OrderRepository)) => ({
     // Асинхронные методы — загрузка
     async loadAll(): Promise<void> {
       patchState(store, { isLoading: true });
-      const orders = await repo.getAll();
+      const orders = await orderRepository.getAll();
       patchState(store, { orders, isLoading: false });
     },
 
@@ -420,7 +420,7 @@ export const OrderStore = signalStore(
 @Injectable({ providedIn: 'root' })
 export class CompleteOrderService {
   private readonly orderStore = inject(OrderStore);
-  private readonly orderRepo = inject(OrderRepository);
+  private readonly orderRepository = inject(OrderRepository);
 
   async execute(orderId: OrderId): Promise<void> {
     // 1. Optimistic update — UI реагирует мгновенно
@@ -428,7 +428,7 @@ export class CompleteOrderService {
 
     try {
       // 2. Персистенция
-      await this.orderRepo.update(orderId, { status: 'COMPLETED' });
+      await this.orderRepository.update(orderId, { status: 'COMPLETED' });
     } catch {
       // 3. Rollback при ошибке
       this.orderStore.upsertOrder({ ...this.orderStore.activeOrder()!, status: 'PENDING' });

@@ -43,8 +43,8 @@ export type SendMessageEvent =
 
 @Injectable({ providedIn: 'root' })
 export class SendMessageService {
-  private readonly chatRepo = inject(ChatRepository);
-  private readonly messageRepo = inject(MessageRepository);
+  private readonly chatRepository = inject(ChatRepository);
+  private readonly messageRepository = inject(MessageRepository);
   private readonly chatStore = inject(ChatStore);
   private readonly messageStore = inject(MessageStore);
   private readonly socket = inject(SocketService);
@@ -74,7 +74,7 @@ export class SendMessageService {
       try {
         if (!chat) {
           const createdChat = createChatEntity(trimmed, model);
-          await this.chatRepo.create(createdChat);
+          await this.chatRepository.create(createdChat);
           this.chatStore.upsertChat(createdChat);
           this.chatStore.setActive(createdChat.id);
 
@@ -108,7 +108,7 @@ export class SendMessageService {
         });
         assistantMessageId = assistantMessage.id;
 
-        await this.messageRepo.createMessages([userMessage, assistantMessage]);
+        await this.messageRepository.createMessages([userMessage, assistantMessage]);
 
         const apiMessages = buildApiMessages(
           messageHistory,
@@ -145,7 +145,7 @@ export class SendMessageService {
                 update.state = payload.state;
               }
 
-              return from(this.messageRepo.updateMessage(assistantMessage.id, update)).pipe(
+              return from(this.messageRepository.updateMessage(assistantMessage.id, update)).pipe(
                 tap(() => {
                   lastPersistedContent = payload.content;
                 }),
@@ -228,7 +228,7 @@ export class SendMessageService {
         }
 
         if (assistantMessageId) {
-          void this.messageRepo.updateMessage(assistantMessageId, {
+          void this.messageRepository.updateMessage(assistantMessageId, {
             content,
             state: ChatMessageState.ERROR,
           });
@@ -261,7 +261,7 @@ export class SendMessageService {
       lastUpdate: Date.now(),
     };
 
-    await this.chatRepo.update(chat.id, {
+    await this.chatRepository.update(chat.id, {
       ...data,
       lastUpdate: next.lastUpdate,
     });

@@ -17,9 +17,9 @@ export const SettingsStore = signalStore(
     currentModel: getDefaultModel(),
     globalCurrentModel: getDefaultModel(),
   }),
-  withMethods((store, repo = inject(SettingsRepository)) => ({
+  withMethods((store, settingsRepository = inject(SettingsRepository)) => ({
     async loadSettings(): Promise<void> {
-      const loaded = await repo.getSetting(SettingKey.CURRENT_MODEL);
+      const loaded = await settingsRepository.getSetting(SettingKey.CURRENT_MODEL);
       const fallback = getDefaultModel();
       const model = loaded ?? fallback;
 
@@ -36,7 +36,7 @@ export const SettingsStore = signalStore(
     },
     async persistGlobalModel(model: ModelType): Promise<void> {
       patchState(store, { globalCurrentModel: model });
-      await repo.setSetting(SettingKey.CURRENT_MODEL, model);
+      await settingsRepository.setSetting(SettingKey.CURRENT_MODEL, model);
     },
   })),
 );

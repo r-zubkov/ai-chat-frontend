@@ -49,6 +49,7 @@ export class ChatSidebarComponent {
 
   private readonly alerts = inject(TuiAlertService);
   private readonly dialogs = inject(TuiDialogService);
+
   readonly chatStore = inject(ChatStore);
   readonly manageChat = inject(ManageChatService);
   private readonly router = inject(Router);
@@ -101,7 +102,7 @@ export class ChatSidebarComponent {
       .open<boolean>(TUI_CONFIRM, { size: 's', label: 'Очистить историю?', data: TuiConfirmText })
       .subscribe((confirm) => {
         if (confirm) {
-          void this.manageChat.clearAllChats().finally(() => {
+          void this.manageChat.deleteAllChats().finally(() => {
             void this.router.navigate(['/chats', 'new']);
           });
         }

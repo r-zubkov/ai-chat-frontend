@@ -42,7 +42,7 @@ export class UserChatPage {
   readonly sendMessage = inject(SendMessageService);
   readonly manageChat = inject(ManageChatService);
 
-  private readonly messageRepo = inject(MessageRepository);
+  private readonly messageRepository = inject(MessageRepository);
   private readonly selectModel = inject(SelectModelService);
   private readonly router = inject(Router);
   private readonly appUi = inject(AppUiService);
@@ -77,7 +77,7 @@ export class UserChatPage {
       return;
     }
 
-    const messages = await this.messageRepo.getMessagesByChatId(chatId);
+    const messages = await this.messageRepository.getMessagesByChatId(chatId);
 
     if (!messages.length) {
       await this.router.navigate(['/chats', 'new']);
@@ -102,7 +102,7 @@ export class UserChatPage {
   }
 
   private watchMessagesUpdate(): void {
-    this.messageRepo.messagesUpdated$
+    this.messageRepository.messagesUpdated$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((event: RepositoryEventType) => {
         const scrollEffect = event === RepositoryEventType.UPDATING ? null : 'smooth';

@@ -20,9 +20,9 @@ export const ChatStore = signalStore(
     activeChat: computed(() => chats().find((chat) => chat.id === activeChatId()) ?? null),
     chatsCount: computed(() => chats().length),
   })),
-  withMethods((store, repo = inject(ChatRepository)) => ({
+  withMethods((store, chatRepository = inject(ChatRepository)) => ({
     async loadAll(limit: number = DEFAULT_CHAT_LIST_LIMIT): Promise<void> {
-      const chats = await repo.getAll(limit);
+      const chats = await chatRepository.getAll(limit);
       patchState(store, { chats: sortByLastUpdateDesc(chats) });
     },
     setActive(id: ChatId | null): void {
