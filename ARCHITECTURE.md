@@ -1,214 +1,228 @@
-# ARCHITECTURE
+﻿# ARCHITECTURE.md
 
-Документ фиксирует текущую архитектуру `ai-chat-frontend` по фактическому состоянию кода.
+Документ фиксирует фактическую архитектуру `ai-chat-frontend` по состоянию исходного кода.
 
 ## 1. Технологический стек
 
 - Angular 21, standalone-компоненты.
-- TypeScript `strict`.
+- TypeScript (`strict` + strict Angular template checks).
 - UI: Taiga UI.
 - State: `@ngrx/signals` (`signalStore`) + Angular Signals.
 - Персистентность: Dexie (IndexedDB).
-- Транспорт: `socket.io-client` (основной), HTTP fallback (резервный).
+- Транспорт: `socket.io-client` (основной runtime-канал), HTTP fallback.
 - Стили: Less.
 
 ## 2. Архитектурный стиль
 
 Проект организован по FSD-слоям:
 
-- `app` - инициализация приложения, роутинг, shell-сервисы.
+- `app` - bootstrap, роутинг, guard, shell-сервисы.
 - `pages` - маршрутизируемые экраны.
 - `widgets` - составные UI-блоки.
-- `features` - пользовательские сценарии (use-cases).
+- `features` - пользовательские сценарии (orchestration/use-cases).
 - `entities` - доменные модели, store и repository.
-- `shared` - инфраструктура и переиспользуемые утилиты.
+- `shared` - инфраструктура, конфиги, утилиты и UI-пайпы.
 
-Ограничения зависимостей зафиксированы в ESLint (`eslint-plugin-boundaries`):
+Правила зависимостей фиксируются в ESLint (`eslint-plugin-boundaries`):
 
 - `app -> pages/widgets/features/entities/shared`
 - `pages -> widgets/features/entities/shared`
 - `widgets -> features/entities/shared`
 - `features -> entities/shared`
 - `entities -> shared`
-- `shared -> (нет зависимостей на верхние слои)`
+- `shared` не зависит на верхние слои.
 
 ## 3. Карта репозитория
 
-- `src/app` - root shell (`AppComponent`), `app.routes.ts`, `app.config.ts`, guard, app-level services.
+- `src/main.ts` - `bootstrapApplication(AppComponent)` + `provideHttpClient()` + `provideEventPlugins()`.
+- `src/app` - `app.config.ts`, `app.routes.ts`, guard и app-level services.
 - `src/pages` - `new-chat`, `user-chat`.
 - `src/widgets` - `chat-header`, `chat-sidebar`, `chat-input`.
 - `src/features` - `send-message`, `select-model`, `manage-chat`.
 - `src/entities` - `chat`, `message`, `settings`.
 - `src/shared` - `api`, `db`, `config`, `ui`, `helpers`, `validators`.
-- `src/environments` - endpoint-конфиги для local/prod.
+- `src/environments` - endpoint-конфиги `local/prod`.
 
-## 4. Инициализация и жизненный цикл
+## 4. Инициализация приложения
 
-1. `main.ts` запускает `bootstrapApplication(AppComponent)` и подключает:
+1. `main.ts` запускает приложение и добавляет провайдеры HTTP/Taiga plugins.
+2. `app.config.ts` настраивает:
 
-- `appConfig`
-- `provideHttpClient()`
-- `provideEventPlugins()`
+- `provideRouter(appRoutes, withComponentInputBinding())`.
+- `provideAppInitializer(...)`, который вызывает `MigrationService.migrateIfNeeded()`.
 
-2. `app.config.ts` задает:
+3. `AppComponent` регистрирует Promise начальной загрузки:
 
-- `provideRouter(appRoutes, withComponentInputBinding())`
-- `provideAppInitializer(...)`, который вызывает `MigrationService.migrateIfNeeded()`
+- `SettingsStore.loadSettings()`.
+- `ChatStore.loadAll()`.
 
-3. `AppComponent` в конструкторе регистрирует промис начальной загрузки:
-
-- `SettingsStore.loadSettings()`
-- `ChatStore.loadAll()`
-
-4. `initialDataGuard` пропускает роуты только после завершения этой загрузки через `AppStateService`.
+4. `initialDataGuard` (`canMatch`) пропускает роуты только после готовности `AppStateService`.
 
 ## 5. Роутинг
 
-- `'' -> /chats`
-- `/chats/new -> NewChatPage` (lazy)
-- `/chats/:id -> UserChatPage` (lazy)
-- `** -> /chats`
+Маршруты (`src/app/app.routes.ts`):
 
-Guard `canMatch` применяется на ветке `/chats`.
+- `'' -> /chats`.
+- `/chats/new -> NewChatPage` (lazy).
+- `/chats/:id -> UserChatPage` (lazy).
+- `** -> /chats`.
+
+Guard `initialDataGuard` висит на ветке `/chats`.
 
 ## 6. Слои и ответственности
 
-## 6.1 `entities`
+### 6.1 `entities`
 
 `chat`:
 
 - `chat.model.ts` - типы (`Chat`, `ChatId`, `ChatState`).
-- `chat.store.ts` - список чатов, активный чат, upsert/remove/load.
-- `chat.repository.ts` - CRUD по чатам в Dexie, `chatsUpdated$`.
+- `chat.store.ts` - список чатов, activeChatId, chatsCount, upsert/remove/load.
+- `chat.repository.ts` - CRUD по чатам в Dexie + каскадное удаление сообщений.
 
 `message`:
 
-- `message.model.ts` - типы сообщений (`ChatMessage`, `MessageId`, `SequelId`, role/state).
-- `message.store.ts` - in-memory контент стримящегося ассистент-сообщения (`Map<MessageId, string>`).
-- `message.repository.ts` - CRUD по сообщениям в Dexie, `messagesUpdated$`.
+- `message.model.ts` - типы сообщений (`ChatMessage`, роли/стейты, ids).
+- `message.store.ts` - in-memory буфер стримящегося текста ассистента (`Map<MessageId, string>`).
+- `message.repository.ts` - CRUD по сообщениям в Dexie, выборка по `[chatId+sequelId]`.
 
 `settings`:
 
 - `settings.model.ts` - ключи и типы настроек.
-- `settings.store.ts` - `currentModel` и `globalCurrentModel`.
+- `settings.store.ts` - `currentModel` + `globalCurrentModel`.
 - `settings.repository.ts` - чтение/запись настроек в Dexie.
 
-## 6.2 `features`
+### 6.2 `features`
 
-`send-message`:
+`send-message` (`SendMessageService`):
 
-- Оркестрация полного цикла отправки сообщения.
+- Полный цикл отправки сообщения.
 - Создает чат при первом сообщении.
-- Создает user/assistant сообщения.
-- Запускает socket stream.
-- Пишет стрим-дельты в `MessageStore`.
-- Периодически персистит стрим в DB (`STREAM_PERSIST_INTERVAL`).
-- Обновляет состояние чата (`IDLE/THINKING/ERROR`), поддерживает abort/destroy.
+- Создает user/assistant сообщения в DB.
+- Запускает socket stream и обновляет chat state (`THINKING/IDLE/ERROR`).
+- Пишет stream-дельты в `MessageStore` и периодически персистит их в DB (`STREAM_PERSIST_INTERVAL`).
+- Поддерживает отмену одного/всех активных запросов.
 
-`select-model`:
+`select-model` (`SelectModelService`):
 
-- Выбор и нормализация модели.
-- Синхронизация `SettingsStore` для нового/активного чата.
-- Сохранение глобальной модели в настройках при работе вне активного чата.
+- Нормализует и выбирает модель из `AVAILABLE_MODELS`.
+- Синхронизирует модель между активным чатом и глобальными настройками.
+- При отсутствии активного чата персистит глобальную модель.
 
-`manage-chat`:
+`manage-chat` (`ManageChatService`):
 
 - Переименование чата.
 - Удаление одного чата.
-- Очистка всей истории.
+- Полная очистка истории.
 - Синхронизация `ChatStore` после операций.
 
-## 6.3 `widgets`
+### 6.3 `widgets`
 
-- `chat-header` - выбор модели, переключение sidebar, отображение контекста чата.
+- `chat-header` - выбор модели, переключение sidebar.
 - `chat-sidebar` - список чатов, rename/delete/clear через `ManageChatService`.
-- `chat-input` - ввод, отправка, отмена активного запроса через `SendMessageService`.
+- `chat-input` - ввод, отправка и отмена активного запроса через `SendMessageService`.
 
-## 6.4 `pages`
+### 6.4 `pages`
 
-- `new-chat.page` - старт нового диалога, обработка события отправки и переход к `/chats/:id`.
-- `user-chat.page` - загрузка сообщений чата, отображение markdown, retry последнего запроса.
+- `new-chat.page` - сбрасывает активный чат, восстанавливает глобальную модель, стартует новый диалог.
+- `user-chat.page`:
+- активирует чат по route param;
+- загружает сообщения через `MessageRepository`;
+- подписывается на `messagesUpdated$` для реактивного обновления;
+- поддерживает retry последнего user-сообщения.
 
-## 6.5 `app`
+### 6.5 `app`
 
-- `AppComponent` - корневой layout, контроль responsive-состояния (через `ResizeObserver` + `AppUiService`), инициализация данных.
+- `AppComponent` - root layout, resize-обсервер, инициализация базовых данных.
+- `AppUiService` - состояние sidebar/mobile.
 - `AppStateService` - координация guard-ready состояния.
-- `AppUiService` - состояние mobile/sidebar.
 
 ## 7. Данные и хранилище
 
-Dexie БД (`shared/db/chat.db.ts`, имя `ai-chat-db`):
+Dexie БД (`src/shared/db/chat.db.ts`, имя `ai-chat-db`):
 
-- `projects` (`id`, `lastUpdate`) - подготовленный слой под проекты.
+- `projects` (`id`, `lastUpdate`).
 - `chats` (`id`, `projectId`, `lastUpdate`).
 - `messages` (`id`, `sequelId`, `chatId`, `timestamp`, `[chatId+sequelId]`).
 - `settings` (`key`).
 
 Миграция (`MigrationService`):
 
-- Перенос legacy-данных из `localStorage` (`ai-chat-chats`, `ai-chat-current-model`) в Dexie.
-- Выполняется один раз при старте, до навигации.
+- Источник legacy-данных: `localStorage` ключи `ai-chat-chats`, `ai-chat-current-model`.
+- Выполняется до старта навигации (через `provideAppInitializer`).
+- Пропускается, если в Dexie уже есть чаты/сообщения.
+- Переносит валидные записи в Dexie транзакцией и очищает legacy-ключи после успешной записи.
 
 ## 8. Сеть и протоколы
 
-`SocketService` (`shared/api/socket.service.ts`) - основной runtime-канал:
+`SocketService` (`src/shared/api/socket.service.ts`) - основной runtime-канал:
 
-- Подключение к `environment.apiUrl`, path: `/api/socket.io`.
+- Подключение к `environment.apiUrl`, `path: /api/socket.io`.
 - События:
-- исходящий `chat:request` (payload: `requestId`, `model`, `messages`)
-- входящий `chat:chunk` (stream delta)
-- входящий `chat:done`
-- входящий `chat:error`
-- исходящий `chat:abort`
-- Поддержка конкурентных активных запросов (`Map<requestId, Observer>`).
+- исходящий `chat:request`;
+- входящий `chat:chunk`;
+- входящий `chat:done`;
+- входящий `chat:error`;
+- исходящий `chat:abort`.
+- Управление конкурентными запросами через `Map<requestId, Observer<string>>`.
+- При `disconnect` все активные запросы завершаются ошибкой.
 
-`HttpService` (`shared/api/http.service.ts`) - резервный gateway:
+`HttpService` (`src/shared/api/http.service.ts`) - fallback gateway:
 
-- метод `sendChatCompletion(...)`
-- в текущем основном чатовом потоке не используется.
+- `POST {apiUrl}/chat`.
+- Возвращает текст первого ответа `choices[0].message.content`.
+- В основном runtime-чате не используется по умолчанию.
 
 ## 9. Конфигурация
 
-- `shared/config/models.config.ts`:
-- список доступных моделей (`AVAILABLE_MODELS`)
-- лимит контекста (`HISTORY_LIMIT`)
-- системный промпт (`SYSTEM_PROMPT`)
-- интервал персиста стрима (`STREAM_PERSIST_INTERVAL`)
+`src/shared/config/models.config.ts`:
 
-- `shared/config/app.constants.ts`:
-- `RepositoryEventType`
-- `DEFAULT_CHAT_LIST_LIMIT`
+- `ModelType`, `AVAILABLE_MODELS`.
+- `HISTORY_LIMIT`.
+- `SYSTEM_PROMPT`.
+- `STREAM_PERSIST_INTERVAL`.
 
-- `environments`:
-- local/dev `apiUrl: http://localhost:5000`
-- prod `apiUrl: https://chat.my-local-stuff.ru`
+`src/shared/config/app.constants.ts`:
 
-## 10. Публичные API и импорт
+- `RepositoryEventType`.
+- `DEFAULT_CHAT_LIST_LIMIT`.
 
-- Для слоев настроены alias-пути в `tsconfig.json`: `@app`, `@pages`, `@widgets`, `@features`, `@entities`, `@shared`.
-- Каждый слой и слайс экспортирует публичный контракт через `index.ts`.
-- Предпочтительный способ импорта - через alias и публичный `index.ts` слайса.
+`src/environments`:
+
+- local/dev: `apiUrl = http://localhost:5000`.
+- prod: `apiUrl = https://chat.my-local-stuff.ru`.
+
+## 10. Публичные импорты и контракты
+
+- Alias в `tsconfig.json`: `@app`, `@pages`, `@widgets`, `@features`, `@entities`, `@shared`.
+- Срезы экспортируют публичные контракты через `index.ts`.
+- Предпочтительный импорт - через alias и публичные `index.ts`.
 
 ## 11. Ключевые сценарии
 
 Отправка сообщения:
 
-1. Пользователь вводит текст в `ChatInputComponent`.
+1. Пользователь отправляет текст из `ChatInputComponent`.
 2. `SendMessageService.sendMessage(...)` валидирует вход и модель.
-3. При новом диалоге создается чат (`ChatRepository` + `ChatStore`).
-4. Создаются user/assistant сообщения (`MessageRepository`).
-5. Стартует socket stream.
-6. Дельты потока пишутся в `MessageStore`, затем пачками в Dexie.
-7. По завершению/ошибке обновляется чат и финальный статус assistant-сообщения.
+3. Для нового диалога создается чат и активируется в `ChatStore`.
+4. Создаются user/assistant сообщения в `MessageRepository`.
+5. Стартует socket stream (`chat:request`).
+6. Stream-дельты идут в `MessageStore`, затем батч-персистятся в Dexie.
+7. По завершению/ошибке фиксируется финальный state чата и сообщения.
 
-Выбор модели:
+Смена модели:
 
-1. Выбор в `ChatHeaderComponent`.
-2. `SelectModelService.selectModel(...)` обновляет `SettingsStore`.
-3. Если активного чата нет, модель персистится как глобальная настройка.
+1. Выбор модели в `ChatHeaderComponent`.
+2. `SelectModelService.selectModel(...)` нормализует модель и обновляет `SettingsStore`.
+3. Если активного чата нет, модель сохраняется как глобальная настройка.
 
 Управление историей:
 
 1. Действия из `ChatSidebarComponent`.
-2. `ManageChatService` выполняет операции в `ChatRepository`.
-3. `ChatStore` синхронизируется локально.
+2. `ManageChatService` вызывает операции `rename/delete/clear` в `ChatRepository`.
+3. `ChatStore` синхронизируется после каждой операции.
+
+## 12. Ограничения и инварианты
+
+- `pages/widgets` не работают с Dexie напрямую.
+- Изменения в payload socket/HTTP и endpoint-path требуют явного запроса.
+- Изменения межслойных зависимостей должны учитывать правила `eslint-plugin-boundaries`.

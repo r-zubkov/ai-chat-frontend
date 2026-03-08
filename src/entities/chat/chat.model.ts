@@ -24,5 +24,6 @@ export interface Chat {
 
 export interface ChatStoreState {
   chats: Chat[];
+  chatsCount: number;
   activeChatId: ChatId | null;
 }

@@ -24,10 +24,12 @@ export class ManageChatService {
   async deleteChat(id: ChatId): Promise<void> {
     await this.chatRepository.delete(id);
     this.chatStore.removeChat(id);
+    await this.chatStore.loadChatsCount();
   }
 
   async deleteAllChats(): Promise<void> {
     await this.chatRepository.clear();
     this.chatStore.clearState();
+    await this.chatStore.loadChatsCount();
   }
 }

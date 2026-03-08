@@ -76,6 +76,7 @@ export class SendMessageService {
           const createdChat = createChatEntity(trimmed, model);
           await this.chatRepository.create(createdChat);
           this.chatStore.upsertChat(createdChat);
+          await this.chatStore.loadChatsCount();
           this.chatStore.setActive(createdChat.id);
 
           chat = createdChat;
