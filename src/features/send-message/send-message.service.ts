@@ -254,20 +254,16 @@ export class SendMessageService {
     this.socket.destroy();
   }
 
-  private async updateChat(
-    chat: Chat,
-    data: Partial<Omit<Chat, 'id'>>,
-    triggerLastUpdate = true,
-  ): Promise<Chat> {
+  private async updateChat(chat: Chat, data: Partial<Omit<Chat, 'id'>>): Promise<Chat> {
     const next: Chat = {
       ...chat,
       ...data,
-      lastUpdate: triggerLastUpdate ? Date.now() : chat.lastUpdate,
+      lastUpdate: Date.now(),
     };
 
     await this.chatRepo.update(chat.id, {
       ...data,
-      ...(triggerLastUpdate ? { lastUpdate: next.lastUpdate } : {}),
+      lastUpdate: next.lastUpdate,
     });
 
     this.chatStore.upsertChat(next);
