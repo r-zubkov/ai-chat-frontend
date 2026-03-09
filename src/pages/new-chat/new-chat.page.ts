@@ -1,6 +1,7 @@
 ﻿import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ChatStore } from '@entities/chat';
+import { MessageStore } from '@entities/message';
 import { SettingsStore } from '@entities/settings';
 import { SendMessageEvent, SendMessageEventType } from '@features/send-message';
 import { ChatInputComponent } from '@widgets/chat-input';
@@ -15,12 +16,14 @@ import { AppUiService } from '@app/app-ui.service';
 })
 export class NewChatPage implements OnInit {
   readonly chatStore = inject(ChatStore);
+  readonly messageStore = inject(MessageStore);
   readonly settings = inject(SettingsStore);
   private readonly router = inject(Router);
   private readonly appUi = inject(AppUiService);
 
   ngOnInit(): void {
     this.chatStore.setActive(null);
+    this.messageStore.clearState();
     this.settings.setCurrentModel(this.settings.globalCurrentModel());
     this.appUi.closeSidebarOnMobile();
   }

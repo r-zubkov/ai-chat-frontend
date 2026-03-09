@@ -6,4 +6,4 @@
   ModelType,
 } from './models.config';
 export type { ModelOption } from './models.config';
-export { DEFAULT_CHAT_LIST_LIMIT, RepositoryEventType } from './app.constants';
+export { DEFAULT_CHAT_LIST_LIMIT } from './app.constants';

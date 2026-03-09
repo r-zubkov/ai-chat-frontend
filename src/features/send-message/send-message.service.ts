@@ -110,6 +110,7 @@ export class SendMessageService {
         assistantMessageId = assistantMessage.id;
 
         await this.messageRepository.createMessages([userMessage, assistantMessage]);
+        this.messageStore.upsertMessages([userMessage, assistantMessage]);
 
         const apiMessages = buildApiMessages(
           messageHistory,
@@ -149,6 +150,10 @@ export class SendMessageService {
               return from(this.messageRepository.updateMessage(assistantMessage.id, update)).pipe(
                 tap(() => {
                   lastPersistedContent = payload.content;
+                  this.messageStore.patchMessage(assistantMessage.id, update);
+                  if (payload.state !== undefined) {
+                    this.messageStore.remove(assistantMessage.id);
+                  }
                 }),
                 catchError((persistError: unknown) => {
                   console.error('Error persisting streaming content:', persistError);
@@ -233,6 +238,11 @@ export class SendMessageService {
             content,
             state: ChatMessageState.ERROR,
           });
+          this.messageStore.patchMessage(assistantMessageId, {
+            content,
+            state: ChatMessageState.ERROR,
+          });
+          this.messageStore.remove(assistantMessageId);
         }
 
         events$.error(err);

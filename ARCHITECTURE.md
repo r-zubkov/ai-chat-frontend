@@ -82,7 +82,7 @@ Guard `initialDataGuard` висит на ветке `/chats`.
 `message`:
 
 - `message.model.ts` - типы сообщений (`ChatMessage`, роли/стейты, ids).
-- `message.store.ts` - in-memory буфер стримящегося текста ассистента (`Map<MessageId, string>`).
+- `message.store.ts` - список сообщений текущего открытого чата + in-memory буфер стримящегося текста ассистента (`Map<MessageId, string>`).
 - `message.repository.ts` - CRUD по сообщениям в Dexie, выборка по `[chatId+sequelId]`.
 
 `settings`:
@@ -97,9 +97,9 @@ Guard `initialDataGuard` висит на ветке `/chats`.
 
 - Полный цикл отправки сообщения.
 - Создает чат при первом сообщении.
-- Создает user/assistant сообщения в DB.
+- Создает user/assistant сообщения в DB и синхронно обновляет `MessageStore`.
 - Запускает socket stream и обновляет chat state (`THINKING/IDLE/ERROR`).
-- Пишет stream-дельты в `MessageStore` и периодически персистит их в DB (`STREAM_PERSIST_INTERVAL`).
+- Пишет stream-дельты в `MessageStore` и периодически персистит их в DB (`STREAM_PERSIST_INTERVAL`) с синхронным patch в `MessageStore`.
 - Поддерживает отмену одного/всех активных запросов.
 
 `select-model` (`SelectModelService`):
@@ -123,11 +123,11 @@ Guard `initialDataGuard` висит на ветке `/chats`.
 
 ### 6.4 `pages`
 
-- `new-chat.page` - сбрасывает активный чат, восстанавливает глобальную модель, стартует новый диалог.
+- `new-chat.page` - сбрасывает активный чат и state сообщений, восстанавливает глобальную модель, стартует новый диалог.
 - `user-chat.page`:
 - активирует чат по route param;
-- загружает сообщения через `MessageRepository`;
-- подписывается на `messagesUpdated$` для реактивного обновления;
+- загружает сообщения в `MessageStore` через `MessageStore.loadByChatId(...)`;
+- рендерит список из `MessageStore.messages()` (без подписки на repository events);
 - поддерживает retry последнего user-сообщения.
 
 ### 6.5 `app`
@@ -183,7 +183,6 @@ Dexie БД (`src/shared/db/chat.db.ts`, имя `ai-chat-db`):
 
 `src/shared/config/app.constants.ts`:
 
-- `RepositoryEventType`.
 - `DEFAULT_CHAT_LIST_LIMIT`.
 
 `src/environments`:
@@ -204,9 +203,9 @@ Dexie БД (`src/shared/db/chat.db.ts`, имя `ai-chat-db`):
 1. Пользователь отправляет текст из `ChatInputComponent`.
 2. `SendMessageService.sendMessage(...)` валидирует вход и модель.
 3. Для нового диалога создается чат и активируется в `ChatStore`.
-4. Создаются user/assistant сообщения в `MessageRepository`.
+4. Создаются user/assistant сообщения в `MessageRepository` и сразу upsert в `MessageStore`.
 5. Стартует socket stream (`chat:request`).
-6. Stream-дельты идут в `MessageStore`, затем батч-персистятся в Dexie.
+6. Stream-дельты идут в `MessageStore`, затем батч-персистятся в Dexie и patch-ятся в `MessageStore`.
 7. По завершению/ошибке фиксируется финальный state чата и сообщения.
 
 Смена модели:

@@ -5,25 +5,19 @@
   ElementRef,
   Input,
   ViewChild,
+  effect,
   inject,
-  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
 import { ChatState, ChatStore, toChatId } from '@entities/chat';
-import {
-  ChatMessage,
-  ChatMessageRole,
-  ChatMessageState,
-  MessageRepository,
-  MessageStore,
-} from '@entities/message';
+import { ChatMessageRole, ChatMessageState, MessageStore } from '@entities/message';
 import { ManageChatService } from '@features/manage-chat';
 import { SendMessageService } from '@features/send-message';
 import { SelectModelService } from '@features/select-model';
 import { getCssValue, remToPx } from '@shared/helpers';
-import { MarkdownPipe, ModelLabelPipe, RepositoryEventType } from '@shared';
+import { MarkdownPipe, ModelLabelPipe } from '@shared';
 import { ChatInputComponent } from '@widgets/chat-input';
 import { AppUiService } from '@app/app-ui.service';
 
@@ -42,10 +36,13 @@ export class UserChatPage {
   readonly sendMessage = inject(SendMessageService);
   readonly manageChat = inject(ManageChatService);
 
-  private readonly messageRepository = inject(MessageRepository);
   private readonly selectModel = inject(SelectModelService);
   private readonly router = inject(Router);
   private readonly appUi = inject(AppUiService);
+
+  private suppressAutoScroll = false;
+  private initialLoadDone = false;
+  private lastMessagesLength = 0;
 
   @Input() set id(chatId: string) {
     const activeId = toChatId(chatId);
@@ -62,10 +59,20 @@ export class UserChatPage {
   protected readonly ChatMessageState = ChatMessageState;
   protected readonly ChatMessageRole = ChatMessageRole;
 
-  protected readonly messages = signal<ChatMessage[]>([]);
-
   constructor() {
-    this.watchMessagesUpdate();
+    effect(() => {
+      const length = this.messageStore.messages().length;
+
+      if (!this.initialLoadDone || this.suppressAutoScroll) {
+        return;
+      }
+
+      if (length > this.lastMessagesLength) {
+        setTimeout(() => this.scrollToBottom('smooth'), 50);
+      }
+
+      this.lastMessagesLength = length;
+    });
   }
 
   private async loadMessages(
@@ -73,51 +80,48 @@ export class UserChatPage {
     scrollEffect: 'instant' | 'smooth' | null = null,
   ): Promise<void> {
     if (!chatId) {
-      this.messages.set([]);
+      this.initialLoadDone = false;
+      this.lastMessagesLength = 0;
+      this.messageStore.clearMessages();
       return;
     }
 
-    const messages = await this.messageRepository.getMessagesByChatId(chatId);
+    this.suppressAutoScroll = true;
 
-    if (!messages.length) {
-      await this.router.navigate(['/chats', 'new']);
-      return;
-    }
+    try {
+      const messages = await this.messageStore.loadByChatId(chatId);
 
-    this.messages.set(messages);
-
-    for (const msg of messages) {
-      if (
-        msg.role === ChatMessageRole.ASSISTANT &&
-        msg.state !== ChatMessageState.STREAMING &&
-        this.messageStore.get(msg.id)
-      ) {
-        this.messageStore.remove(msg.id);
+      if (chatId !== this.chatStore.activeChatId()) {
+        return;
       }
-    }
 
-    if (scrollEffect) {
-      setTimeout(() => this.scrollToBottom(scrollEffect), 50);
-    }
-  }
+      if (!messages.length) {
+        this.initialLoadDone = false;
+        this.lastMessagesLength = 0;
+        await this.router.navigate(['/chats', 'new']);
+        return;
+      }
 
-  private watchMessagesUpdate(): void {
-    this.messageRepository.messagesUpdated$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((event: RepositoryEventType) => {
-        const scrollEffect = event === RepositoryEventType.UPDATING ? null : 'smooth';
-        void this.loadMessages(this.chatStore.activeChatId(), scrollEffect);
+      this.initialLoadDone = true;
+      this.lastMessagesLength = messages.length;
+
+      if (scrollEffect) {
+        setTimeout(() => this.scrollToBottom(scrollEffect), 50);
+      }
+    } finally {
+      queueMicrotask(() => {
+        this.suppressAutoScroll = false;
       });
+    }
   }
 
   protected retryLasRequest(): void {
-    const lastUserMsg = this.messages()
-      .filter((msg) => msg.role === ChatMessageRole.USER)
-      .at(-1);
+    const messages = this.messageStore.messages();
+    const lastUserMsg = messages.filter((msg) => msg.role === ChatMessageRole.USER).at(-1);
 
     if (lastUserMsg) {
       this.sendMessage
-        .sendMessage(lastUserMsg.content, this.messages())
+        .sendMessage(lastUserMsg.content, messages)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           error: (err) => console.error('Error sending message:', err),

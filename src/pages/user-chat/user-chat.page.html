@@ -2,7 +2,7 @@
   <tui-scrollbar>
     <div class="flex flex-col items-center">
       <div class="chat-messages flex flex-col flex-1 pt-6">
-        @for (msg of messages(); let last = $last; track msg.id) {
+        @for (msg of messageStore.messages(); let last = $last; track msg.id) {
           <div
             class="chat-message"
             [attr.data-id]="msg.id"
@@ -52,6 +52,6 @@
 </div>
 <div class="chat-input-wrapper">
   <div class="chat-input">
-    <app-chat-input [messageHistory]="messages()"></app-chat-input>
+    <app-chat-input [messageHistory]="messageStore.messages()"></app-chat-input>
   </div>
 </div>
