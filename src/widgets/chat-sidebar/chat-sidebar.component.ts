@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+﻿import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   TuiAlertService,
@@ -56,6 +56,7 @@ export class ChatSidebarComponent {
   private readonly chatNavigation = inject(ChatNavigationService);
 
   protected readonly ChatState = ChatState;
+  protected readonly isLoadingMoreChats = signal(false);
 
   protected handleOpenItemOptionsDropdown(chatId: string): void {
     this.openItemOptionsDropdown(chatId);
@@ -108,6 +109,17 @@ export class ChatSidebarComponent {
           });
         }
       });
+  }
+
+  protected handleLoadMoreChats(): void {
+    if (this.isLoadingMoreChats()) {
+      return;
+    }
+
+    this.isLoadingMoreChats.set(true);
+    void this.chatStore.loadMore().finally(() => {
+      this.isLoadingMoreChats.set(false);
+    });
   }
 
   protected onObscured(obscured: boolean): void {

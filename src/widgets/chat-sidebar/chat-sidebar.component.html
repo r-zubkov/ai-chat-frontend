@@ -67,6 +67,20 @@
           </button>
         </div>
       }
+
+      @if (chatStore.hasMoreChats()) {
+        <button
+          type="button"
+          class="sidebar-list__btn sidebar-action-btn sidebar-load-more-btn"
+          [disabled]="isLoadingMoreChats()"
+          (click)="handleLoadMoreChats()"
+        >
+          @if (isLoadingMoreChats()) {
+            <tui-loader [inheritColor]="true" />
+          }
+          <span>Показать ещё</span>
+        </button>
+      }
     </div>
   </tui-scrollbar>
 

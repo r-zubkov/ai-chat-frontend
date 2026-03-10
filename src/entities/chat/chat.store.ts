@@ -7,14 +7,16 @@ import { ChatRepository } from './chat.repository';
 const initialState: ChatStoreState = {
   chats: [],
   chatsCount: 0,
+  loadedChatsLimit: DEFAULT_CHAT_LIST_LIMIT,
   activeChatId: null,
 };
 
 export const ChatStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withComputed(({ chats, activeChatId }) => ({
+  withComputed(({ chats, chatsCount, activeChatId }) => ({
     activeChat: computed(() => chats().find((chat) => chat.id === activeChatId()) ?? null),
+    hasMoreChats: computed(() => chats().length < chatsCount()),
   })),
   withMethods((store, chatRepository = inject(ChatRepository)) => ({
     async loadAll(limit: number = DEFAULT_CHAT_LIST_LIMIT): Promise<void> {
@@ -22,7 +24,20 @@ export const ChatStore = signalStore(
         chatRepository.getAll(limit),
         chatRepository.getCount(),
       ]);
-      patchState(store, { chats, chatsCount });
+      patchState(store, { chats, chatsCount, loadedChatsLimit: limit });
+    },
+    async loadMore(step: number = DEFAULT_CHAT_LIST_LIMIT): Promise<void> {
+      if (!store.hasMoreChats()) {
+        return;
+      }
+
+      const nextLimit = store.loadedChatsLimit() + step;
+      const [chats, chatsCount] = await Promise.all([
+        chatRepository.getAll(nextLimit),
+        chatRepository.getCount(),
+      ]);
+
+      patchState(store, { chats, chatsCount, loadedChatsLimit: nextLimit });
     },
     async loadChatsCount(): Promise<void> {
       const chatsCount = await chatRepository.getCount();
