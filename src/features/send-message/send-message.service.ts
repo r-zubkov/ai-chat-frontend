@@ -42,6 +42,14 @@ export type SendMessageEvent =
       assistantMessage: ChatMessage;
     };
 
+const TYPEWRITER_BACKLOG_SLOW_THRESHOLD = 80;
+const TYPEWRITER_BACKLOG_MEDIUM_THRESHOLD = 240;
+const TYPEWRITER_BACKLOG_FAST_THRESHOLD = 600;
+const TYPEWRITER_CHARS_PER_FRAME_SLOW = 2;
+const TYPEWRITER_CHARS_PER_FRAME_MEDIUM = 6;
+const TYPEWRITER_CHARS_PER_FRAME_FAST = 12;
+const TYPEWRITER_CHARS_PER_FRAME_MAX = 24;
+
 @Injectable({ providedIn: 'root' })
 export class SendMessageService {
   private readonly chatRepository = inject(ChatRepository);
@@ -50,6 +58,7 @@ export class SendMessageService {
   private readonly messageStore = inject(MessageStore);
   private readonly socket = inject(SocketService);
   private readonly settings = inject(SettingsStore);
+  private readonly abortedRequestIds = new Set<string>();
 
   private readonly modelSystemPrompts: Partial<Record<ModelType, string>> = {
     [ModelType.GPT_51]: SYSTEM_PROMPT,
@@ -185,6 +194,8 @@ export class SendMessageService {
           if (!persistQueueClosed) {
             persistQueueClosed = true;
             persistTickSubscription.unsubscribe();
+            this.messageStore.patchMessage(assistantMessage.id, { content, state });
+            this.messageStore.remove(assistantMessage.id);
             persistQueue$.next({ content, state });
             persistQueue$.complete();
           }
@@ -192,16 +203,100 @@ export class SendMessageService {
           persistQueueDrained$.pipe(take(1)).subscribe(() => onDrained());
         };
 
+        let incomingBuffer = '';
+        let frameId: number | null = null;
+        let streamDone = false;
+
+        const clearFrame = (): void => {
+          if (frameId === null) {
+            return;
+          }
+
+          cancelAnimationFrame(frameId);
+          frameId = null;
+        };
+
+        const commitTypewriterFrame = (): void => {
+          if (!incomingBuffer.length) {
+            return;
+          }
+
+          const step = this.resolveTypewriterStep(incomingBuffer.length);
+          content += incomingBuffer.slice(0, step);
+          incomingBuffer = incomingBuffer.slice(step);
+          this.messageStore.set(assistantMessage.id, content);
+          persistTick$.next();
+        };
+
+        const finalizeSuccess = (): void => {
+          flushFinalPersist(ChatMessageState.COMPLETED, () => {
+            void this.updateChat(chat as Chat, {
+              model,
+              state: ChatState.IDLE,
+              currentRequestId: null,
+            });
+
+            const finalAssistantMessage: ChatMessage = {
+              ...assistantMessage,
+              content,
+              state: ChatMessageState.COMPLETED,
+            };
+
+            events$.next({
+              type: SendMessageEventType.FINISHED,
+              chatId: activeChatId,
+              assistantMessage: finalAssistantMessage,
+            });
+            events$.complete();
+          });
+        };
+
+        const handleAbort = (): void => {
+          clearFrame();
+          incomingBuffer = '';
+          finalizeSuccess();
+        };
+
+        const maybeFinalizeSuccess = (): void => {
+          if (!streamDone || incomingBuffer.length > 0 || frameId !== null) {
+            return;
+          }
+
+          finalizeSuccess();
+        };
+
+        const runTypewriterFrame = (): void => {
+          frameId = null;
+          commitTypewriterFrame();
+
+          if (incomingBuffer.length > 0) {
+            frameId = requestAnimationFrame(runTypewriterFrame);
+            return;
+          }
+
+          maybeFinalizeSuccess();
+        };
+
+        const ensureTypewriterFrame = (): void => {
+          if (frameId !== null || !incomingBuffer.length) {
+            return;
+          }
+
+          frameId = requestAnimationFrame(runTypewriterFrame);
+        };
+
         stream$
           .pipe(
             tap((delta: string) => {
-              content += delta;
-              this.messageStore.set(assistantMessage.id, content);
-              persistTick$.next();
+              incomingBuffer += delta;
+              ensureTypewriterFrame();
             }),
           )
           .subscribe({
             error: (err: unknown) => {
+              this.abortedRequestIds.delete(requestId);
+              clearFrame();
+              incomingBuffer = '';
               flushFinalPersist(ChatMessageState.ERROR, () => {
                 void this.updateChat(chat as Chat, {
                   model,
@@ -212,26 +307,13 @@ export class SendMessageService {
               });
             },
             complete: () => {
-              flushFinalPersist(ChatMessageState.COMPLETED, () => {
-                void this.updateChat(chat as Chat, {
-                  model,
-                  state: ChatState.IDLE,
-                  currentRequestId: null,
-                });
+              if (this.abortedRequestIds.delete(requestId)) {
+                handleAbort();
+                return;
+              }
 
-                const finalAssistantMessage: ChatMessage = {
-                  ...assistantMessage,
-                  content,
-                  state: ChatMessageState.COMPLETED,
-                };
-
-                events$.next({
-                  type: SendMessageEventType.FINISHED,
-                  chatId: activeChatId,
-                  assistantMessage: finalAssistantMessage,
-                });
-                events$.complete();
-              });
+              streamDone = true;
+              maybeFinalizeSuccess();
             },
           });
       } catch (err: unknown) {
@@ -263,6 +345,7 @@ export class SendMessageService {
   }
 
   stopRequest(requestId: string): void {
+    this.abortedRequestIds.add(requestId);
     this.socket.abortRequest(requestId);
   }
 
@@ -289,5 +372,21 @@ export class SendMessageService {
 
     this.chatStore.upsertChat(next);
     return next;
+  }
+
+  private resolveTypewriterStep(backlog: number): number {
+    if (backlog <= TYPEWRITER_BACKLOG_SLOW_THRESHOLD) {
+      return TYPEWRITER_CHARS_PER_FRAME_SLOW;
+    }
+
+    if (backlog <= TYPEWRITER_BACKLOG_MEDIUM_THRESHOLD) {
+      return TYPEWRITER_CHARS_PER_FRAME_MEDIUM;
+    }
+
+    if (backlog <= TYPEWRITER_BACKLOG_FAST_THRESHOLD) {
+      return TYPEWRITER_CHARS_PER_FRAME_FAST;
+    }
+
+    return TYPEWRITER_CHARS_PER_FRAME_MAX;
   }
 }
