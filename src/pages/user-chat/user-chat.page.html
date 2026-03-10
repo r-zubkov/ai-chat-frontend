@@ -52,6 +52,9 @@
 </div>
 <div class="chat-input-wrapper">
   <div class="chat-input">
-    <app-chat-input [messageHistory]="messageStore.messages()"></app-chat-input>
+    <app-chat-input
+      [messageHistory]="messageStore.messages()"
+      (requestEvent)="handleRequestEvent($event)"
+    ></app-chat-input>
   </div>
 </div>

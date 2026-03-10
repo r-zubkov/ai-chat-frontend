@@ -5,7 +5,6 @@
   ElementRef,
   Input,
   ViewChild,
-  effect,
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -14,7 +13,7 @@ import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
 import { ChatState, ChatStore, toChatId } from '@entities/chat';
 import { ChatMessageRole, ChatMessageState, MessageStore } from '@entities/message';
 import { ManageChatService } from '@features/manage-chat';
-import { SendMessageService } from '@features/send-message';
+import { SendMessageEvent, SendMessageEventType, SendMessageService } from '@features/send-message';
 import { SelectModelService } from '@features/select-model';
 import { getCssValue, remToPx } from '@shared/helpers';
 import { MarkdownPipe, ModelLabelPipe } from '@shared';
@@ -40,10 +39,6 @@ export class UserChatPage {
   private readonly router = inject(Router);
   private readonly appUi = inject(AppUiService);
 
-  private suppressAutoScroll = false;
-  private initialLoadDone = false;
-  private lastMessagesLength = 0;
-
   @Input() set id(chatId: string) {
     const activeId = toChatId(chatId);
     this.chatStore.setActive(activeId);
@@ -59,59 +54,28 @@ export class UserChatPage {
   protected readonly ChatMessageState = ChatMessageState;
   protected readonly ChatMessageRole = ChatMessageRole;
 
-  constructor() {
-    effect(() => {
-      const length = this.messageStore.messages().length;
-
-      if (!this.initialLoadDone || this.suppressAutoScroll) {
-        return;
-      }
-
-      if (length > this.lastMessagesLength) {
-        setTimeout(() => this.scrollToBottom('smooth'), 50);
-      }
-
-      this.lastMessagesLength = length;
-    });
-  }
-
   private async loadMessages(
     chatId = this.chatStore.activeChatId(),
     scrollEffect: 'instant' | 'smooth' | null = null,
   ): Promise<void> {
     if (!chatId) {
-      this.initialLoadDone = false;
-      this.lastMessagesLength = 0;
       this.messageStore.clearMessages();
       return;
     }
 
-    this.suppressAutoScroll = true;
+    const messages = await this.messageStore.loadByChatId(chatId);
 
-    try {
-      const messages = await this.messageStore.loadByChatId(chatId);
+    if (chatId !== this.chatStore.activeChatId()) {
+      return;
+    }
 
-      if (chatId !== this.chatStore.activeChatId()) {
-        return;
-      }
+    if (!messages.length) {
+      await this.router.navigate(['/chats', 'new']);
+      return;
+    }
 
-      if (!messages.length) {
-        this.initialLoadDone = false;
-        this.lastMessagesLength = 0;
-        await this.router.navigate(['/chats', 'new']);
-        return;
-      }
-
-      this.initialLoadDone = true;
-      this.lastMessagesLength = messages.length;
-
-      if (scrollEffect) {
-        setTimeout(() => this.scrollToBottom(scrollEffect), 50);
-      }
-    } finally {
-      queueMicrotask(() => {
-        this.suppressAutoScroll = false;
-      });
+    if (scrollEffect) {
+      setTimeout(() => this.scrollToBottom(scrollEffect), 50);
     }
   }
 
@@ -124,8 +88,15 @@ export class UserChatPage {
         .sendMessage(lastUserMsg.content, messages)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
+          next: (event) => this.handleRequestEvent(event),
           error: (err) => console.error('Error sending message:', err),
         });
+    }
+  }
+
+  protected handleRequestEvent(event: SendMessageEvent): void {
+    if (event.type === SendMessageEventType.SENT) {
+      setTimeout(() => this.scrollToBottom('smooth'), 50);
     }
   }
 
