@@ -38,7 +38,7 @@
 - `src/app` - `app.config.ts`, `app.routes.ts`, guard и app-level services.
 - `src/pages` - `new-chat`, `user-chat`.
 - `src/widgets` - `chat-header`, `chat-sidebar`, `chat-input`.
-- `src/features` - `send-message`, `select-model`, `manage-chat`.
+- `src/features` - `send-message`, `select-model`, `manage-chat` (включая `manage-chat/change-chat-name-modal`).
 - `src/entities` - `chat`, `message`, `settings`.
 - `src/shared` - `api`, `db`, `config`, `ui`, `helpers`, `validators`.
 - `src/environments` - endpoint-конфиги `local/prod`.
@@ -63,6 +63,7 @@
 Маршруты (`src/app/app.routes.ts`):
 
 - `'' -> /chats`.
+- `/chats -> /chats/new`.
 - `/chats/new -> NewChatPage` (lazy).
 - `/chats/:id -> UserChatPage` (lazy).
 - `** -> /chats`.
@@ -114,11 +115,12 @@ Guard `initialDataGuard` висит на ветке `/chats`.
 - Удаление одного чата.
 - Полная очистка истории.
 - Синхронизация `ChatStore` после операций.
+- UI-переименование реализовано через `ChangeChatNameModalComponent` в `features/manage-chat/change-chat-name-modal`.
 
 ### 6.3 `widgets`
 
 - `chat-header` - выбор модели, переключение sidebar.
-- `chat-sidebar` - список чатов, rename/delete/clear через `ManageChatService`.
+- `chat-sidebar` - список чатов, rename/delete/clear через `ManageChatService`; переименование открывает `ChangeChatNameModalComponent`.
 - `chat-input` - UI формы ввода: текст, submit по кнопке/Enter, cancel по кнопке stop; бизнес-логика отправки вынесена наружу через `@Output`.
 
 ### 6.4 `pages`
@@ -141,7 +143,7 @@ Guard `initialDataGuard` висит на ветке `/chats`.
 
 Dexie БД (`src/shared/db/chat.db.ts`, имя `ai-chat-db`):
 
-- `projects` (`id`, `lastUpdate`).
+- `projects` (`id`, `name`, `lastUpdate`).
 - `chats` (`id`, `projectId`, `lastUpdate`).
 - `messages` (`id`, `sequelId`, `chatId`, `timestamp`, `[chatId+sequelId]`).
 - `settings` (`key`).
@@ -219,7 +221,7 @@ Dexie БД (`src/shared/db/chat.db.ts`, имя `ai-chat-db`):
 Управление историей:
 
 1. Действия из `ChatSidebarComponent`.
-2. `ManageChatService` вызывает операции `rename/delete/clear` в `ChatRepository`.
+2. Переименование инициируется через `ChangeChatNameModalComponent`, затем `ManageChatService` вызывает операции `rename/delete/clear` в `ChatRepository`.
 3. `ChatStore` синхронизируется после каждой операции.
 
 ## 12. Ограничения и инварианты
