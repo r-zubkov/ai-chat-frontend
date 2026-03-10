@@ -4,6 +4,7 @@ import {
   Observable,
   ReplaySubject,
   Subject,
+  animationFrameScheduler,
   auditTime,
   catchError,
   concatMap,
@@ -181,10 +182,23 @@ export class SendMessageService {
           )
           .subscribe();
 
+        const renderTick$ = new Subject<void>();
+        const renderTickSubscription = renderTick$
+          .pipe(
+            auditTime(0, animationFrameScheduler),
+            tap(() => {
+              this.messageStore.set(assistantMessage.id, content);
+            }),
+          )
+          .subscribe();
+
         const flushFinalPersist = (state: ChatMessageState, onDrained: () => void): void => {
           if (!persistQueueClosed) {
             persistQueueClosed = true;
             persistTickSubscription.unsubscribe();
+            renderTickSubscription.unsubscribe();
+            renderTick$.complete();
+            this.messageStore.set(assistantMessage.id, content);
             persistQueue$.next({ content, state });
             persistQueue$.complete();
           }
@@ -196,7 +210,7 @@ export class SendMessageService {
           .pipe(
             tap((delta: string) => {
               content += delta;
-              this.messageStore.set(assistantMessage.id, content);
+              renderTick$.next();
               persistTick$.next();
             }),
           )
