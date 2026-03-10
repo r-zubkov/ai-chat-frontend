@@ -28,6 +28,24 @@ export const ChatStore = signalStore(
       const chatsCount = await chatRepository.getCount();
       patchState(store, { chatsCount });
     },
+    async ensureChatLoaded(chatId: ChatId): Promise<boolean> {
+      const currentChats = store.chats();
+
+      if (currentChats.some((chat) => chat.id === chatId)) {
+        return true;
+      }
+
+      const chat = await chatRepository.getById(chatId);
+      if (!chat) {
+        return false;
+      }
+
+      const chats = [...currentChats.filter((item) => item.id !== chat.id), chat].sort(
+        (a, b) => b.lastUpdate - a.lastUpdate,
+      );
+      patchState(store, { chats });
+      return true;
+    },
     setActive(id: ChatId | null): void {
       patchState(store, { activeChatId: id });
     },

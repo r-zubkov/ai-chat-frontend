@@ -98,14 +98,22 @@ export class UserChatPage {
       return;
     }
 
-    const messages = await this.messageStore.loadByChatId(chatId);
+    const hasChat = await this.chatStore.ensureChatLoaded(chatId);
 
     if (chatId !== this.chatStore.activeChatId()) {
       return;
     }
 
-    if (!messages.length) {
+    if (!hasChat) {
       await this.chatNavigation.navigateToNewChat();
+      return;
+    }
+
+    this.selectModel.syncCurrentModelForChat(chatId);
+
+    await this.messageStore.loadByChatId(chatId);
+
+    if (chatId !== this.chatStore.activeChatId()) {
       return;
     }
 
