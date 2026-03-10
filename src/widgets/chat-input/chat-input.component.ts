@@ -1,19 +1,7 @@
-﻿import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  EventEmitter,
-  Input,
-  Output,
-  inject,
-} from '@angular/core';
+﻿import { ChangeDetectionStrategy, Component, EventEmitter, Output, input } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TuiButton, TuiTextfield } from '@taiga-ui/core';
 import { TuiTextarea } from '@taiga-ui/kit';
-import { ChatState, ChatStore } from '@entities/chat';
-import { ChatMessage } from '@entities/message';
-import { SendMessageEvent, SendMessageService } from '@features/send-message';
 
 @Component({
   selector: 'app-chat-input',
@@ -23,14 +11,10 @@ import { SendMessageEvent, SendMessageService } from '@features/send-message';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatInputComponent {
-  private readonly destroyRef = inject(DestroyRef);
+  readonly thinking = input(false);
 
-  readonly sendMessage = inject(SendMessageService);
-  readonly chatStore = inject(ChatStore);
-
-  @Input() messageHistory: ChatMessage[] = [];
-
-  @Output() requestEvent = new EventEmitter<SendMessageEvent>();
+  @Output() sendMessage = new EventEmitter<string>();
+  @Output() cancelRequest = new EventEmitter<void>();
 
   protected readonly form = new FormGroup({
     message: new FormControl('', {
@@ -38,12 +22,8 @@ export class ChatInputComponent {
     }),
   });
 
-  protected get thinking(): boolean {
-    return this.chatStore.activeChat()?.state === ChatState.THINKING;
-  }
-
   protected get isSendAllowed(): boolean {
-    return !this.thinking && this.form.controls.message.value.trim().length > 0;
+    return !this.thinking() && this.form.controls.message.value.trim().length > 0;
   }
 
   protected send(): void {
@@ -51,22 +31,12 @@ export class ChatInputComponent {
 
     if (!this.isSendAllowed) return;
 
-    this.sendMessage
-      .sendMessage(text, this.messageHistory)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (event) => this.requestEvent.emit(event),
-        error: (err) => console.error('Error sending message:', err),
-      });
-
+    this.sendMessage.emit(text);
     this.form.controls.message.reset('');
   }
 
   protected cancel(): void {
-    const requestId = this.chatStore.activeChat()?.currentRequestId;
-    if (!requestId) return;
-
-    this.sendMessage.stopRequest(requestId);
+    this.cancelRequest.emit();
   }
 
   protected onKeyDown(event: KeyboardEvent): void {

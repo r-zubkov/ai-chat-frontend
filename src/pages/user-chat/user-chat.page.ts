@@ -11,7 +11,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
 import { ChatState, ChatStore, toChatId } from '@entities/chat';
-import { ChatMessageRole, ChatMessageState, MessageStore } from '@entities/message';
+import { ChatMessage, ChatMessageRole, ChatMessageState, MessageStore } from '@entities/message';
 import { ManageChatService } from '@features/manage-chat';
 import { SendMessageEvent, SendMessageEventType, SendMessageService } from '@features/send-message';
 import { SelectModelService } from '@features/select-model';
@@ -32,9 +32,9 @@ export class UserChatPage {
 
   readonly chatStore = inject(ChatStore);
   readonly messageStore = inject(MessageStore);
-  readonly sendMessage = inject(SendMessageService);
   readonly manageChat = inject(ManageChatService);
 
+  private readonly sendMessageService = inject(SendMessageService);
   private readonly selectModel = inject(SelectModelService);
   private readonly router = inject(Router);
   private readonly appUi = inject(AppUiService);
@@ -53,6 +53,42 @@ export class UserChatPage {
   protected readonly ChatState = ChatState;
   protected readonly ChatMessageState = ChatMessageState;
   protected readonly ChatMessageRole = ChatMessageRole;
+
+  protected onSendMessage(text: string): void {
+    this.send(text, this.messageStore.messages());
+  }
+
+  protected onCancelRequest(): void {
+    const requestId = this.chatStore.activeChat()?.currentRequestId;
+    if (!requestId) return;
+
+    this.sendMessageService.stopRequest(requestId);
+  }
+
+  protected retryLasRequest(): void {
+    const messages = this.messageStore.messages();
+    const lastUserMsg = messages.filter((msg) => msg.role === ChatMessageRole.USER).at(-1);
+
+    if (!lastUserMsg) return;
+
+    this.send(lastUserMsg.content, messages);
+  }
+
+  protected handleRequestEvent(event: SendMessageEvent): void {
+    if (event.type === SendMessageEventType.SENT) {
+      setTimeout(() => this.scrollToBottom('smooth'), 50);
+    }
+  }
+
+  private send(text: string, messageHistory: ChatMessage[]): void {
+    this.sendMessageService
+      .sendMessage(text, messageHistory)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (event) => this.handleRequestEvent(event),
+        error: (err) => console.error('Error sending message:', err),
+      });
+  }
 
   private async loadMessages(
     chatId = this.chatStore.activeChatId(),
@@ -76,27 +112,6 @@ export class UserChatPage {
 
     if (scrollEffect) {
       setTimeout(() => this.scrollToBottom(scrollEffect), 50);
-    }
-  }
-
-  protected retryLasRequest(): void {
-    const messages = this.messageStore.messages();
-    const lastUserMsg = messages.filter((msg) => msg.role === ChatMessageRole.USER).at(-1);
-
-    if (lastUserMsg) {
-      this.sendMessage
-        .sendMessage(lastUserMsg.content, messages)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (event) => this.handleRequestEvent(event),
-          error: (err) => console.error('Error sending message:', err),
-        });
-    }
-  }
-
-  protected handleRequestEvent(event: SendMessageEvent): void {
-    if (event.type === SendMessageEventType.SENT) {
-      setTimeout(() => this.scrollToBottom('smooth'), 50);
     }
   }
 

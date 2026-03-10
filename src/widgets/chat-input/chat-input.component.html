@@ -9,7 +9,7 @@
       (keydown)="onKeyDown($event)"
     ></textarea>
 
-    @if (!thinking) {
+    @if (!thinking()) {
       <button
         tuiButton
         iconStart="@tui.arrow-up"

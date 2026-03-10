@@ -53,8 +53,9 @@
 <div class="chat-input-wrapper">
   <div class="chat-input">
     <app-chat-input
-      [messageHistory]="messageStore.messages()"
-      (requestEvent)="handleRequestEvent($event)"
+      [thinking]="chatStore.activeChat()?.state === ChatState.THINKING"
+      (sendMessage)="onSendMessage($event)"
+      (cancelRequest)="onCancelRequest()"
     ></app-chat-input>
   </div>
 </div>

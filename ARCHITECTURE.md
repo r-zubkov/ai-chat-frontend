@@ -119,15 +119,16 @@ Guard `initialDataGuard` висит на ветке `/chats`.
 
 - `chat-header` - выбор модели, переключение sidebar.
 - `chat-sidebar` - список чатов, rename/delete/clear через `ManageChatService`.
-- `chat-input` - ввод, отправка и отмена активного запроса через `SendMessageService`.
+- `chat-input` - UI формы ввода: текст, submit по кнопке/Enter, cancel по кнопке stop; бизнес-логика отправки вынесена наружу через `@Output`.
 
 ### 6.4 `pages`
 
-- `new-chat.page` - сбрасывает активный чат и state сообщений, восстанавливает глобальную модель, стартует новый диалог.
+- `new-chat.page` - сбрасывает активный чат и state сообщений, восстанавливает глобальную модель, оркестрирует отправку первого сообщения через `SendMessageService` и переход в созданный чат.
 - `user-chat.page`:
 - активирует чат по route param;
 - загружает сообщения в `MessageStore` через `MessageStore.loadByChatId(...)`;
 - рендерит список из `MessageStore.messages()` (без подписки на repository events);
+- обрабатывает отправку/отмену запроса из `ChatInputComponent` через `SendMessageService`;
 - поддерживает retry последнего user-сообщения.
 
 ### 6.5 `app`
@@ -201,12 +202,13 @@ Dexie БД (`src/shared/db/chat.db.ts`, имя `ai-chat-db`):
 Отправка сообщения:
 
 1. Пользователь отправляет текст из `ChatInputComponent`.
-2. `SendMessageService.sendMessage(...)` валидирует вход и модель.
-3. Для нового диалога создается чат и активируется в `ChatStore`.
-4. Создаются user/assistant сообщения в `MessageRepository` и сразу upsert в `MessageStore`.
-5. Стартует socket stream (`chat:request`).
-6. Stream-дельты идут в `MessageStore`, затем батч-персистятся в Dexie и patch-ятся в `MessageStore`.
-7. По завершению/ошибке фиксируется финальный state чата и сообщения.
+2. Страница (`new-chat`/`user-chat`) получает событие и вызывает `SendMessageService.sendMessage(...)`.
+3. `SendMessageService.sendMessage(...)` валидирует вход и модель.
+4. Для нового диалога создается чат и активируется в `ChatStore`.
+5. Создаются user/assistant сообщения в `MessageRepository` и сразу upsert в `MessageStore`.
+6. Стартует socket stream (`chat:request`).
+7. Stream-дельты идут в `MessageStore`, затем батч-персистятся в Dexie и patch-ятся в `MessageStore`.
+8. По завершению/ошибке фиксируется финальный state чата и сообщения.
 
 Смена модели:
 
