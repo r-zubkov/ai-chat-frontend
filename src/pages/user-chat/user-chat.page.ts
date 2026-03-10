@@ -8,14 +8,13 @@
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
 import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
 import { ChatState, ChatStore, toChatId } from '@entities/chat';
 import { ChatMessage, ChatMessageRole, ChatMessageState, MessageStore } from '@entities/message';
 import { ManageChatService } from '@features/manage-chat';
 import { SendMessageEvent, SendMessageEventType, SendMessageService } from '@features/send-message';
 import { SelectModelService } from '@features/select-model';
-import { getCssValue, remToPx } from '@shared/helpers';
+import { ChatNavigationService, getCssValue, remToPx } from '@shared/helpers';
 import { MarkdownPipe, ModelLabelPipe } from '@shared';
 import { ChatInputComponent } from '@widgets/chat-input';
 import { AppUiService } from '@app/app-ui.service';
@@ -36,7 +35,7 @@ export class UserChatPage {
 
   private readonly sendMessageService = inject(SendMessageService);
   private readonly selectModel = inject(SelectModelService);
-  private readonly router = inject(Router);
+  private readonly chatNavigation = inject(ChatNavigationService);
   private readonly appUi = inject(AppUiService);
 
   @Input() set id(chatId: string) {
@@ -106,7 +105,7 @@ export class UserChatPage {
     }
 
     if (!messages.length) {
-      await this.router.navigate(['/chats', 'new']);
+      await this.chatNavigation.navigateToNewChat();
       return;
     }
 

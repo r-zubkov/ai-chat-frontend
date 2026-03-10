@@ -13,10 +13,11 @@ import { TUI_CONFIRM, TuiConfirmData } from '@taiga-ui/kit';
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import { TuiObscured } from '@taiga-ui/cdk/directives/obscured';
 import { TuiActiveZone } from '@taiga-ui/cdk/directives/active-zone';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { take } from 'rxjs';
 import { Chat, ChatState, ChatStore } from '@entities/chat';
 import { ManageChatService, ChangeChatNameModalComponent } from '@features/manage-chat';
+import { ChatNavigationService } from '@shared/helpers';
 import { ModelLabelPipe } from '@shared/ui';
 
 const TuiConfirmText: TuiConfirmData = {
@@ -52,7 +53,7 @@ export class ChatSidebarComponent {
 
   readonly chatStore = inject(ChatStore);
   readonly manageChat = inject(ManageChatService);
-  private readonly router = inject(Router);
+  private readonly chatNavigation = inject(ChatNavigationService);
 
   protected readonly ChatState = ChatState;
 
@@ -91,7 +92,7 @@ export class ChatSidebarComponent {
       .subscribe((confirm) => {
         if (confirm) {
           void this.manageChat.deleteChat(chat.id).finally(() => {
-            void this.router.navigate(['/chats', 'new']);
+            void this.chatNavigation.navigateToNewChat();
           });
         }
       });
@@ -103,7 +104,7 @@ export class ChatSidebarComponent {
       .subscribe((confirm) => {
         if (confirm) {
           void this.manageChat.deleteAllChats().finally(() => {
-            void this.router.navigate(['/chats', 'new']);
+            void this.chatNavigation.navigateToNewChat();
           });
         }
       });
