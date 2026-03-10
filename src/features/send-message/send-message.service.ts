@@ -2,12 +2,13 @@
 import {
   EMPTY,
   Observable,
+  ReplaySubject,
   Subject,
   auditTime,
   catchError,
   concatMap,
-  finalize,
   from,
+  take,
   tap,
 } from 'rxjs';
 import { Chat, ChatId, ChatRepository, ChatState, ChatStore } from '@entities/chat';
@@ -134,10 +135,11 @@ export class SendMessageService {
         });
 
         let lastPersistedContent = '';
-        let terminalMessageState = ChatMessageState.COMPLETED;
 
         const persistQueue$ = new Subject<{ content: string; state?: ChatMessageState }>();
         const persistTick$ = new Subject<void>();
+        const persistQueueDrained$ = new ReplaySubject<void>(1);
+        let persistQueueClosed = false;
 
         persistQueue$
           .pipe(
@@ -162,21 +164,33 @@ export class SendMessageService {
               );
             }),
           )
-          .subscribe();
+          .subscribe({
+            complete: () => {
+              persistQueueDrained$.next();
+              persistQueueDrained$.complete();
+            },
+          });
 
-        persistTick$
+        const persistTickSubscription = persistTick$
           .pipe(
             auditTime(STREAM_PERSIST_INTERVAL),
             tap(() => {
               if (content === lastPersistedContent) return;
               persistQueue$.next({ content });
             }),
-            finalize(() => {
-              persistQueue$.next({ content, state: terminalMessageState });
-              persistQueue$.complete();
-            }),
           )
           .subscribe();
+
+        const flushFinalPersist = (state: ChatMessageState, onDrained: () => void): void => {
+          if (!persistQueueClosed) {
+            persistQueueClosed = true;
+            persistTickSubscription.unsubscribe();
+            persistQueue$.next({ content, state });
+            persistQueue$.complete();
+          }
+
+          persistQueueDrained$.pipe(take(1)).subscribe(() => onDrained());
+        };
 
         stream$
           .pipe(
@@ -185,43 +199,39 @@ export class SendMessageService {
               this.messageStore.set(assistantMessage.id, content);
               persistTick$.next();
             }),
-            tap({
-              error: () => {
-                terminalMessageState = ChatMessageState.ERROR;
-              },
-            }),
-            finalize(() => {
-              persistTick$.complete();
-            }),
           )
           .subscribe({
             error: (err: unknown) => {
-              void this.updateChat(chat as Chat, {
-                model,
-                state: ChatState.ERROR,
-                currentRequestId: null,
+              flushFinalPersist(ChatMessageState.ERROR, () => {
+                void this.updateChat(chat as Chat, {
+                  model,
+                  state: ChatState.ERROR,
+                  currentRequestId: null,
+                });
+                events$.error(err);
               });
-              events$.error(err);
             },
             complete: () => {
-              void this.updateChat(chat as Chat, {
-                model,
-                state: ChatState.IDLE,
-                currentRequestId: null,
-              });
+              flushFinalPersist(ChatMessageState.COMPLETED, () => {
+                void this.updateChat(chat as Chat, {
+                  model,
+                  state: ChatState.IDLE,
+                  currentRequestId: null,
+                });
 
-              const finalAssistantMessage: ChatMessage = {
-                ...assistantMessage,
-                content,
-                state: ChatMessageState.COMPLETED,
-              };
+                const finalAssistantMessage: ChatMessage = {
+                  ...assistantMessage,
+                  content,
+                  state: ChatMessageState.COMPLETED,
+                };
 
-              events$.next({
-                type: SendMessageEventType.FINISHED,
-                chatId: activeChatId,
-                assistantMessage: finalAssistantMessage,
+                events$.next({
+                  type: SendMessageEventType.FINISHED,
+                  chatId: activeChatId,
+                  assistantMessage: finalAssistantMessage,
+                });
+                events$.complete();
               });
-              events$.complete();
             },
           });
       } catch (err: unknown) {
