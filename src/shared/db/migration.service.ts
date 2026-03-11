@@ -96,7 +96,7 @@ export class MigrationService {
 
     console.info('[migration] mapping strategy', {
       chatIteration: 'reverse-full-pass-no-limit',
-      messageIteration: 'reverse-full-pass-no-limit',
+      messageIteration: 'reverse-full-pass-no-limit-with-desc-sequel-id',
     });
 
     console.info('[migration] prepared payload', {
@@ -293,7 +293,11 @@ export class MigrationService {
       };
       chats.push(chat);
 
-      let sequelId = 0;
+      let sequelId =
+        rawMessages.reduce((count, rawMessage) => {
+          const messageId = this.readString((rawMessage as LegacyChatMessage)?.id);
+          return messageId ? count + 1 : count;
+        }, 0) - 1;
 
       for (let messageIndex = rawMessages.length - 1; messageIndex >= 0; messageIndex -= 1) {
         const rawMessage = rawMessages[messageIndex] as LegacyChatMessage;
@@ -314,7 +318,7 @@ export class MigrationService {
           timestamp: this.normalizeTimestamp(rawMessage.timestamp),
         });
 
-        sequelId += 1;
+        sequelId -= 1;
       }
     }
 
