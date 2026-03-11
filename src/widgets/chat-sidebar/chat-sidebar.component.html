@@ -48,19 +48,20 @@
             <tui-icon icon="@tui.ellipsis-vertical" [style.font-size.rem]="1" />
 
             <ng-template #dropdownItemOptionsContent>
-              <tui-data-list>
-                <button tuiOption type="button" (click)="handleRenameChat(chat)">
+              <tui-data-list class="action-list--compact-spacing">
+                <button tuiOption new type="button" (click)="handleRenameChat(chat)">
                   <tui-icon icon="@tui.pencil" [style.font-size.rem]="1" />
-                  <span class="ml-2">Переименовать</span>
+                  <span>Переименовать</span>
                 </button>
                 <button
                   class="tui-text-danger"
                   tuiOption
+                  new
                   type="button"
                   (click)="handleDeleteChat(chat)"
                 >
                   <tui-icon icon="@tui.trash-2" [style.font-size.rem]="1" />
-                  <span class="ml-2">Удалить</span>
+                  <span>Удалить</span>
                 </button>
               </tui-data-list>
             </ng-template>

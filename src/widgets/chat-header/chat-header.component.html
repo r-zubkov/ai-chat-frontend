@@ -42,7 +42,7 @@
 <ng-template #dropdown>
   <tui-data-list>
     @for (model of selectModel.models; track model) {
-      <button tuiOption type="button" class="item gap-2" (click)="onClick(model.id)">
+      <button tuiOption new type="button" (click)="onClick(model.id)">
         {{ model.label }}
         @if (itemIsActive(model.id)) {
           <tui-icon icon="@tui.check" [style.font-size.rem]="1" />
