@@ -1,59 +1,95 @@
-# AiChat
+# AI Chat Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.10.
+Фронтенд-приложение для чата с AI: создание диалогов, выбор модели, потоковый ответ ассистента и локальное хранение истории.
 
-## Development server
+## Что умеет приложение
 
-To start a local development server, run:
+- Создавать новые диалоги и продолжать существующие.
+- Отправлять сообщения и получать потоковый ответ от сервера.
+- Выбирать модель AI для текущего чата и глобально.
+- Переименовывать/удалять чаты и очищать историю.
+- Хранить историю и настройки локально в IndexedDB.
 
-```bash
-ng serve
-```
+## Технологический стек
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- `Angular 21` (standalone components)
+- `TypeScript` (`strict`)
+- `Taiga UI` для интерфейса
+- `@ngrx/signals` + Angular Signals для состояния
+- `Dexie` + IndexedDB для локального хранения
+- `socket.io-client` как основной транспорт + HTTP fallback
+- `Less` для стилей
+- `ESLint` + `Prettier` + `Husky` для качества кода
 
-## Code scaffolding
+## Архитектура
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Проект организован по FSD-слоям:
 
-```bash
-ng generate component component-name
-```
+- `app` - bootstrap, роутинг, guard, app-level сервисы
+- `pages` - маршрутизируемые страницы
+- `widgets` - составные UI-блоки
+- `features` - пользовательские сценарии (orchestration)
+- `entities` - доменные модели, store и repository
+- `shared` - инфраструктура, утилиты, конфиги, общие UI-элементы
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Подробности: [ARCHITECTURE.md](./ARCHITECTURE.md) и [ANGULAR_FSD.md](./ANGULAR_FSD.md).
 
-```bash
-ng generate --help
-```
+## Быстрый старт
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+### 1. Установка зависимостей
 
 ```bash
-ng test
+npm install
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+### 2. Запуск в локальном окружении
 
 ```bash
-ng e2e
+npm start
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+После запуска приложение доступно по адресу: `http://localhost:4200`.
 
-## Additional Resources
+По умолчанию локальное окружение ожидает backend на `http://localhost:5000`.
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Основные команды
+
+```bash
+# локальная разработка
+npm start
+
+# сборка (local)
+npm run build
+
+# production-сборка
+npm run build:prod
+
+# линтинг
+npm run lint
+
+# форматирование
+npm run format
+npm run format:check
+
+# тесты
+npm run test
+```
+
+## Конфигурация окружений
+
+- `src/environments/environment.local.ts` - локальная разработка
+- `src/environments/environment.prod.ts` - production
+- `src/environments/environment.ts` - базовая конфигурация
+
+## Структура проекта
+
+```text
+src/
+  app/
+  pages/
+  widgets/
+  features/
+  entities/
+  shared/
+  environments/
+```
