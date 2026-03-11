@@ -59,6 +59,7 @@
     "@types/markdown-it": "^14.1.2",
     "angular-eslint": "^21.2.0",
     "eslint": "^9.39.3",
+    "eslint-plugin-boundaries": "^4.2.2",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "jasmine-core": "~5.9.0",

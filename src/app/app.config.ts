@@ -1,21 +1,20 @@
-import {
+﻿import {
   ApplicationConfig,
   inject,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
-
-import { routes } from './app.routes';
-import { LocalStorageMigrationService } from './services/local-storage-migration.service';
+import { MigrationService } from '@shared/db';
+import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withComponentInputBinding()),
+    provideRouter(appRoutes, withComponentInputBinding()),
     provideAppInitializer(() => {
-      const localStorageMigrationService = inject(LocalStorageMigrationService);
-      return localStorageMigrationService.migrateIfNeeded();
+      const migrationService = inject(MigrationService);
+      return migrationService.migrateIfNeeded();
     }),
   ],
 };

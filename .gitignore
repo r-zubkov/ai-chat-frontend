@@ -149,3 +149,5 @@ out-tsc/
 
 # local agent instructions
 AGENTS.md
+ARCHITECTURE.md
+ANGULAR_FSD.md
