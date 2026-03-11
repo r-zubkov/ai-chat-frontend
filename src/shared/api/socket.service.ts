@@ -27,7 +27,7 @@ export class SocketService {
   private initSocket(): void {
     this.socket = io(environment.apiUrl, {
       transports: ['websocket'],
-      path: '/api/socket.io',
+      path: environment.socketPath,
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: Infinity,
