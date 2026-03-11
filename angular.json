@@ -25,7 +25,7 @@
                 "glob": "**/*",
                 "input": "public"
               },
-	            {
+              {
                 "glob": "**/*",
                 "input": "node_modules/@taiga-ui/icons/src",
                 "output": "assets/taiga-ui/icons"
@@ -99,9 +99,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.less"
-            ]
+            "styles": ["src/styles.less"]
           }
         }
       }

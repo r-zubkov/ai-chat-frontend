@@ -1,12 +1,20 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
-
-import { routes } from './app.routes';
+﻿import {
+  ApplicationConfig,
+  inject,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { MigrationService } from '@shared/db';
+import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideZonelessChangeDetection(),
-    provideRouter(routes)
-  ]
+    provideRouter(appRoutes, withComponentInputBinding()),
+    provideAppInitializer(() => {
+      const migrationService = inject(MigrationService);
+      return migrationService.migrateIfNeeded();
+    }),
+  ],
 };

@@ -1,1 +1,0 @@
-export type ModelOption = { id: string; label: string };

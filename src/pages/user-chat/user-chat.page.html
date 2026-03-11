@@ -1,0 +1,61 @@
+﻿<div class="chat-list">
+  <tui-scrollbar>
+    <div class="flex flex-col items-center">
+      <div class="chat-messages flex flex-col flex-1 pt-6">
+        @for (msg of messageStore.messages(); let last = $last; track msg.id) {
+          <div
+            class="chat-message"
+            [attr.data-id]="msg.id"
+            [class.chat-message--user]="msg.role === ChatMessageRole.USER"
+            [class.chat-message--assistant]="msg.role === ChatMessageRole.ASSISTANT"
+          >
+            @if (msg.role === ChatMessageRole.ASSISTANT) {
+              <div class="chat-message__header opacity-60 mb-3">
+                AI • {{ msg.model | modelLabel }}
+              </div>
+            }
+
+            @if (msg.role === ChatMessageRole.USER) {
+              <div class="chat-message__content">{{ msg.content }}</div>
+            } @else if (msg.role === ChatMessageRole.ASSISTANT) {
+              <div
+                class="chat-message__content"
+                [innerHTML]="messageStore.get(msg.id) || msg.content | markdown"
+              ></div>
+            }
+
+            @if (last && chatStore.activeChat()?.state === ChatState.THINKING) {
+              <div class="chat-thinking mt-5">
+                <div class="thinking-loader"></div>
+              </div>
+            }
+          </div>
+        }
+
+        @if (chatStore.activeChat()?.state === ChatState.ERROR) {
+          <div class="chat-error flex flex-col items-start">
+            <div class="mb-4">Произошла ошибка</div>
+            <button
+              size="s"
+              tuiButton
+              iconStart="@tui.rotate-ccw"
+              type="button"
+              (click)="retryLasRequest()"
+            >
+              Повторить запрос
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </tui-scrollbar>
+</div>
+<div class="chat-input-wrapper">
+  <div class="chat-input">
+    <app-chat-input
+      [thinking]="chatStore.activeChat()?.state === ChatState.THINKING"
+      (sendMessage)="onSendMessage($event)"
+      (cancelRequest)="onCancelRequest()"
+    ></app-chat-input>
+  </div>
+</div>

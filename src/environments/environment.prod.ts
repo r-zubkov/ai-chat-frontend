@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://chat.my-local-stuff.ru',
+  apiUrl: '${API_URL}',
+  socketPath: '/api/socket.io',
 };

@@ -7,7 +7,12 @@
     "build": "ng build -c local",
     "build:prod": "ng build -c production",
     "watch": "ng build --watch -c local",
-    "test": "ng test"
+    "test": "ng test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "prepare": "husky"
   },
   "prettier": {
     "printWidth": 100,
@@ -22,6 +27,9 @@
     ]
   },
   "private": true,
+  "lint-staged": {
+    "*.{ts,html,js,json,css,scss,less,md,yml,yaml}": "prettier --write"
+  },
   "dependencies": {
     "@angular/common": "^21.0.6",
     "@angular/compiler": "^21.0.6",
@@ -29,11 +37,13 @@
     "@angular/forms": "^21.0.6",
     "@angular/platform-browser": "^21.0.6",
     "@angular/router": "^21.0.6",
+    "@ngrx/signals": "^21.0.1",
     "@taiga-ui/cdk": "^4.66.0",
     "@taiga-ui/core": "^4.66.0",
     "@taiga-ui/event-plugins": "^4.7.0",
     "@taiga-ui/icons": "^4.66.0",
     "@taiga-ui/kit": "^4.66.0",
+    "dexie": "^4.2.1",
     "highlight.js": "^11.11.1",
     "markdown-it": "^14.1.0",
     "rxjs": "~7.8.0",
@@ -44,8 +54,14 @@
     "@angular/build": "^21.0.4",
     "@angular/cli": "^21.0.4",
     "@angular/compiler-cli": "^21.0.6",
+    "@eslint/js": "^9.39.3",
     "@types/jasmine": "~5.1.0",
     "@types/markdown-it": "^14.1.2",
+    "angular-eslint": "^21.2.0",
+    "eslint": "^9.39.3",
+    "eslint-plugin-boundaries": "^4.2.2",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
     "jasmine-core": "~5.9.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
@@ -53,7 +69,10 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "less": "^4.2.0",
+    "lint-staged": "^16.3.1",
+    "prettier": "^3.8.1",
     "tailwindcss": "^3.4.13",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "typescript-eslint": "^8.56.1"
   }
 }

@@ -143,3 +143,11 @@ vite.config.ts.timestamp-*
 
 # vs code
 .vscode/
+
+#type script
+out-tsc/
+
+# local agent instructions
+AGENTS.md
+ARCHITECTURE.md
+ANGULAR_FSD.md

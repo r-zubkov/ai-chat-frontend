@@ -1,15 +1,15 @@
-<tui-root tuiTheme="dark">
-  <div class="app-root flex" [class.mobile]="appSerivce.isMobile()">
-    @if(appSerivce.sidebarOpen()) {
+﻿<tui-root tuiTheme="dark">
+  <div class="app-root flex" [class.mobile]="appUi.isMobile()">
+    @if (appUi.sidebarOpen()) {
       <aside class="sidebar">
-        <app-sidebar></app-sidebar>
+        <app-chat-sidebar></app-chat-sidebar>
       </aside>
     }
     <div class="app-body flex flex-1 flex-col">
-      <app-header></app-header>
+      <app-chat-header></app-chat-header>
 
       <main class="chat-container flex flex-1 justify-center">
-        <app-chat></app-chat>
+        <router-outlet></router-outlet>
       </main>
     </div>
   </div>

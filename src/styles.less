@@ -1,17 +1,18 @@
-@import "highlight.js/styles/github-dark.css";
+@import 'highlight.js/styles/github-dark.css';
 
-@import "styles/variables.less";
-@import "styles/utils.less";
-@import "styles/tui-utils.less";
+@import 'styles/variables.less';
+@import 'styles/utils.less';
+@import 'styles/tui-utils.less';
 
-@import "styles/modals.less";
+@import 'styles/modals.less';
+@import 'styles/dropdowns.less';
 
-@import "styles/markdown.less";
+@import 'styles/markdown.less';
 
 // variables
 :root {
   --header-height: var(--space-16);
-  
+
   --sidebar-desktop-max-width: 280px;
   --sidebar-mobile-max-width: 450px;
 
@@ -19,7 +20,9 @@
 
   --chat-input-height: 56px;
   --chat-input-wrapper-padding: var(--space-4);
-  --chat-input-wrapper-height: calc(var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2);
+  --chat-input-wrapper-height: calc(
+    var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2
+  );
   --chat-input-height: 56px;
 
   --chat-messages-gap: var(--space-6);
@@ -27,28 +30,30 @@
   --chat-messages-inner-padding: var(--space-3);
 
   --color-bg: #151823;
-  --color-bg-semi-subtle: #1D2133;
-  --color-bg-subtle: #23283B;
-  --color-bg-elevation: #2B3147;
-  
-  --color-bg-dark: #10121a; 
-  --color-bg-dark-subtle: #282a31; 
-  --color-bg-dark-elevation: #36383f; 
+  --color-bg-semi-subtle: #1d2133;
+  --color-bg-subtle: #23283b;
+  --color-bg-elevation: #2b3147;
+
+  --color-bg-dark: #10121a;
+  --color-bg-dark-subtle: #282a31;
+  --color-bg-dark-elevation: #36383f;
 
   --color-bg-user-msg: #1d2030;
 
   --color-bg-button-hover: #232839;
-  --color-bg-button-active: #292e42; 
+  --color-bg-button-active: #292e42;
   --color-bg-button-focus: #2e344b;
 }
 
 .mobile {
   --header-height: var(--space-14);
   --chat-input-wrapper-padding: var(--space-3);
-  --chat-input-wrapper-height: calc(var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2);
+  --chat-input-wrapper-height: calc(
+    var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2
+  );
 }
 
-[tuiTheme=dark] {
+[tuiTheme='dark'] {
   --tui-background-elevation-1: var(--color-bg-semi-subtle);
   --tui-background-elevation-2: var(--color-bg-subtle);
   --tui-background-elevation-3: var(--color-bg-elevation);
@@ -67,7 +72,9 @@
 }
 
 // common
-html, body, tui-root {
+html,
+body,
+tui-root {
   height: 100%;
   overflow: hidden;
 }

@@ -1,0 +1,1 @@
+﻿export const DEFAULT_CHAT_LIST_LIMIT = 50;
