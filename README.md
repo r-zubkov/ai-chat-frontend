@@ -32,8 +32,6 @@
 - `entities` - доменные модели, store и repository
 - `shared` - инфраструктура, утилиты, конфиги, общие UI-элементы
 
-Подробности: [ARCHITECTURE.md](./ARCHITECTURE.md) и [ANGULAR_FSD.md](./ANGULAR_FSD.md).
-
 ## Быстрый старт
 
 ### 1. Установка зависимостей
