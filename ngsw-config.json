@@ -15,13 +15,7 @@
       "installMode": "prefetch",
       "updateMode": "prefetch",
       "resources": {
-        "files": [
-          "/favicon.ico",
-          "/favicon.svg",
-          "/manifest.webmanifest",
-          "/icons/**",
-          "/assets/**"
-        ]
+        "files": ["/favicon.ico", "/favicon.svg", "/manifest.json", "/icons/**", "/assets/**"]
       }
     }
   ]
