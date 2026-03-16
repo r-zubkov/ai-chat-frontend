@@ -20,8 +20,10 @@
 
   --chat-input-height: 56px;
   --chat-input-wrapper-padding: var(--space-4);
+  --chat-input-bottom-offset: 0px;
   --chat-input-wrapper-height: calc(
-    var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2
+    var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2 +
+      var(--chat-input-bottom-offset)
   );
   --chat-input-height: 56px;
 
@@ -49,8 +51,16 @@
   --header-height: var(--space-14);
   --chat-input-wrapper-padding: var(--space-3);
   --chat-input-wrapper-height: calc(
-    var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2
+    var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2 +
+      var(--chat-input-bottom-offset)
   );
+}
+
+@media (display-mode: standalone) {
+  .mobile {
+    --chat-input-bottom-offset: var(--space-2);
+    --chat-input-bottom-offset: max(var(--space-2), env(safe-area-inset-bottom));
+  }
 }
 
 [tuiTheme='dark'] {
