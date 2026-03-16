@@ -11,6 +11,8 @@
 
 // variables
 :root {
+  --standalone-bottom-safe-offset: 0px;
+
   --header-height: var(--space-16);
 
   --sidebar-desktop-max-width: 280px;
@@ -20,10 +22,9 @@
 
   --chat-input-height: 56px;
   --chat-input-wrapper-padding: var(--space-4);
-  --chat-input-bottom-offset: 0px;
   --chat-input-wrapper-height: calc(
     var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2 +
-      var(--chat-input-bottom-offset)
+      var(--standalone-bottom-safe-offset)
   );
   --chat-input-height: 56px;
 
@@ -52,14 +53,14 @@
   --chat-input-wrapper-padding: var(--space-3);
   --chat-input-wrapper-height: calc(
     var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2 +
-      var(--chat-input-bottom-offset)
+      var(--standalone-bottom-safe-offset)
   );
 }
 
 @media (display-mode: standalone) {
   .mobile {
-    --chat-input-bottom-offset: var(--space-2);
-    --chat-input-bottom-offset: max(var(--space-2), env(safe-area-inset-bottom));
+    --standalone-bottom-safe-offset: var(--space-2);
+    --standalone-bottom-safe-offset: max(var(--space-2), env(safe-area-inset-bottom));
   }
 }
 
