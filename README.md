@@ -9,6 +9,7 @@
 - Выбирать модель AI для текущего чата и глобально.
 - Переименовывать/удалять чаты и очищать историю.
 - Хранить историю и настройки локально в IndexedDB.
+- Поддерживает PWA в production (manifest + Service Worker).
 
 ## Технологический стек
 
@@ -18,6 +19,7 @@
 - `@ngrx/signals` + Angular Signals для состояния
 - `Dexie` + IndexedDB для локального хранения
 - `socket.io-client` как основной транспорт + HTTP fallback
+- `PWA` (manifest + Service Worker в production)
 - `Less` для стилей
 - `ESLint` + `Prettier` + `Husky` для качества кода
 
