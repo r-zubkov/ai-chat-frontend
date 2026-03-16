@@ -18,7 +18,7 @@
 - `Taiga UI` для интерфейса
 - `@ngrx/signals` + Angular Signals для состояния
 - `Dexie` + IndexedDB для локального хранения
-- `socket.io-client` как основной транспорт + HTTP fallback
+- `socket.io-client` как основной транспорт
 - `PWA` (manifest + Service Worker)
 - `Less` для стилей
 - `ESLint` + `Prettier` + `Husky` для качества кода
