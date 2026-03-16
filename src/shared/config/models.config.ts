@@ -35,4 +35,4 @@ export const SYSTEM_PROMPT: string = `
   - Если задачу можно сделать по шагам — пронумеруй шаги.
 `;
 
-export const STREAM_PERSIST_INTERVAL: number = 5000;
+export const STREAM_PERSIST_INTERVAL: number = 3000;
