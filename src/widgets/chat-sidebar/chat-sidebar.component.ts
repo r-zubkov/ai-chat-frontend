@@ -42,7 +42,7 @@ const TuiConfirmText: TuiConfirmData = {
     ModelLabelPipe,
   ],
   templateUrl: './chat-sidebar.component.html',
-  styleUrls: ['./chat-sidebar.component.less'],
+  styleUrl: './chat-sidebar.component.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatSidebarComponent {

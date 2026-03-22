@@ -11,7 +11,7 @@ import { AppUiService } from '@app/app-ui.service';
   selector: 'app-chat-header',
   imports: [TuiChevron, TuiIcon, TuiLink, TuiDropdown, TuiDataList, RouterLink],
   templateUrl: './chat-header.component.html',
-  styleUrls: ['./chat-header.component.less'],
+  styleUrl: './chat-header.component.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatHeaderComponent {

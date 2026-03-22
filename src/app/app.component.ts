@@ -31,7 +31,7 @@ interface SelectItem {
     }),
   ],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.less'],
+  styleUrl: './app.component.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, OnDestroy {
