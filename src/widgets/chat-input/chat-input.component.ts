@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, EventEmitter, Output, input } from '@angular/core';
+﻿import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TuiButton, TuiTextfield } from '@taiga-ui/core';
 import { TuiTextarea } from '@taiga-ui/kit';
@@ -13,8 +13,8 @@ import { TuiTextarea } from '@taiga-ui/kit';
 export class ChatInputComponent {
   readonly thinking = input(false);
 
-  @Output() sendMessage = new EventEmitter<string>();
-  @Output() cancelRequest = new EventEmitter<void>();
+  readonly sendMessage = output<string>();
+  readonly cancelRequest = output<void>();
 
   protected readonly form = new FormGroup({
     message: new FormControl('', {
