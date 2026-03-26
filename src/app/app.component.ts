@@ -24,6 +24,7 @@ import { AppUiService } from './app-ui.service';
 })
 export class AppComponent implements OnInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
+  private lastObservedWidth?: number;
 
   readonly appUi = inject(AppUiService);
   private readonly appState = inject(AppStateService);
@@ -55,7 +56,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private observeWidthChange(): void {
     this.resizeObserver = new ResizeObserver((entries) => {
-      const width = entries[0].contentRect.width;
+      const entry = entries[0];
+      if (!entry) return;
+
+      const width = entry.contentRect.width;
+      if (width === this.lastObservedWidth) return;
+
+      this.lastObservedWidth = width;
       this.appUi.updateMobileState(width);
     });
 
@@ -65,5 +72,6 @@ export class AppComponent implements OnInit, OnDestroy {
   private cleanupResizeObserver(): void {
     this.resizeObserver?.disconnect();
     this.resizeObserver = undefined;
+    this.lastObservedWidth = undefined;
   }
 }
