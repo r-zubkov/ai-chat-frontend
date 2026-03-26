@@ -16,31 +16,35 @@
             }
 
             @if (msg.role === ChatMessageRole.USER) {
-              <div class="chat-message__content">{{ msg.content }}</div>
+              <div class="chat-message__body">
+                <div class="chat-message__bubble chat-message__bubble--user">{{ msg.content }}</div>
 
-              <div class="chat-message__actions chat-message__actions--user">
-                <app-copy-msg-button
-                  [text]="msg.content"
-                  hint="Скопировать"
-                  copiedHint="Скопировано"
-                ></app-copy-msg-button>
-              </div>
-            } @else if (msg.role === ChatMessageRole.ASSISTANT) {
-              <div
-                class="chat-message__content"
-                [innerHTML]="messageStore.get(msg.id) || msg.content | markdown"
-              ></div>
-
-              @if (msg.content.length) {
-                <div class="chat-message__actions chat-message__actions--assistant">
+                <div class="chat-message__actions chat-message__actions--user">
                   <app-copy-msg-button
                     [text]="msg.content"
-                    [richText]="true"
                     hint="Скопировать"
                     copiedHint="Скопировано"
                   ></app-copy-msg-button>
                 </div>
-              }
+              </div>
+            } @else if (msg.role === ChatMessageRole.ASSISTANT) {
+              <div class="chat-message__body">
+                <div
+                  class="chat-message__bubble chat-message__bubble--assistant"
+                  [innerHTML]="messageStore.get(msg.id) || msg.content | markdown"
+                ></div>
+
+                @if (msg.content.length) {
+                  <div class="chat-message__actions chat-message__actions--assistant">
+                    <app-copy-msg-button
+                      [text]="msg.content"
+                      [richText]="true"
+                      hint="Скопировать"
+                      copiedHint="Скопировано"
+                    ></app-copy-msg-button>
+                  </div>
+                }
+              </div>
             }
 
             @if (last && chatStore.activeChat()?.state === ChatState.THINKING) {
