@@ -45,9 +45,14 @@
 }
 
 .chat-message__actions--user {
+  justify-content: flex-end;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease-in-out;
+}
+
+.chat-message__actions--assistant {
+  justify-content: flex-start;
 }
 
 .chat-message--user:hover .chat-message__actions--user {

@@ -8,7 +8,7 @@
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TuiButton, TuiIcon, TuiScrollbar } from '@taiga-ui/core';
+import { TuiButton, TuiHint, TuiIcon, TuiScrollbar } from '@taiga-ui/core';
 import { ChatState, ChatStore, toChatId } from '@entities/chat';
 import { ChatMessage, ChatMessageRole, ChatMessageState, MessageStore } from '@entities/message';
 import { ManageChatService } from '@features/manage-chat';
@@ -21,7 +21,15 @@ import { AppUiService } from '@app/app-ui.service';
 
 @Component({
   selector: 'app-user-chat-page',
-  imports: [MarkdownPipe, TuiScrollbar, TuiButton, TuiIcon, ChatInputComponent, ModelLabelPipe],
+  imports: [
+    MarkdownPipe,
+    TuiScrollbar,
+    TuiButton,
+    TuiIcon,
+    TuiHint,
+    ChatInputComponent,
+    ModelLabelPipe,
+  ],
   templateUrl: './user-chat.page.html',
   styleUrl: './user-chat.page.less',
   changeDetection: ChangeDetectionStrategy.OnPush,

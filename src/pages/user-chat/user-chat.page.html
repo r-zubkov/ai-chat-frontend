@@ -22,7 +22,10 @@
                 <button
                   class="chat-message__action-btn"
                   type="button"
-                  aria-label="Копировать сообщение"
+                  aria-label="Скопировать"
+                  tuiHint="Скопировать"
+                  tuiHintAppearance="message"
+                  tuiHintDirection="bottom"
                   (click)="copyMessage(msg)"
                 >
                   <tui-icon icon="@tui.copy" [style.font-size.rem]="0.9" />
@@ -39,7 +42,10 @@
                   <button
                     class="chat-message__action-btn"
                     type="button"
-                    aria-label="Копировать ответ"
+                    aria-label="Скопировать"
+                    tuiHint="Скопировать"
+                    tuiHintAppearance="message"
+                    tuiHintDirection="bottom"
                     (click)="copyMessage(msg)"
                   >
                     <tui-icon icon="@tui.copy" [style.font-size.rem]="0.9" />
