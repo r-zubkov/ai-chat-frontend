@@ -22,10 +22,8 @@
 
   --chat-input-height: 56px;
   --chat-input-wrapper-padding: var(--space-4);
-  --chat-input-wrapper-height: calc(
-    var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2 +
-      var(--standalone-bottom-safe-offset)
-  );
+  --chat-input-bottom-offset: calc(var(--chat-input-wrapper-padding) * 2);
+  --chat-input-wrapper-height: calc(var(--chat-input-height) + var(--chat-input-bottom-offset));
   --chat-input-height: 56px;
 
   --chat-messages-gap: var(--space-6);
@@ -57,16 +55,17 @@
 .mobile {
   --header-height: var(--space-14);
   --chat-input-wrapper-padding: var(--space-3);
-  --chat-input-wrapper-height: calc(
-    var(--chat-input-height) + var(--chat-input-wrapper-padding) * 2 +
-      var(--standalone-bottom-safe-offset)
-  );
+  --chat-input-bottom-offset: calc(var(--chat-input-wrapper-padding) * 2);
+  --chat-input-wrapper-height: calc(var(--chat-input-height) + var(--chat-input-bottom-offset));
 }
 
 @media (display-mode: standalone) {
   .mobile {
-    --standalone-bottom-safe-offset: var(--space-2);
-    --standalone-bottom-safe-offset: max(var(--space-2), env(safe-area-inset-bottom));
+    --standalone-bottom-safe-offset: env(safe-area-inset-bottom, 0px);
+    --chat-input-bottom-offset: max(
+      calc(var(--chat-input-wrapper-padding) * 2),
+      var(--standalone-bottom-safe-offset)
+    );
   }
 }
 
