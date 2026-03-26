@@ -1,0 +1,11 @@
+<button
+  class="copy-msg-button"
+  type="button"
+  [attr.aria-label]="hintText()"
+  [tuiHint]="hintText()"
+  tuiHintAppearance="message"
+  tuiHintDirection="bottom"
+  (click)="copyText()"
+>
+  <tui-icon [icon]="icon()" [style.font-size.rem]="0.9" />
+</button>

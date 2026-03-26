@@ -18,3 +18,9 @@ tui-hint[data-appearance='message'] {
 tui-hint[data-appearance='message']::before {
   content: none;
 }
+
+@media (hover: none), (pointer: coarse) {
+  tui-hint[data-appearance='message'] {
+    display: none;
+  }
+}

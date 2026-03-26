@@ -19,21 +19,11 @@
               <div class="chat-message__content">{{ msg.content }}</div>
 
               <div class="chat-message__actions chat-message__actions--user">
-                <button
-                  class="chat-message__action-btn"
-                  type="button"
-                  aria-label="Скопировать"
-                  [class.chat-message__action-btn--success]="isMessageCopied(msg.id)"
-                  [tuiHint]="getCopyHint(msg.id)"
-                  tuiHintAppearance="message"
-                  tuiHintDirection="bottom"
-                  (click)="copyMessage(msg)"
-                >
-                  <tui-icon
-                    [icon]="isMessageCopied(msg.id) ? '@tui.check' : '@tui.copy'"
-                    [style.font-size.rem]="0.9"
-                  />
-                </button>
+                <app-copy-msg-button
+                  [text]="msg.content"
+                  hint="Скопировать"
+                  copiedHint="Скопировано"
+                ></app-copy-msg-button>
               </div>
             } @else if (msg.role === ChatMessageRole.ASSISTANT) {
               <div
@@ -41,23 +31,14 @@
                 [innerHTML]="messageStore.get(msg.id) || msg.content | markdown"
               ></div>
 
-              @if (canShowAssistantActions(msg)) {
+              @if (msg.content.length) {
                 <div class="chat-message__actions chat-message__actions--assistant">
-                  <button
-                    class="chat-message__action-btn"
-                    type="button"
-                    aria-label="Скопировать"
-                    [class.chat-message__action-btn--success]="isMessageCopied(msg.id)"
-                    [tuiHint]="getCopyHint(msg.id)"
-                    tuiHintAppearance="message"
-                    tuiHintDirection="bottom"
-                    (click)="copyMessage(msg)"
-                  >
-                    <tui-icon
-                      [icon]="isMessageCopied(msg.id) ? '@tui.check' : '@tui.copy'"
-                      [style.font-size.rem]="0.9"
-                    />
-                  </button>
+                  <app-copy-msg-button
+                    [text]="msg.content"
+                    [richText]="true"
+                    hint="Скопировать"
+                    copiedHint="Скопировано"
+                  ></app-copy-msg-button>
                 </div>
               }
             }
