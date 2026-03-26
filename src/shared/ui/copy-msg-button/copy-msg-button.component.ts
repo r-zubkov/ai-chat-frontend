@@ -8,6 +8,11 @@
   signal,
 } from '@angular/core';
 import { TuiHint, TuiIcon } from '@taiga-ui/core';
+import {
+  copyHtmlToClipboard,
+  copyPlainTextToClipboard,
+  extractPlainTextFromHtml,
+} from '../../helpers';
 import { MarkdownService } from '../markdown';
 
 @Component({
@@ -46,7 +51,7 @@ export class CopyMsgButtonComponent implements OnDestroy {
     const text = this.text();
     const copied = this.richText()
       ? await this.copyRichText(text)
-      : await this.copyPlainTextToClipboard(text);
+      : await copyPlainTextToClipboard(text);
 
     if (!copied) {
       return;
@@ -65,55 +70,9 @@ export class CopyMsgButtonComponent implements OnDestroy {
   }
 
   private async copyRichText(rawText: string): Promise<boolean> {
-    if (typeof navigator === 'undefined' || !navigator.clipboard) {
-      return false;
-    }
-
     const html = this.markdown.render(rawText);
-    const plainText = this.extractPlainTextFromHtml(html);
-    const canWriteHtml =
-      typeof ClipboardItem !== 'undefined' && typeof navigator.clipboard.write === 'function';
+    const plainText = extractPlainTextFromHtml(html);
 
-    if (canWriteHtml) {
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            'text/html': new Blob([html], { type: 'text/html' }),
-            'text/plain': new Blob([plainText], { type: 'text/plain' }),
-          }),
-        ]);
-
-        return true;
-      } catch (error) {
-        console.error('Error copying rich message:', error);
-      }
-    }
-
-    return this.copyPlainTextToClipboard(plainText);
-  }
-
-  private async copyPlainTextToClipboard(text: string): Promise<boolean> {
-    if (typeof navigator === 'undefined' || !navigator.clipboard) {
-      return false;
-    }
-
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch (error) {
-      console.error('Error copying message:', error);
-      return false;
-    }
-  }
-
-  private extractPlainTextFromHtml(html: string): string {
-    if (typeof document === 'undefined') {
-      return '';
-    }
-
-    const parser = document.createElement('div');
-    parser.innerHTML = html;
-
-    return parser.innerText || parser.textContent || '';
+    return copyHtmlToClipboard(html, plainText);
   }
 }
