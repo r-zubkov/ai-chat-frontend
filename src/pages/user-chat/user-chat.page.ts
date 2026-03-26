@@ -39,11 +39,17 @@ export class UserChatPage {
   private readonly chatNavigation = inject(ChatNavigationService);
   private readonly appUi = inject(AppUiService);
 
-  readonly id = input.required<string>();
+  readonly id = input('');
 
   constructor() {
     effect(() => {
-      this.handleChatId(this.id());
+      const chatId = this.id();
+      if (!chatId) {
+        this.handleEmptyId();
+        return;
+      }
+
+      this.handleChatId(chatId);
     });
   }
 
@@ -78,6 +84,10 @@ export class UserChatPage {
     if (event.type === SendMessageEventType.SENT) {
       setTimeout(() => this.scrollToBottom('smooth'), 50);
     }
+  }
+
+  private handleEmptyId(): void {
+    this.messageStore.clearMessages();
   }
 
   private handleChatId(chatId: string): void {
