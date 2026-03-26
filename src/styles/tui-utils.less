@@ -1,3 +1,26 @@
 .tui-text-danger {
   color: var(--tui-status-negative) !important;
 }
+
+tui-hint[data-appearance='message'] {
+  max-inline-size: 12rem;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-button-hover);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+tui-hint[data-appearance='message']::before {
+  content: none;
+}
+
+@media (hover: none), (pointer: coarse) {
+  tui-hint[data-appearance='message'] {
+    display: none;
+  }
+}

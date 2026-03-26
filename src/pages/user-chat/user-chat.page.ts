@@ -10,18 +10,25 @@
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
 import { ChatState, ChatStore, toChatId } from '@entities/chat';
-import { ChatMessage, ChatMessageRole, ChatMessageState, MessageStore } from '@entities/message';
+import { ChatMessage, ChatMessageRole, MessageStore } from '@entities/message';
 import { ManageChatService } from '@features/manage-chat';
 import { SendMessageEvent, SendMessageEventType, SendMessageService } from '@features/send-message';
 import { SelectModelService } from '@features/select-model';
 import { ChatNavigationService, getCssValue, remToPx } from '@shared/helpers';
-import { MarkdownPipe, ModelLabelPipe } from '@shared';
+import { CopyMsgButtonComponent, MarkdownPipe, ModelLabelPipe } from '@shared';
 import { ChatInputComponent } from '@widgets/chat-input';
 import { AppUiService } from '@app/app-ui.service';
 
 @Component({
   selector: 'app-user-chat-page',
-  imports: [MarkdownPipe, TuiScrollbar, TuiButton, ChatInputComponent, ModelLabelPipe],
+  imports: [
+    MarkdownPipe,
+    TuiScrollbar,
+    TuiButton,
+    CopyMsgButtonComponent,
+    ChatInputComponent,
+    ModelLabelPipe,
+  ],
   templateUrl: './user-chat.page.html',
   styleUrl: './user-chat.page.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,7 +57,6 @@ export class UserChatPage {
   private readonly scrollBar?: ElementRef<HTMLElement>;
 
   protected readonly ChatState = ChatState;
-  protected readonly ChatMessageState = ChatMessageState;
   protected readonly ChatMessageRole = ChatMessageRole;
 
   protected onSendMessage(text: string): void {
