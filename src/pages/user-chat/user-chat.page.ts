@@ -3,9 +3,8 @@
   Component,
   DestroyRef,
   ElementRef,
+  Input,
   ViewChild,
-  effect,
-  input,
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -39,18 +38,12 @@ export class UserChatPage {
   private readonly chatNavigation = inject(ChatNavigationService);
   private readonly appUi = inject(AppUiService);
 
-  readonly id = input('');
-
-  constructor() {
-    effect(() => {
-      const chatId = this.id();
-      if (!chatId) {
-        this.handleEmptyId();
-        return;
-      }
-
-      this.handleChatId(chatId);
-    });
+  @Input() set id(chatId: string) {
+    const activeId = toChatId(chatId);
+    this.chatStore.setActive(activeId);
+    this.selectModel.syncCurrentModelForChat(activeId);
+    this.appUi.closeSidebarOnMobile();
+    void this.loadMessages(activeId, 'instant');
   }
 
   @ViewChild(TuiScrollbar, { read: ElementRef })
@@ -84,18 +77,6 @@ export class UserChatPage {
     if (event.type === SendMessageEventType.SENT) {
       setTimeout(() => this.scrollToBottom('smooth'), 50);
     }
-  }
-
-  private handleEmptyId(): void {
-    this.messageStore.clearMessages();
-  }
-
-  private handleChatId(chatId: string): void {
-    const activeId = toChatId(chatId);
-    this.chatStore.setActive(activeId);
-    this.selectModel.syncCurrentModelForChat(activeId);
-    this.appUi.closeSidebarOnMobile();
-    void this.loadMessages(activeId, 'instant');
   }
 
   private send(text: string, messageHistory: ChatMessage[]): void {
