@@ -6,6 +6,7 @@
   Input,
   ViewChild,
   inject,
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TuiButton, TuiHint, TuiIcon, TuiScrollbar } from '@taiga-ui/core';
@@ -35,6 +36,10 @@ import { AppUiService } from '@app/app-ui.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserChatPage {
+  private readonly copySuccessDurationMs = 1500;
+  private readonly copiedMessageIds = signal<Set<ChatMessage['id']>>(new Set());
+  private readonly copyResetTimers = new Map<ChatMessage['id'], ReturnType<typeof setTimeout>>();
+
   private readonly destroyRef = inject(DestroyRef);
 
   readonly chatStore = inject(ChatStore);
@@ -46,6 +51,10 @@ export class UserChatPage {
   private readonly chatNavigation = inject(ChatNavigationService);
   private readonly appUi = inject(AppUiService);
   private readonly markdown = inject(MarkdownService);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.clearCopyTimers());
+  }
 
   @Input() set id(chatId: string) {
     const activeId = toChatId(chatId);
@@ -95,21 +104,30 @@ export class UserChatPage {
     );
   }
 
+  protected isMessageCopied(messageId: ChatMessage['id']): boolean {
+    return this.copiedMessageIds().has(messageId);
+  }
+
   protected async copyMessage(message: ChatMessage): Promise<void> {
+    let copied = false;
+
     if (message.role === ChatMessageRole.USER) {
-      await this.copyTextToClipboard(message.content);
-      return;
+      copied = await this.copyTextToClipboard(message.content);
+    } else {
+      if (!this.canShowAssistantActions(message)) {
+        return;
+      }
+
+      const content = this.getAssistantMessageContent(message);
+      const html = this.markdown.render(content);
+      const plainText = this.extractPlainTextFromHtml(html);
+
+      copied = await this.copyAssistantMessage(html, plainText);
     }
 
-    if (!this.canShowAssistantActions(message)) {
-      return;
+    if (copied) {
+      this.markMessageCopied(message.id);
     }
-
-    const content = this.getAssistantMessageContent(message);
-    const html = this.markdown.render(content);
-    const plainText = this.extractPlainTextFromHtml(html);
-
-    await this.copyAssistantMessage(html, plainText);
   }
 
   private send(text: string, messageHistory: ChatMessage[]): void {
@@ -198,9 +216,9 @@ export class UserChatPage {
     return parser.innerText || parser.textContent || '';
   }
 
-  private async copyAssistantMessage(html: string, plainText: string): Promise<void> {
+  private async copyAssistantMessage(html: string, plainText: string): Promise<boolean> {
     if (typeof navigator === 'undefined' || !navigator.clipboard) {
-      return;
+      return false;
     }
 
     const safePlainText = plainText ?? '';
@@ -215,24 +233,54 @@ export class UserChatPage {
             'text/plain': new Blob([safePlainText], { type: 'text/plain' }),
           }),
         ]);
-        return;
+        return true;
       } catch (error) {
         console.error('Error copying rich message:', error);
       }
     }
 
-    await this.copyTextToClipboard(safePlainText);
+    return this.copyTextToClipboard(safePlainText);
   }
 
-  private async copyTextToClipboard(text: string): Promise<void> {
+  private async copyTextToClipboard(text: string): Promise<boolean> {
     if (typeof navigator === 'undefined' || !navigator.clipboard) {
-      return;
+      return false;
     }
 
     try {
       await navigator.clipboard.writeText(text);
+      return true;
     } catch (error) {
       console.error('Error copying message:', error);
+      return false;
     }
+  }
+
+  private markMessageCopied(messageId: ChatMessage['id']): void {
+    const nextCopiedIds = new Set(this.copiedMessageIds());
+    nextCopiedIds.add(messageId);
+    this.copiedMessageIds.set(nextCopiedIds);
+
+    const prevTimer = this.copyResetTimers.get(messageId);
+    if (prevTimer) {
+      clearTimeout(prevTimer);
+    }
+
+    const timer = setTimeout(() => {
+      const ids = new Set(this.copiedMessageIds());
+      ids.delete(messageId);
+      this.copiedMessageIds.set(ids);
+      this.copyResetTimers.delete(messageId);
+    }, this.copySuccessDurationMs);
+
+    this.copyResetTimers.set(messageId, timer);
+  }
+
+  private clearCopyTimers(): void {
+    for (const timer of this.copyResetTimers.values()) {
+      clearTimeout(timer);
+    }
+
+    this.copyResetTimers.clear();
   }
 }

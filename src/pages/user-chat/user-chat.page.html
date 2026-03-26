@@ -23,12 +23,16 @@
                   class="chat-message__action-btn"
                   type="button"
                   aria-label="Скопировать"
-                  tuiHint="Скопировать"
+                  [class.chat-message__action-btn--success]="isMessageCopied(msg.id)"
+                  [tuiHint]="isMessageCopied(msg.id) ? 'Скопировано' : 'Скопировать'"
                   tuiHintAppearance="message"
                   tuiHintDirection="bottom"
                   (click)="copyMessage(msg)"
                 >
-                  <tui-icon icon="@tui.copy" [style.font-size.rem]="0.9" />
+                  <tui-icon
+                    [icon]="isMessageCopied(msg.id) ? '@tui.check' : '@tui.copy'"
+                    [style.font-size.rem]="0.9"
+                  />
                 </button>
               </div>
             } @else if (msg.role === ChatMessageRole.ASSISTANT) {
@@ -43,12 +47,16 @@
                     class="chat-message__action-btn"
                     type="button"
                     aria-label="Скопировать"
-                    tuiHint="Скопировать"
+                    [class.chat-message__action-btn--success]="isMessageCopied(msg.id)"
+                    [tuiHint]="isMessageCopied(msg.id) ? 'Скопировано' : 'Скопировать'"
                     tuiHintAppearance="message"
                     tuiHintDirection="bottom"
                     (click)="copyMessage(msg)"
                   >
-                    <tui-icon icon="@tui.copy" [style.font-size.rem]="0.9" />
+                    <tui-icon
+                      [icon]="isMessageCopied(msg.id) ? '@tui.check' : '@tui.copy'"
+                      [style.font-size.rem]="0.9"
+                    />
                   </button>
                 </div>
               }
