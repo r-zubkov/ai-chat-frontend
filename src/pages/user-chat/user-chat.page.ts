@@ -108,6 +108,14 @@ export class UserChatPage {
     return this.copiedMessageIds().has(messageId);
   }
 
+  protected getCopyHint(messageId: ChatMessage['id']): string | null {
+    if (this.appUi.isMobile()) {
+      return null;
+    }
+
+    return this.isMessageCopied(messageId) ? 'Скопировано' : 'Скопировать';
+  }
+
   protected async copyMessage(message: ChatMessage): Promise<void> {
     let copied = false;
 
