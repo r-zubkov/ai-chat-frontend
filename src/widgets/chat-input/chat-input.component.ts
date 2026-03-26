@@ -1,5 +1,6 @@
 ﻿import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { isMobileDevice } from '@shared/helpers';
 import { TuiButton, TuiTextfield } from '@taiga-ui/core';
 import { TuiTextarea } from '@taiga-ui/kit';
 
@@ -42,9 +43,9 @@ export class ChatInputComponent {
   protected onKeyDown(event: KeyboardEvent): void {
     if (event.isComposing) return;
 
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.send();
-    }
+    if (event.key !== 'Enter' || event.shiftKey || isMobileDevice()) return;
+
+    event.preventDefault();
+    this.send();
   }
 }
