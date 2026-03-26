@@ -8,20 +8,20 @@
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
+import { TuiButton, TuiIcon, TuiScrollbar } from '@taiga-ui/core';
 import { ChatState, ChatStore, toChatId } from '@entities/chat';
 import { ChatMessage, ChatMessageRole, ChatMessageState, MessageStore } from '@entities/message';
 import { ManageChatService } from '@features/manage-chat';
 import { SendMessageEvent, SendMessageEventType, SendMessageService } from '@features/send-message';
 import { SelectModelService } from '@features/select-model';
 import { ChatNavigationService, getCssValue, remToPx } from '@shared/helpers';
-import { MarkdownPipe, ModelLabelPipe } from '@shared';
+import { MarkdownPipe, MarkdownService, ModelLabelPipe } from '@shared';
 import { ChatInputComponent } from '@widgets/chat-input';
 import { AppUiService } from '@app/app-ui.service';
 
 @Component({
   selector: 'app-user-chat-page',
-  imports: [MarkdownPipe, TuiScrollbar, TuiButton, ChatInputComponent, ModelLabelPipe],
+  imports: [MarkdownPipe, TuiScrollbar, TuiButton, TuiIcon, ChatInputComponent, ModelLabelPipe],
   templateUrl: './user-chat.page.html',
   styleUrl: './user-chat.page.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +37,7 @@ export class UserChatPage {
   private readonly selectModel = inject(SelectModelService);
   private readonly chatNavigation = inject(ChatNavigationService);
   private readonly appUi = inject(AppUiService);
+  private readonly markdown = inject(MarkdownService);
 
   @Input() set id(chatId: string) {
     const activeId = toChatId(chatId);
@@ -77,6 +78,30 @@ export class UserChatPage {
     if (event.type === SendMessageEventType.SENT) {
       setTimeout(() => this.scrollToBottom('smooth'), 50);
     }
+  }
+
+  protected canShowAssistantActions(message: ChatMessage): boolean {
+    return (
+      message.role === ChatMessageRole.ASSISTANT &&
+      (message.state === ChatMessageState.COMPLETED || message.state === ChatMessageState.ERROR)
+    );
+  }
+
+  protected async copyMessage(message: ChatMessage): Promise<void> {
+    if (message.role === ChatMessageRole.USER) {
+      await this.copyTextToClipboard(message.content);
+      return;
+    }
+
+    if (!this.canShowAssistantActions(message)) {
+      return;
+    }
+
+    const content = this.getAssistantMessageContent(message);
+    const html = this.markdown.render(content);
+    const plainText = this.extractPlainTextFromHtml(html);
+
+    await this.copyAssistantMessage(html, plainText);
   }
 
   private send(text: string, messageHistory: ChatMessage[]): void {
@@ -148,5 +173,58 @@ export class UserChatPage {
       top,
       behavior,
     });
+  }
+
+  private getAssistantMessageContent(message: ChatMessage): string {
+    return this.messageStore.get(message.id) || message.content;
+  }
+
+  private extractPlainTextFromHtml(html: string): string {
+    if (typeof document === 'undefined') {
+      return '';
+    }
+
+    const parser = document.createElement('div');
+    parser.innerHTML = html;
+
+    return parser.innerText || parser.textContent || '';
+  }
+
+  private async copyAssistantMessage(html: string, plainText: string): Promise<void> {
+    if (typeof navigator === 'undefined' || !navigator.clipboard) {
+      return;
+    }
+
+    const safePlainText = plainText ?? '';
+    const canWriteHtml =
+      typeof ClipboardItem !== 'undefined' && typeof navigator.clipboard.write === 'function';
+
+    if (canWriteHtml) {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': new Blob([html], { type: 'text/html' }),
+            'text/plain': new Blob([safePlainText], { type: 'text/plain' }),
+          }),
+        ]);
+        return;
+      } catch (error) {
+        console.error('Error copying rich message:', error);
+      }
+    }
+
+    await this.copyTextToClipboard(safePlainText);
+  }
+
+  private async copyTextToClipboard(text: string): Promise<void> {
+    if (typeof navigator === 'undefined' || !navigator.clipboard) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (error) {
+      console.error('Error copying message:', error);
+    }
   }
 }

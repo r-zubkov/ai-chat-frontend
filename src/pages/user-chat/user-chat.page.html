@@ -17,11 +17,35 @@
 
             @if (msg.role === ChatMessageRole.USER) {
               <div class="chat-message__content">{{ msg.content }}</div>
+
+              <div class="chat-message__actions chat-message__actions--user">
+                <button
+                  class="chat-message__action-btn"
+                  type="button"
+                  aria-label="Копировать сообщение"
+                  (click)="copyMessage(msg)"
+                >
+                  <tui-icon icon="@tui.copy" [style.font-size.rem]="0.9" />
+                </button>
+              </div>
             } @else if (msg.role === ChatMessageRole.ASSISTANT) {
               <div
                 class="chat-message__content"
                 [innerHTML]="messageStore.get(msg.id) || msg.content | markdown"
               ></div>
+
+              @if (canShowAssistantActions(msg)) {
+                <div class="chat-message__actions chat-message__actions--assistant">
+                  <button
+                    class="chat-message__action-btn"
+                    type="button"
+                    aria-label="Копировать ответ"
+                    (click)="copyMessage(msg)"
+                  >
+                    <tui-icon icon="@tui.copy" [style.font-size.rem]="0.9" />
+                  </button>
+                </div>
+              }
             }
 
             @if (last && chatStore.activeChat()?.state === ChatState.THINKING) {
