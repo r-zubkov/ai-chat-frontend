@@ -5,10 +5,9 @@
   OnDestroy,
   OnInit,
   inject,
-  signal,
 } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { tuiItemsHandlersProvider, TuiRoot } from '@taiga-ui/core';
+import { TuiRoot } from '@taiga-ui/core';
 import { ChatStore } from '@entities/chat';
 import { SettingsStore } from '@entities/settings';
 import { SendMessageService } from '@features/send-message';
@@ -16,20 +15,9 @@ import { ChatHeaderComponent, ChatSidebarComponent } from '@widgets';
 import { AppStateService } from './app-state.service';
 import { AppUiService } from './app-ui.service';
 
-interface SelectItem {
-  readonly id: string | number;
-  readonly label: string;
-}
-
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, TuiRoot, ChatSidebarComponent, ChatHeaderComponent],
-  providers: [
-    tuiItemsHandlersProvider({
-      stringify: signal((x: SelectItem) => x.label),
-      identityMatcher: signal((a: SelectItem, b: SelectItem) => a.id === b.id),
-    }),
-  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
