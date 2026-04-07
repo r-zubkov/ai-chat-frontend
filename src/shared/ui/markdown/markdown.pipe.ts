@@ -10,6 +10,6 @@ export class MarkdownPipe implements PipeTransform {
   private readonly md = inject(MarkdownService);
 
   transform(value: string | null | undefined): string {
-    return this.md.render(value || '');
+    return this.md.renderForChat(value || '');
   }
 }

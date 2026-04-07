@@ -4,10 +4,25 @@ import hljs from 'highlight.js';
 
 @Injectable({ providedIn: 'root' })
 export class MarkdownService {
-  private md: MarkdownIt;
+  private readonly md: MarkdownIt;
+  private readonly mdWithCodeCopyButton: MarkdownIt;
+  private readonly codeCopyButtonText = 'Копировать';
 
   constructor() {
-    this.md = new MarkdownIt({
+    this.md = this.createMarkdownInstance(false);
+    this.mdWithCodeCopyButton = this.createMarkdownInstance(true);
+  }
+
+  render(src: string): string {
+    return this.md.render(src ?? '');
+  }
+
+  renderForChat(src: string): string {
+    return this.mdWithCodeCopyButton.render(src ?? '');
+  }
+
+  private createMarkdownInstance(withCodeCopyButton: boolean): MarkdownIt {
+    const markdown = new MarkdownIt({
       html: false,
       linkify: true,
       breaks: true,
@@ -15,22 +30,36 @@ export class MarkdownService {
         if (lang && hljs.getLanguage(lang)) {
           try {
             const { value } = hljs.highlight(str, { language: lang });
-            return `<pre><code class="hljs language-${lang}">${value}</code></pre>`;
+            return withCodeCopyButton
+              ? this.renderCodeBlockWithCopyButton(value, lang)
+              : this.renderCodeBlock(value, lang);
           } catch {
             // Переключение на автоопределение подсветки, если основной метод не сработал.
           }
         }
 
         const { value } = hljs.highlightAuto(str);
-        return `<pre><code class="hljs">${value}</code></pre>`;
+        return withCodeCopyButton
+          ? this.renderCodeBlockWithCopyButton(value)
+          : this.renderCodeBlock(value);
       },
     });
 
-    this.md.renderer.rules['table_open'] = () => '<div class="table-wrapper"><table>';
-    this.md.renderer.rules['table_close'] = () => '</table></div>';
+    markdown.renderer.rules['table_open'] = () => '<div class="table-wrapper"><table>';
+    markdown.renderer.rules['table_close'] = () => '</table></div>';
+
+    return markdown;
   }
 
-  render(src: string): string {
-    return this.md.render(src ?? '');
+  private renderCodeBlockWithCopyButton(code: string, lang?: string): string {
+    const languageClass = lang ? ` language-${lang}` : '';
+
+    return `<pre class="chat-code-block"><span class="chat-code-block__copy" role="button" tabindex="0" aria-label="${this.codeCopyButtonText}" title="${this.codeCopyButtonText}"></span><code class="hljs${languageClass}">${code}</code></pre>`;
+  }
+
+  private renderCodeBlock(code: string, lang?: string): string {
+    const languageClass = lang ? ` language-${lang}` : '';
+
+    return `<pre><code class="hljs${languageClass}">${code}</code></pre>`;
   }
 }

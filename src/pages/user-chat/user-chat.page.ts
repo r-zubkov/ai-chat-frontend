@@ -15,7 +15,7 @@ import { ManageChatService } from '@features/manage-chat';
 import { SendMessageEvent, SendMessageEventType, SendMessageService } from '@features/send-message';
 import { SelectModelService } from '@features/select-model';
 import { ChatNavigationService, getCssValue, remToPx } from '@shared/helpers';
-import { CopyMsgButtonComponent, MarkdownPipe, ModelLabelPipe } from '@shared';
+import { CopyTextButtonComponent, MarkdownPipe, ModelLabelPipe } from '@shared';
 import { ChatInputComponent } from '@widgets/chat-input';
 import { AppUiService } from '@app/app-ui.service';
 
@@ -25,7 +25,7 @@ import { AppUiService } from '@app/app-ui.service';
     MarkdownPipe,
     TuiScrollbar,
     TuiButton,
-    CopyMsgButtonComponent,
+    CopyTextButtonComponent,
     ChatInputComponent,
     ModelLabelPipe,
   ],
@@ -56,6 +56,7 @@ export class UserChatPage {
   @ViewChild(TuiScrollbar, { read: ElementRef })
   private readonly scrollBar?: ElementRef<HTMLElement>;
 
+  protected readonly copyTextButton = CopyTextButtonComponent;
   protected readonly ChatState = ChatState;
   protected readonly ChatMessageRole = ChatMessageRole;
 
