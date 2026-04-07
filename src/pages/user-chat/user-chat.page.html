@@ -31,8 +31,8 @@
               <div class="chat-message__body">
                 <div
                   class="chat-message__bubble chat-message__bubble--assistant"
-                  (click)="copyTextButton.onCodeBlockClick($event)"
-                  (keydown)="copyTextButton.onCodeBlockKeydown($event)"
+                  (click)="onCodeBlockCopyClick($event)"
+                  (keydown)="onCodeBlockCopyKeydown($event)"
                   [innerHTML]="messageStore.get(msg.id) || msg.content | markdown"
                 ></div>
 

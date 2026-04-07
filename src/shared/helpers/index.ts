@@ -10,3 +10,4 @@ export {
   copyPlainTextToClipboard,
   copyHtmlToClipboard,
 } from './clipboard';
+export { handleCodeBlockCopyClick, handleCodeBlockCopyKeydown } from './code-block-copy';
