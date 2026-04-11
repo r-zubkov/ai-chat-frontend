@@ -6,8 +6,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: var(--control-size-xs);
+  height: var(--control-size-xs);
   padding: 0;
   border: none;
   border-radius: var(--radius-md);
@@ -15,8 +15,8 @@
   color: rgba(255, 255, 255, 0.72);
   cursor: pointer;
   transition:
-    background-color 0.2s ease-in-out,
-    color 0.2s ease-in-out;
+    background-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
 }
 
 .copy-text-button:hover {

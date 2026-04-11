@@ -53,7 +53,7 @@
 
 .chat-message__actions {
   display: flex;
-  min-height: 30px;
+  min-height: var(--control-size-xs);
 }
 
 .chat-message__actions--user {
@@ -61,7 +61,7 @@
   align-self: flex-end;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease-in-out;
+  transition: opacity var(--duration-base) var(--ease-standard);
 }
 
 .chat-message__actions--assistant {
@@ -135,7 +135,7 @@
   max-width: clamp(
     0px,
     calc(100vw - var(--chat-messages-side-padding) * 2),
-    calc(var(--chat-max-width) + 2px)
+    calc(var(--chat-max-width) + var(--border-width-2))
   );
   min-width: 0;
   margin: auto;

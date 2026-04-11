@@ -21,8 +21,8 @@
   border-radius: var(--radius-lg);
   color: #ffffff;
   transition:
-    background 0.3s ease-in-out,
-    box-shadow 0.3s ease-in-out;
+    background var(--duration-slow) var(--ease-standard),
+    box-shadow var(--duration-slow) var(--ease-standard);
 
   &:hover,
   &:active,
@@ -61,14 +61,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 32px;
-  height: 32px;
+  width: var(--control-size-sm);
+  height: var(--control-size-sm);
   padding: 0;
   background: transparent;
   border: none;
   cursor: pointer;
   position: relative;
-  z-index: 10;
+  z-index: var(--z-control);
   transform: scale(0.67);
 }
 
@@ -76,11 +76,11 @@
 .burger-btn span::before,
 .burger-btn span::after {
   display: block;
-  width: 32px;
+  width: var(--control-size-sm);
   height: 3px;
   background-color: #ffffff;
   border-radius: 2px;
-  transition: all 0.2s ease-in-out;
+  transition: all var(--duration-base) var(--ease-standard);
   position: absolute;
 }
 
