@@ -18,24 +18,17 @@
   display: grid !important;
 }
 
-@grid-xs: 0;
-@grid-sm: 576px;
-@grid-md: 768px;
-@grid-lg: 992px;
-@grid-xl: 1200px;
-@grid-xxl: 1400px;
-
 .min-width-auto {
   min-width: auto;
 }
 .min-width-0 {
   min-width: 0;
 }
+.min-h-0 {
+  min-height: 0;
+}
 
 // flex
-.flex {
-  display: flex;
-}
 .inline-flex {
   display: inline-flex;
 }
@@ -210,6 +203,64 @@
   order: 12;
 }
 
+// position
+.relative {
+  position: relative;
+}
+.absolute {
+  position: absolute;
+}
+.fixed {
+  position: fixed;
+}
+.sticky {
+  position: sticky;
+}
+
+.inset-0 {
+  inset: 0;
+}
+.top-0 {
+  top: 0;
+}
+.right-0 {
+  right: 0;
+}
+.bottom-0 {
+  bottom: 0;
+}
+.left-0 {
+  left: 0;
+}
+
+// z-index
+.z-base {
+  z-index: var(--z-base);
+}
+.z-overlay {
+  z-index: var(--z-overlay);
+}
+.z-control {
+  z-index: var(--z-control);
+}
+
+// sizing
+.w-auto {
+  width: auto;
+}
+.w-full {
+  width: 100%;
+}
+.h-auto {
+  height: auto;
+}
+.h-full {
+  height: 100%;
+}
+.max-w-full {
+  max-width: 100%;
+}
+
 // fonts
 .text-xs {
   font-size: var(--text-xs);
@@ -302,6 +353,33 @@
 }
 .text-right {
   text-align: right;
+}
+
+// overflow
+.overflow-hidden {
+  overflow: hidden;
+}
+.overflow-auto {
+  overflow: auto;
+}
+.overflow-x-auto {
+  overflow-x: auto;
+}
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+// text overflow
+.text-ellipsis {
+  text-overflow: ellipsis;
+}
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 // spacing
@@ -958,6 +1036,52 @@
 }
 .rounded-full {
   border-radius: var(--radius-full);
+}
+
+// visual helpers
+.border {
+  border: var(--border-width-1) solid var(--tui-border-normal, rgba(255, 255, 255, 0.14));
+}
+.border-0 {
+  border: 0;
+}
+
+.shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+.shadow-md {
+  box-shadow: var(--shadow-md);
+}
+.shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+// interactivity
+.cursor-default {
+  cursor: default;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+.pointer-events-none {
+  pointer-events: none;
+}
+.pointer-events-auto {
+  pointer-events: auto;
+}
+.select-none {
+  user-select: none;
+}
+
+// transitions
+.transition-colors {
+  transition:
+    color var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard);
+}
+.transition-opacity {
+  transition: opacity var(--duration-base) var(--ease-standard);
 }
 
 // opacity

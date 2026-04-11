@@ -4,7 +4,7 @@
       <div class="chat-messages flex flex-col flex-1 pt-6">
         @for (msg of messageStore.messages(); let last = $last; track msg.id) {
           <div
-            class="chat-message"
+            class="chat-message max-w-full overflow-auto"
             [attr.data-id]="msg.id"
             [class.chat-message--user]="msg.role === ChatMessageRole.USER"
             [class.chat-message--assistant]="msg.role === ChatMessageRole.ASSISTANT"
@@ -16,10 +16,12 @@
             }
 
             @if (msg.role === ChatMessageRole.USER) {
-              <div class="chat-message__body">
+              <div class="chat-message__body flex flex-col gap-2">
                 <div class="chat-message__bubble chat-message__bubble--user">{{ msg.content }}</div>
 
-                <div class="chat-message__actions chat-message__actions--user">
+                <div
+                  class="chat-message__actions chat-message__actions--user flex pointer-events-none transition-opacity"
+                >
                   <app-copy-text-button
                     [text]="msg.content"
                     hint="Скопировать"
@@ -28,7 +30,7 @@
                 </div>
               </div>
             } @else if (msg.role === ChatMessageRole.ASSISTANT) {
-              <div class="chat-message__body">
+              <div class="chat-message__body flex flex-col gap-2">
                 <div
                   class="chat-message__bubble chat-message__bubble--assistant"
                   (click)="onCodeBlockCopyClick($event)"
@@ -37,7 +39,7 @@
                 ></div>
 
                 @if (msg.content.length) {
-                  <div class="chat-message__actions chat-message__actions--assistant">
+                  <div class="chat-message__actions chat-message__actions--assistant flex">
                     <app-copy-text-button
                       [text]="msg.content"
                       [richText]="true"
@@ -50,7 +52,7 @@
             }
 
             @if (last && chatStore.activeChat()?.state === ChatState.THINKING) {
-              <div class="chat-thinking mt-5">
+              <div class="chat-thinking mt-5 relative">
                 <div class="thinking-loader"></div>
               </div>
             }
@@ -75,8 +77,8 @@
     </div>
   </tui-scrollbar>
 </div>
-<div class="chat-input-wrapper">
-  <div class="chat-input">
+<div class="chat-input-wrapper relative">
+  <div class="chat-input absolute w-full">
     <app-chat-input
       [thinking]="chatStore.activeChat()?.state === ChatState.THINKING"
       (sendMessage)="onSendMessage($event)"

@@ -1,7 +1,3 @@
-.sidebar-root {
-  height: 100%;
-}
-
 .sidebar-list {
   display: flex;
   flex-direction: column;
@@ -83,19 +79,7 @@
   }
 }
 
-.sidebar-chat__title,
-.sidebar-chat__model {
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
 .sidebar-chat__link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-  flex: 1 1 auto;
   text-decoration: none;
 }
 
@@ -120,7 +104,6 @@
   border: none;
   background: transparent;
   padding: var(--space-0) var(--space-1);
-  cursor: pointer;
 }
 
 .sidebar-chat.sidebar-list__btn--inner-padding .sidebar-chat__action {
@@ -130,17 +113,14 @@
 .sidebar-chat:hover {
   .sidebar-chat__action {
     display: flex;
-    align-items: center;
   }
 }
 .sidebar-chat__action.dropdown-open {
   display: flex;
-  align-items: center;
 }
 
 :host-context(.mobile) .sidebar-chat .sidebar-chat__action {
   display: flex;
-  align-items: center;
 }
 
 .sidebar-chat__model {

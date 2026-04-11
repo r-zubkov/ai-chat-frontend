@@ -1,4 +1,4 @@
-﻿<div class="sidebar-root flex flex-col">
+﻿<div class="sidebar-root flex flex-col h-full">
   <div class="sidebar-list sidebar-header">
     <a
       class="sidebar-list__btn sidebar-action-btn sidebar-new-btn"
@@ -16,23 +16,26 @@
           class="sidebar-chat sidebar-list__btn sidebar-list__btn--inner-padding flex items-center items-stretch gap-3"
           [class.sidebar-list__btn--active]="chat.id === chatStore.activeChatId()"
         >
-          <a class="sidebar-chat__link" [routerLink]="['/chats', chat.id]">
+          <a
+            class="sidebar-chat__link flex items-center gap-3 min-width-0 flex-auto"
+            [routerLink]="['/chats', chat.id]"
+          >
             @if (chat.state === ChatState.THINKING) {
               <tui-loader [inheritColor]="true" />
             }
 
             <div class="min-width-0 flex-1">
-              <div class="sidebar-chat__title">
+              <div class="sidebar-chat__title truncate">
                 {{ chat.title }}
               </div>
-              <div class="sidebar-chat__model opacity-60">
+              <div class="sidebar-chat__model opacity-60 truncate">
                 {{ chat.lastUpdate | date: 'dd.MM.yy HH:mm' }} • {{ chat.model | modelLabel }}
               </div>
             </div>
           </a>
 
           <button
-            class="sidebar-chat__action"
+            class="sidebar-chat__action items-center cursor-pointer"
             type="button"
             [class.dropdown-open]="isItemOptionsDropdownOpen(chat.id)"
             tuiActiveZone
