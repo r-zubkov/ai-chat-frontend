@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
+import { escapeHtml } from '../../helpers';
+
+type ResolvedLanguage = {
+  key: string;
+  label: string;
+};
 
 @Injectable({ providedIn: 'root' })
 export class MarkdownService {
@@ -26,13 +32,15 @@ export class MarkdownService {
       html: false,
       linkify: true,
       breaks: true,
-      highlight: (str, lang) => {
-        if (lang && hljs.getLanguage(lang)) {
+      highlight: (str, langInfo) => {
+        const language = this.resolveLanguage(langInfo);
+
+        if (language) {
           try {
-            const { value } = hljs.highlight(str, { language: lang });
+            const { value } = hljs.highlight(str, { language: language.key });
             return withCodeCopyButton
-              ? this.renderCodeBlockWithCopyButton(value, lang)
-              : this.renderCodeBlock(value, lang);
+              ? this.renderCodeBlockWithCopyButton(value, language)
+              : this.renderCodeBlock(value, language.key);
           } catch {
             // Переключение на автоопределение подсветки, если основной метод не сработал.
           }
@@ -51,10 +59,30 @@ export class MarkdownService {
     return markdown;
   }
 
-  private renderCodeBlockWithCopyButton(code: string, lang?: string): string {
-    const languageClass = lang ? ` language-${lang}` : '';
+  private resolveLanguage(langInfo: string): ResolvedLanguage | null {
+    const languageKey = langInfo?.trim().split(/\s+/u)[0]?.toLowerCase();
+    if (!languageKey) {
+      return null;
+    }
 
-    return `<pre class="chat-code-block"><span class="chat-code-block__copy" role="button" tabindex="0" aria-label="${this.codeCopyButtonText}" title="${this.codeCopyButtonText}"></span><code class="hljs${languageClass}">${code}</code></pre>`;
+    const language = hljs.getLanguage(languageKey);
+    if (!language) {
+      return null;
+    }
+
+    return {
+      key: languageKey,
+      label: language.name ?? languageKey,
+    };
+  }
+
+  private renderCodeBlockWithCopyButton(code: string, language?: ResolvedLanguage): string {
+    const languageClass = language ? ` language-${language.key}` : '';
+    const languageLabel = language
+      ? `<span class="chat-code-block__language">${escapeHtml(language.label)}</span>`
+      : '';
+
+    return `<pre class="chat-code-block"><div class="chat-code-block__header"><span class="chat-code-block__meta"><span class="chat-code-block__icon" aria-hidden="true"></span>${languageLabel}</span><span class="chat-code-block__copy" role="button" tabindex="0" aria-label="${this.codeCopyButtonText}" title="${this.codeCopyButtonText}"></span></div><code class="hljs${languageClass}">${code}</code></pre>`;
   }
 
   private renderCodeBlock(code: string, lang?: string): string {
