@@ -15,7 +15,7 @@ export class MarkdownService {
   private readonly mdWithCodeCopyButton: MarkdownIt;
   private readonly codeCopyButtonText = 'Копировать';
   private readonly defaultCodeLanguageLabel = 'Code';
-  private readonly plainTextLanguageLabel = 'Текст';
+  private readonly plainTextLanguageLabel = 'Текстовый блок';
 
   constructor() {
     this.md = this.createMarkdownInstance(false);
