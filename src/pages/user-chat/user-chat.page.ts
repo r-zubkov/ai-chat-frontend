@@ -14,8 +14,14 @@ import { ChatMessage, ChatMessageRole, MessageStore } from '@entities/message';
 import { ManageChatService } from '@features/manage-chat';
 import { SendMessageEvent, SendMessageEventType, SendMessageService } from '@features/send-message';
 import { SelectModelService } from '@features/select-model';
-import { ChatNavigationService, getCssValue, remToPx } from '@shared/helpers';
-import { CopyMsgButtonComponent, MarkdownPipe, ModelLabelPipe } from '@shared';
+import {
+  ChatNavigationService,
+  getCssValue,
+  handleCodeBlockCopyClick,
+  handleCodeBlockCopyKeydown,
+  remToPx,
+} from '@shared/helpers';
+import { CopyTextButtonComponent, MarkdownPipe, ModelLabelPipe } from '@shared';
 import { ChatInputComponent } from '@widgets/chat-input';
 import { AppUiService } from '@app/app-ui.service';
 
@@ -25,7 +31,7 @@ import { AppUiService } from '@app/app-ui.service';
     MarkdownPipe,
     TuiScrollbar,
     TuiButton,
-    CopyMsgButtonComponent,
+    CopyTextButtonComponent,
     ChatInputComponent,
     ModelLabelPipe,
   ],
@@ -83,6 +89,14 @@ export class UserChatPage {
     if (event.type === SendMessageEventType.SENT) {
       setTimeout(() => this.scrollToBottom('smooth'), 50);
     }
+  }
+
+  protected onCodeBlockCopyClick(event: MouseEvent): void {
+    handleCodeBlockCopyClick(event);
+  }
+
+  protected onCodeBlockCopyKeydown(event: KeyboardEvent): void {
+    handleCodeBlockCopyKeydown(event);
   }
 
   private send(text: string, messageHistory: ChatMessage[]): void {

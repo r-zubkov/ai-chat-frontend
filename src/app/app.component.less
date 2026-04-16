@@ -11,7 +11,7 @@
   height: 100vh;
   height: 100dvh;
   width: var(--sidebar-desktop-max-width);
-  border-right: 2px solid rgba(255, 255, 255, 0.06);
+  border-right: var(--border-width-2) solid rgba(255, 255, 255, 0.06);
   background: var(--color-bg-dark);
   overflow: hidden;
 }
@@ -24,8 +24,8 @@
 .mobile .sidebar {
   position: fixed;
   left: 0;
-  top: calc(var(--header-height) - 1px);
-  z-index: 2;
+  top: calc(var(--header-height) - var(--border-width-1));
+  z-index: var(--z-overlay);
   height: calc(100vh - var(--header-height));
   height: calc(100dvh - var(--header-height));
   width: 100%;

@@ -1,7 +1,7 @@
 ﻿<header class="header flex items-center justify-between gap-4 px-4">
   @if (appUi.isMobile()) {
     <button
-      class="burger-btn"
+      class="burger-btn flex justify-center items-center cursor-pointer relative"
       aria-label="Меню"
       [class.open]="appUi.sidebarOpen()"
       (click)="toggleMenu()"
@@ -33,7 +33,11 @@
   </div>
 
   @if (appUi.isMobile()) {
-    <a class="header__new-chat" aria-label="Новый чат" [routerLink]="['/chats', 'new']">
+    <a
+      class="header__new-chat inline-flex items-center cursor-pointer"
+      aria-label="Новый чат"
+      [routerLink]="['/chats', 'new']"
+    >
       <tui-icon icon="@tui.message-circle-plus" [style.font-size.rem]="1.25" />
     </a>
   }

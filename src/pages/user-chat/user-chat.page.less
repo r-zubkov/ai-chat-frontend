@@ -25,8 +25,6 @@
 
 .chat-message {
   min-width: 25%;
-  max-width: 100%;
-  overflow: auto;
   align-self: flex-start;
 
   &--user {
@@ -38,12 +36,6 @@
   }
 }
 
-.chat-message__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
 .chat-message__bubble--user {
   white-space: pre-wrap;
   background: var(--color-bg-user-msg);
@@ -52,16 +44,13 @@
 }
 
 .chat-message__actions {
-  display: flex;
-  min-height: 30px;
+  min-height: var(--control-size-xs);
 }
 
 .chat-message__actions--user {
   justify-content: flex-end;
   align-self: flex-end;
   opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease-in-out;
 }
 
 .chat-message__actions--assistant {
@@ -77,10 +66,6 @@
 :host-context(.mobile) .chat-message__actions--user {
   opacity: 1;
   pointer-events: auto;
-}
-
-.chat-thinking {
-  position: relative;
 }
 
 .thinking-loader,
@@ -135,16 +120,13 @@
   max-width: clamp(
     0px,
     calc(100vw - var(--chat-messages-side-padding) * 2),
-    calc(var(--chat-max-width) + 2px)
+    calc(var(--chat-max-width) + var(--border-width-2))
   );
   min-width: 0;
   margin: auto;
-  position: relative;
 }
 
 .chat-input {
-  position: absolute;
-  width: 100%;
   background: var(--color-bg);
   bottom: var(--chat-input-bottom-offset);
 }

@@ -2,27 +2,23 @@
   display: inline-flex;
 }
 
-.copy-msg-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
+.copy-text-button {
+  width: var(--control-size-xs);
+  height: var(--control-size-xs);
   padding: 0;
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
   color: rgba(255, 255, 255, 0.72);
-  cursor: pointer;
   transition:
-    background-color 0.2s ease-in-out,
-    color 0.2s ease-in-out;
+    background-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
 }
 
-.copy-msg-button:hover {
+.copy-text-button:hover {
   background: var(--color-bg-button-hover);
 }
 
-.copy-msg-button:active {
+.copy-text-button:active {
   background: var(--color-bg-button-active);
 }

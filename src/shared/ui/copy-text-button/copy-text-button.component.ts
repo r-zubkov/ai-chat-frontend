@@ -16,14 +16,14 @@ import {
 import { MarkdownService } from '../markdown';
 
 @Component({
-  selector: 'app-copy-msg-button',
+  selector: 'app-copy-text-button',
   standalone: true,
   imports: [TuiIcon, TuiHint],
-  templateUrl: './copy-msg-button.component.html',
-  styleUrl: './copy-msg-button.component.less',
+  templateUrl: './copy-text-button.component.html',
+  styleUrl: './copy-text-button.component.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CopyMsgButtonComponent implements OnDestroy {
+export class CopyTextButtonComponent implements OnDestroy {
   readonly text = input.required<string>();
   readonly richText = input(false);
   readonly hint = input('Copy');
