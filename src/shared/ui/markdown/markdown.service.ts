@@ -4,7 +4,7 @@ import hljs from 'highlight.js';
 import { escapeHtml } from '../../helpers';
 
 type ResolvedLanguage = {
-  key: string;
+  key?: string;
   label: string;
 };
 
@@ -13,6 +13,7 @@ export class MarkdownService {
   private readonly md: MarkdownIt;
   private readonly mdWithCodeCopyButton: MarkdownIt;
   private readonly codeCopyButtonText = 'Копировать';
+  private readonly defaultCodeLanguageLabel = 'Code';
 
   constructor() {
     this.md = this.createMarkdownInstance(false);
@@ -35,7 +36,7 @@ export class MarkdownService {
       highlight: (str, langInfo) => {
         const language = this.resolveLanguage(langInfo);
 
-        if (language) {
+        if (language?.key) {
           try {
             const { value } = hljs.highlight(str, { language: language.key });
             return withCodeCopyButton
@@ -47,8 +48,10 @@ export class MarkdownService {
         }
 
         const { value } = hljs.highlightAuto(str);
+        const fallbackLanguage = language ?? this.getFallbackCodeLanguage();
+
         return withCodeCopyButton
-          ? this.renderCodeBlockWithCopyButton(value)
+          ? this.renderCodeBlockWithCopyButton(value, fallbackLanguage)
           : this.renderCodeBlock(value);
       },
     });
@@ -77,7 +80,7 @@ export class MarkdownService {
   }
 
   private renderCodeBlockWithCopyButton(code: string, language?: ResolvedLanguage): string {
-    const languageClass = language ? ` language-${language.key}` : '';
+    const languageClass = language?.key ? ` language-${language.key}` : '';
     const languageLabel = language
       ? `<span class="chat-code-block__language">${escapeHtml(language.label)}</span>`
       : '';
@@ -95,5 +98,9 @@ export class MarkdownService {
     const primaryName = languageName?.split(',')[0]?.trim();
 
     return primaryName || fallback;
+  }
+
+  private getFallbackCodeLanguage(): ResolvedLanguage {
+    return { label: this.defaultCodeLanguageLabel };
   }
 }
