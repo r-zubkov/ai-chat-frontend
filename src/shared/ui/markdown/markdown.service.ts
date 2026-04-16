@@ -72,7 +72,7 @@ export class MarkdownService {
 
     return {
       key: languageKey,
-      label: language.name ?? languageKey,
+      label: this.getLanguageLabel(language.name, languageKey),
     };
   }
 
@@ -89,5 +89,11 @@ export class MarkdownService {
     const languageClass = lang ? ` language-${lang}` : '';
 
     return `<pre><code class="hljs${languageClass}">${code}</code></pre>`;
+  }
+
+  private getLanguageLabel(languageName: string | undefined, fallback: string): string {
+    const primaryName = languageName?.split(',')[0]?.trim();
+
+    return primaryName || fallback;
   }
 }
