@@ -6,6 +6,7 @@ import { escapeHtml } from '../../helpers';
 type ResolvedLanguage = {
   key?: string;
   label: string;
+  icon: 'code' | 'text';
 };
 
 @Injectable({ providedIn: 'root' })
@@ -14,6 +15,7 @@ export class MarkdownService {
   private readonly mdWithCodeCopyButton: MarkdownIt;
   private readonly codeCopyButtonText = 'Копировать';
   private readonly defaultCodeLanguageLabel = 'Code';
+  private readonly plainTextLanguageLabel = 'Текст';
 
   constructor() {
     this.md = this.createMarkdownInstance(false);
@@ -75,7 +77,8 @@ export class MarkdownService {
 
     return {
       key: languageKey,
-      label: this.getLanguageLabel(language.name, languageKey),
+      label: this.getLanguageLabel(languageKey, language.name, languageKey),
+      icon: this.getLanguageIcon(languageKey, language.name),
     };
   }
 
@@ -84,8 +87,11 @@ export class MarkdownService {
     const languageLabel = language
       ? `<span class="chat-code-block__language">${escapeHtml(language.label)}</span>`
       : '';
+    const iconClass = language?.icon
+      ? `chat-code-block__icon chat-code-block__icon--${language.icon}`
+      : 'chat-code-block__icon chat-code-block__icon--code';
 
-    return `<pre class="chat-code-block"><div class="chat-code-block__header"><span class="chat-code-block__meta"><span class="chat-code-block__icon" aria-hidden="true"></span>${languageLabel}</span></div><span class="chat-code-block__copy" role="button" tabindex="0" aria-label="${this.codeCopyButtonText}" title="${this.codeCopyButtonText}"></span><code class="hljs${languageClass}">${code}</code></pre>`;
+    return `<pre class="chat-code-block"><div class="chat-code-block__header"><span class="chat-code-block__meta"><span class="${iconClass}" aria-hidden="true"></span>${languageLabel}</span></div><span class="chat-code-block__copy" role="button" tabindex="0" aria-label="${this.codeCopyButtonText}" title="${this.codeCopyButtonText}"></span><code class="hljs${languageClass}">${code}</code></pre>`;
   }
 
   private renderCodeBlock(code: string, lang?: string): string {
@@ -94,13 +100,43 @@ export class MarkdownService {
     return `<pre><code class="hljs${languageClass}">${code}</code></pre>`;
   }
 
-  private getLanguageLabel(languageName: string | undefined, fallback: string): string {
+  private getLanguageLabel(
+    languageKey: string,
+    languageName: string | undefined,
+    fallback: string,
+  ): string {
+    if (this.isPlainTextLanguage(languageKey, languageName)) {
+      return this.plainTextLanguageLabel;
+    }
+
     const primaryName = languageName?.split(',')[0]?.trim();
 
     return primaryName || fallback;
   }
 
+  private getLanguageIcon(languageKey: string, languageName: string | undefined): 'code' | 'text' {
+    if (this.isPlainTextLanguage(languageKey, languageName)) {
+      return 'text';
+    }
+
+    return 'code';
+  }
+
+  private isPlainTextLanguage(languageKey: string, languageName: string | undefined): boolean {
+    const normalizedName = languageName?.trim().toLowerCase();
+
+    return (
+      languageKey === 'plaintext' ||
+      languageKey === 'text' ||
+      languageKey === 'txt' ||
+      normalizedName === 'plain text'
+    );
+  }
+
   private getFallbackCodeLanguage(): ResolvedLanguage {
-    return { label: this.defaultCodeLanguageLabel };
+    return {
+      label: this.defaultCodeLanguageLabel,
+      icon: 'code',
+    };
   }
 }
