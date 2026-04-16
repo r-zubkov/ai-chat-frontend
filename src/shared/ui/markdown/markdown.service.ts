@@ -82,7 +82,7 @@ export class MarkdownService {
       ? `<span class="chat-code-block__language">${escapeHtml(language.label)}</span>`
       : '';
 
-    return `<pre class="chat-code-block"><div class="chat-code-block__header"><span class="chat-code-block__meta"><span class="chat-code-block__icon" aria-hidden="true"></span>${languageLabel}</span><span class="chat-code-block__copy" role="button" tabindex="0" aria-label="${this.codeCopyButtonText}" title="${this.codeCopyButtonText}"></span></div><code class="hljs${languageClass}">${code}</code></pre>`;
+    return `<pre class="chat-code-block"><div class="chat-code-block__header"><span class="chat-code-block__meta"><span class="chat-code-block__icon" aria-hidden="true"></span>${languageLabel}</span></div><span class="chat-code-block__copy" role="button" tabindex="0" aria-label="${this.codeCopyButtonText}" title="${this.codeCopyButtonText}"></span><code class="hljs${languageClass}">${code}</code></pre>`;
   }
 
   private renderCodeBlock(code: string, lang?: string): string {
