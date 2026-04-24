@@ -276,8 +276,22 @@ export class SendMessageService {
     return events$.asObservable();
   }
 
-  stopRequest(requestId: string): void {
-    this.socket.abortRequest(requestId);
+  stopRequest(chat: Chat): void {
+    const requestId = chat.currentRequestId;
+
+    if (requestId) {
+      this.socket.abortRequest(requestId);
+    }
+
+    if (chat.state !== ChatState.THINKING && !requestId) {
+      return;
+    }
+
+    void this.updateChat(chat, {
+      model: chat.model,
+      state: ChatState.IDLE,
+      currentRequestId: null,
+    });
   }
 
   stopAllRequests(): void {

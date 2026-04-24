@@ -132,12 +132,11 @@ export class SocketService {
    * Явная отмена одного запроса
    */
   abortRequest(requestId: string): void {
-    const observer = this.activeRequests.get(requestId);
-    if (!observer) return;
-
     this.socket?.emit('chat:abort', { requestId });
+
+    const observer = this.activeRequests.get(requestId);
     this.activeRequests.delete(requestId);
-    observer.complete();
+    observer?.complete();
   }
 
   /**

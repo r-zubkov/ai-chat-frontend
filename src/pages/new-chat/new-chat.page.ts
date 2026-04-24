@@ -48,10 +48,10 @@ export class NewChatPage implements OnInit {
   }
 
   protected onCancelRequest(): void {
-    const requestId = this.chatStore.activeChat()?.currentRequestId;
-    if (!requestId) return;
+    const chat = this.chatStore.activeChat();
+    if (!chat || chat.state !== ChatState.THINKING) return;
 
-    this.sendMessageService.stopRequest(requestId);
+    this.sendMessageService.stopRequest(chat);
   }
 
   protected get thinking(): boolean {
