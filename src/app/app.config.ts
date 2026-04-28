@@ -1,12 +1,6 @@
-﻿import {
-  ApplicationConfig,
-  inject,
-  provideAppInitializer,
-  provideBrowserGlobalErrorListeners,
-} from '@angular/core';
+﻿import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
-import { MigrationService } from '@shared/db';
 import { appRoutes } from './app.routes';
 import { environment } from 'src/environments/environment';
 
@@ -17,10 +11,6 @@ export const appConfig: ApplicationConfig = {
     provideServiceWorker('ngsw-worker.js', {
       enabled: environment.production,
       registrationStrategy: 'registerWhenStable:30000',
-    }),
-    provideAppInitializer(() => {
-      const migrationService = inject(MigrationService);
-      return migrationService.migrateIfNeeded();
     }),
   ],
 };
