@@ -4,8 +4,10 @@
   HostListener,
   OnDestroy,
   OnInit,
+  effect,
   inject,
 } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
 import { TuiRoot } from '@taiga-ui/core';
 import { ChatStore } from '@entities/chat';
@@ -14,6 +16,8 @@ import { SendMessageService } from '@features/send-message';
 import { ChatHeaderComponent, ChatSidebarComponent } from '@widgets';
 import { AppStateService } from './app-state.service';
 import { AppUiService } from './app-ui.service';
+
+const BASE_PAGE_TITLE = 'AI Chat';
 
 @Component({
   selector: 'app-root',
@@ -31,8 +35,14 @@ export class AppComponent implements OnInit, OnDestroy {
   private readonly chatStore = inject(ChatStore);
   private readonly settingsStore = inject(SettingsStore);
   private readonly sendMessage = inject(SendMessageService);
+  private readonly title = inject(Title);
 
   constructor() {
+    effect(() => {
+      const chatTitle = this.chatStore.activeChat()?.title.trim();
+      this.title.setTitle(chatTitle ? `${BASE_PAGE_TITLE} - ${chatTitle}` : BASE_PAGE_TITLE);
+    });
+
     this.appState.registerInitialDataLoad(
       Promise.all([this.settingsStore.loadSettings(), this.chatStore.loadAll()]).then(
         () => undefined,
